@@ -6,13 +6,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painting Inspection Dashboard</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Custom CSS -->
+    <!-- Custom CSS File -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Embedded CSS Fallback to guarantee 100% styled layout even if link tag or CDN fails -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-main: #dceaf7;
+            --bg-sidebar: #0c2340;
+            --sidebar-hover: #173861;
+            --sidebar-active: #1d4ed8;
+            --bg-card-navy: #0e3a60;
+            --bg-card-light: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --accent-cyan: #00b4d8;
+            --accent-teal: #10b981;
+            --accent-blue: #2563eb;
+            --accent-amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Sarabun', 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main) !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-container {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        .app-sidebar {
+            width: 260px !important;
+            min-width: 260px !important;
+            background-color: var(--bg-sidebar) !important;
+            color: #ffffff !important;
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 1.5rem 1rem !important;
+        }
+
+        .main-wrapper {
+            flex-grow: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            background-color: var(--bg-main) !important;
+        }
+
+        .app-header {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            padding: 1rem 2rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .content-body {
+            padding: 1.75rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .kpi-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 1.25rem !important;
+        }
+
+        .dashboard-grid {
+            display: grid !important;
+            grid-template-columns: 1.8fr 1.2fr !important;
+            gap: 1.5rem !important;
+        }
+
+        .chart-card.navy-theme {
+            background: linear-gradient(145deg, #0e3a60, #08233d) !important;
+            color: #ffffff !important;
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .chart-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+
+        .kpi-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+        }
+    </style>
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,7 +127,7 @@
         <aside class="app-sidebar">
             <div class="brand-header">
                 <div class="brand-icon">
-                    <i class="bi bi-paint-bucket"></i>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 11D19 11 19 3 12 3C5 3 5 11 5 11"/><path d="M5 11H19V19C19 20.1046 18.1046 21 17 21H7C5.89543 21 5 20.1046 5 19V11Z"/><path d="M12 3V11"/></svg>
                 </div>
                 <div>
                     <div class="brand-title">Tlete UI/UX</div>
@@ -37,25 +138,25 @@
             <ul class="nav-menu">
                 <li>
                     <a class="nav-link active" onclick="switchTab('dashboard-tab', this)">
-                        <i class="bi bi-grid-1x2-fill"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                         <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
                 <li>
                     <a class="nav-link" onclick="openInspectionModal()">
-                        <i class="bi bi-plus-square-fill"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                         <span class="nav-text">บันทึกงานตรวจ</span>
                     </a>
                 </li>
                 <li>
                     <a class="nav-link" onclick="switchTab('history-tab', this)">
-                        <i class="bi bi-table"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
                         <span class="nav-text">ประวัติย้อนหลัง</span>
                     </a>
                 </li>
                 <li>
                     <a class="nav-link" onclick="switchTab('settings-tab', this)">
-                        <i class="bi bi-gear-fill"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                         <span class="nav-text">ตั้งค่า API</span>
                     </a>
                 </li>
@@ -63,7 +164,7 @@
 
             <div class="sidebar-footer">
                 <div>Copfiaind Management v2.0</div>
-                <div style="font-size: 0.7rem; color: #94a3b8;">© 2026 Painting App</div>
+                <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">© 2026 Painting App</div>
             </div>
         </aside>
 
@@ -73,7 +174,7 @@
             <!-- Top Header -->
             <header class="app-header">
                 <div class="header-search">
-                    <i class="bi bi-search text-muted"></i>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                     <input type="text" id="globalSearch" placeholder="ค้นหาข้อมูล..." onkeyup="filterHistoryTable()">
                 </div>
 
@@ -84,7 +185,7 @@
                     </div>
 
                     <button class="btn-primary-custom" onclick="openInspectionModal()">
-                        <i class="bi bi-plus-lg"></i>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                         <span>บันทึกข้อมูล</span>
                     </button>
                 </div>
@@ -99,8 +200,8 @@
                     <div class="section-title-bar">
                         <h1 class="page-title">Culoute Dashboard</h1>
                         <div class="date-filter-wrap">
-                            <i class="bi bi-calendar3 text-primary"></i>
-                            <input type="date" id="dashboardDateFilter" class="form-control form-control-sm border-0 bg-transparent" onchange="renderDashboard()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#2563eb"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                            <input type="date" id="dashboardDateFilter" onchange="renderDashboard()">
                         </div>
                     </div>
 
@@ -110,10 +211,10 @@
                             <div class="kpi-info">
                                 <span class="kpi-label">จำนวนการตรวจทั้งหมด</span>
                                 <span class="kpi-value" id="kpiTotalInspections">0</span>
-                                <span class="kpi-subtext"><i class="bi bi-arrow-up-short"></i> รายการทั้งหมด</span>
+                                <span class="kpi-subtext">↑ รายการทั้งหมด</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <i class="bi bi-clipboard-data-fill"></i>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                             </div>
                         </div>
 
@@ -124,7 +225,7 @@
                                 <span class="kpi-subtext" id="kpiAvgDefectPerJob">เฉลี่ย 0 ชิ้น/งาน</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                             </div>
                         </div>
 
@@ -135,7 +236,7 @@
                                 <span class="kpi-subtext" id="kpiTopDefectCount">0 ชิ้น</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <i class="bi bi-pie-chart-fill"></i>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v8.99h9c-.53-4.74-4.26-8.47-9-8.99zm0 11.01V22c4.74-.53 8.47-4.26 9-8.99h-9z"/></svg>
                             </div>
                         </div>
 
@@ -146,7 +247,7 @@
                                 <span class="kpi-subtext" id="kpiTodayDate">วันนี้</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <i class="bi bi-lightning-charge-fill"></i>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
                             </div>
                         </div>
                     </div>
@@ -158,31 +259,31 @@
                         <div class="chart-card navy-theme">
                             <div class="chart-header">
                                 <div class="chart-title">
-                                    <i class="bi bi-graph-up-arrow"></i>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b4d8" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                                     <span>DAILY STATISTICS</span>
                                 </div>
-                                <span class="badge bg-primary bg-opacity-25 text-info px-2 py-1" style="font-size: 0.75rem;">Defect Trends</span>
+                                <span style="background: rgba(0, 180, 216, 0.2); color: #38bdf8; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Defect Trends</span>
                             </div>
                             <div class="chart-container-wrapper">
                                 <canvas id="dailyChart"></canvas>
                             </div>
                         </div>
 
-                        <!-- Defect Proportion Donut Chart Card -->
+                        <!-- Defect Breakdown Donut Chart Card -->
                         <div class="chart-card">
                             <div class="chart-header">
                                 <div class="chart-title">
-                                    <i class="bi bi-donut-chart"></i>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
                                     <span>สัดส่วนของเสีย (Sertufy Troes)</span>
                                 </div>
                             </div>
-                            <div class="chart-container-wrapper" style="height: 220px;">
+                            <div class="chart-container-wrapper" style="height: 200px;">
                                 <canvas id="donutChart"></canvas>
                             </div>
                             
                             <!-- Defect Breakdown Bars -->
                             <div class="severity-bars-container" id="defectProgressList">
-                                <!-- Dynamic progress bars will be rendered here -->
+                                <!-- Dynamic progress bars -->
                             </div>
                         </div>
 
@@ -190,9 +291,9 @@
 
                     <!-- Recent Inspections Table Section -->
                     <div class="table-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold m-0 text-navy"><i class="bi bi-clock-history me-2"></i>รายการตรวจเช็คล่าสุด</h5>
-                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="switchTab('history-tab')">ดูทั้งหมด</button>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 800; color: #0e3a60; margin: 0;">📋 รายการตรวจเช็คล่าสุด</h3>
+                            <button style="background: #e0f2fe; color: #0284c7; border: none; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; cursor: pointer;" onclick="switchTab('history-tab')">ดูทั้งหมด</button>
                         </div>
                         <div class="table-responsive">
                             <table class="custom-table">
@@ -210,7 +311,7 @@
                                 </thead>
                                 <tbody id="recentTableBody">
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -223,8 +324,8 @@
                 <section id="history-tab" class="tab-page">
                     <div class="section-title-bar">
                         <h1 class="page-title">ประวัติการตรวจเช็คทั้งหมด</h1>
-                        <button class="btn btn-success rounded-pill px-3" onclick="loadDataFromAPI()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> รีเฟรชข้อมูล
+                        <button style="background: #10b981; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 20px; font-weight: 700; cursor: pointer;" onclick="loadDataFromAPI()">
+                            🔄 รีเฟรชข้อมูล
                         </button>
                     </div>
 
@@ -245,7 +346,7 @@
                                 </thead>
                                 <tbody id="fullHistoryTableBody">
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -259,15 +360,15 @@
                         <h1 class="page-title">ตั้งค่าการเชื่อมต่อ API</h1>
                     </div>
 
-                    <div class="card shadow-sm border-0 rounded-4 p-4" style="max-width: 700px;">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Google Apps Script Web App URL</label>
-                            <input type="text" id="settingApiUrl" class="form-control form-control-lg" placeholder="https://script.google.com/macros/s/.../exec">
-                            <div class="form-text text-muted">URL ของ Web App ที่ deploy จาก Google Apps Script (code.gs)</div>
+                    <div class="table-card" style="max-width: 700px;">
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label style="font-weight: 800; color: #0e3a60; margin-bottom: 0.5rem; display: block;">Google Apps Script Web App URL</label>
+                            <input type="text" id="settingApiUrl" class="form-control-custom" style="width: 100%;" placeholder="https://script.google.com/macros/s/.../exec">
+                            <span style="font-size: 0.8rem; color: #64748b; margin-top: 0.35rem; display: block;">URL ของ Web App ที่ deploy จาก Google Apps Script (code.gs)</span>
                         </div>
 
-                        <button class="btn btn-primary px-4 rounded-pill" onclick="saveSettings()">
-                            <i class="bi bi-save me-1"></i> บันทึกตั้งค่า
+                        <button class="btn-primary-custom" onclick="saveSettings()">
+                            💾 บันทึกตั้งค่า
                         </button>
                     </div>
                 </section>
@@ -281,8 +382,7 @@
         <div class="modal-box">
             <div class="modal-header">
                 <div class="modal-title">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
+                    <span>📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
                 </div>
                 <button class="modal-close" onclick="closeInspectionModal()">&times;</button>
             </div>
@@ -291,53 +391,53 @@
                     <div class="form-grid">
                         
                         <div class="form-group full-width">
-                            <label><i class="bi bi-calendar-event me-1"></i> วันที่ตรวจเช็ค</label>
+                            <label>📅 วันที่ตรวจเช็ค</label>
                             <input type="date" id="date" class="form-control-custom" required>
                         </div>
 
                         <div class="form-group">
-                            <label><i class="bi bi-shield-exclamation text-warning me-1"></i> งานเป็นสนิม (Rust)</label>
-                            <input type="number" id="rust" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                            <label>🟠 งานเป็นสนิม (Rust)</label>
+                            <input type="number" id="rust" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
                         <div class="form-group">
-                            <label><i class="bi bi-circle text-primary me-1"></i> รอยบุบ (Dent)</label>
-                            <input type="number" id="dent" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                            <label>🔵 รอยบุบ (Dent)</label>
+                            <input type="number" id="dent" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
                         <div class="form-group">
-                            <label><i class="bi bi-lightning text-danger me-1"></i> สะเก็ดรอยเชื่อม (Weld)</label>
-                            <input type="number" id="weld" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                            <label>🔴 สะเก็ดรอยเชื่อม (Weld)</label>
+                            <input type="number" id="weld" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
                         <div class="form-group">
-                            <label><i class="bi bi-droplet text-info me-1"></i> คราบน้ำยา (Chemical)</label>
-                            <input type="number" id="chemical" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                            <label>🟢 คราบน้ำยา (Chemical)</label>
+                            <input type="number" id="chemical" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
                         <div class="form-group full-width">
-                            <label><i class="bi bi-moisture text-secondary me-1"></i> คราบน้ำมัน (Oil)</label>
-                            <input type="number" id="oil" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                            <label>🟣 คราบน้ำมัน (Oil)</label>
+                            <input type="number" id="oil" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
                         <div class="form-group full-width">
                             <div class="total-preview-box">
-                                <span><i class="bi bi-calculator me-2"></i>รวมข้อผิดพลาดทั้งหมด:</span>
+                                <span>🧮 รวมข้อผิดพลาดทั้งหมด:</span>
                                 <span class="total-preview-value" id="modalTotalPreview">0 ชิ้น</span>
                             </div>
                         </div>
 
                         <div class="form-group full-width">
-                            <label><i class="bi bi-card-text me-1"></i> หมายเหตุ</label>
+                            <label>💬 หมายเหตุ</label>
                             <textarea id="note" class="form-control-custom" rows="3" placeholder="ระบุข้อความหรือหมายเหตุเพิ่มเติม..."></textarea>
                         </div>
 
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-light rounded-pill px-4" onclick="closeInspectionModal()">ยกเลิก</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4" id="submitBtn">
-                            <i class="bi bi-send me-1"></i> บันทึกข้อมูล
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button type="button" style="background: #e2e8f0; color: #475569; border: none; padding: 0.65rem 1.5rem; border-radius: 20px; font-weight: 700; cursor: pointer;" onclick="closeInspectionModal()">ยกเลิก</button>
+                        <button type="submit" class="btn-primary-custom" id="submitBtn">
+                            💾 บันทึกข้อมูล
                         </button>
                     </div>
                 </form>
@@ -345,10 +445,10 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- JavaScript Files -->
+    <!-- JS Files -->
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
 </body>

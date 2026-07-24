@@ -30,11 +30,11 @@ async function loadDataFromAPI() {
 }
 
 function switchTab(tabId, element) {
-    document.querySelectorAll(".tab-page").forEach(page => page.classList.remove("active"));
+    document.querySelectorAll(".tab-page").forEach(page => page.style.display = "none");
     document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
 
     const targetTab = document.getElementById(tabId);
-    if (targetTab) targetTab.classList.add("active");
+    if (targetTab) targetTab.style.display = "block";
 
     if (element) {
         element.classList.add("active");
@@ -82,7 +82,7 @@ async function handleFormSubmit(event) {
     event.preventDefault();
     const submitBtn = document.getElementById("submitBtn");
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...`;
+    submitBtn.innerHTML = `กำลังบันทึก...`;
 
     const data = {
         date: document.getElementById("date").value,
@@ -108,7 +108,7 @@ async function handleFormSubmit(event) {
         showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="bi bi-send me-1"></i> บันทึกข้อมูล`;
+        submitBtn.innerHTML = `💾 บันทึกข้อมูล`;
     }
 }
 
@@ -178,6 +178,11 @@ function renderDailyChart() {
     const ctx = document.getElementById("dailyChart");
     if (!ctx) return;
 
+    if (typeof Chart === 'undefined') {
+        console.warn("Chart.js not loaded");
+        return;
+    }
+
     // Aggregate last 7 days of records
     const recentRecords = [...inspectionRecords].reverse().slice(-7);
     const labels = recentRecords.map(r => r.date || "");
@@ -233,7 +238,7 @@ function renderDailyChart() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: { color: '#e2e8f0', font: { family: 'Sarabun' } }
+                    labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
                 }
             },
             scales: {
@@ -253,6 +258,8 @@ function renderDailyChart() {
 function renderDonutChart(defectsCategory, grandTotal) {
     const ctx = document.getElementById("donutChart");
     if (!ctx) return;
+
+    if (typeof Chart === 'undefined') return;
 
     if (donutChartInstance) {
         donutChartInstance.destroy();
@@ -314,7 +321,7 @@ function renderRecentTable() {
 
     const recent = inspectionRecords.slice(0, 5);
     if (recent.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
@@ -328,14 +335,14 @@ function renderRecentTable() {
 
         return `
             <tr>
-                <td class="fw-semibold">${r.date || '-'}</td>
+                <td style="font-weight: 700;">${r.date || '-'}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
                 <td><span class="badge-defect ${chemical > 0 ? 'badge-has-defect' : 'badge-zero'}">${chemical}</span></td>
                 <td><span class="badge-defect ${oil > 0 ? 'badge-has-defect' : 'badge-zero'}">${oil}</span></td>
                 <td><span class="badge-defect badge-total">${total}</span></td>
-                <td class="text-muted small">${r.note || '-'}</td>
+                <td style="color: #64748b; font-size: 0.85rem;">${r.note || '-'}</td>
             </tr>
         `;
     }).join('');
@@ -346,7 +353,7 @@ function renderFullHistoryTable(records) {
     if (!tbody) return;
 
     if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
@@ -360,7 +367,7 @@ function renderFullHistoryTable(records) {
 
         return `
             <tr>
-                <td class="fw-bold text-primary">${r.date || '-'}</td>
+                <td style="font-weight: 800; color: #2563eb;">${r.date || '-'}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -398,7 +405,7 @@ function showToast(message, type = "success") {
     const toast = document.createElement("div");
     toast.className = `toast-msg ${type === 'error' ? 'error' : ''}`;
     toast.innerHTML = `
-        <i class="bi ${type === 'error' ? 'bi-x-circle-fill text-danger' : 'bi-check-circle-fill text-success'}"></i>
+        <span>${type === 'error' ? '❌' : '✅'}</span>
         <span>${message}</span>
     `;
 
