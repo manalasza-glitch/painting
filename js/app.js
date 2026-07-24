@@ -67,6 +67,13 @@ function setCurrentDateTimeDefaults() {
 window.onload = async () => {
     setCurrentDateTimeDefaults();
 
+    // Auto-clear old stale test cache prior to v1.5.0
+    const cacheVer = localStorage.getItem("PAINTING_CACHE_VER");
+    if (cacheVer !== "1.5.0") {
+        localStorage.removeItem("PAINTING_INSPECTION_CACHE");
+        localStorage.setItem("PAINTING_CACHE_VER", "1.5.0");
+    }
+
     const settingInput = document.getElementById("settingApiUrl");
     if (settingInput) {
         settingInput.value = getApiUrl();
