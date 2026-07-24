@@ -37,12 +37,25 @@ function formatDateForDisplay(dateVal, timestampVal) {
     return str;
 }
 
-window.onload = async () => {
-    // Set default date to today
+function setCurrentDateTimeDefaults() {
+    const now = new Date();
     const dateInput = document.getElementById("date");
     if (dateInput) {
-        dateInput.valueAsDate = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
+    const timeInput = document.getElementById("time");
+    if (timeInput) {
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hh}:${hh !== '00' ? min : '00'}`;
+    }
+}
+
+window.onload = async () => {
+    setCurrentDateTimeDefaults();
 
     const settingInput = document.getElementById("settingApiUrl");
     if (settingInput) {
@@ -87,6 +100,7 @@ function openInspectionModal() {
     const modal = document.getElementById("inspectionModal");
     if (modal) {
         modal.classList.add("active");
+        setCurrentDateTimeDefaults();
         calculateTotalDefects();
     }
 }
@@ -120,9 +134,12 @@ async function handleFormSubmit(event) {
     submitBtn.innerHTML = `กำลังบันทึก...`;
 
     const now = new Date();
-    const timeSuffix = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const inputDate = document.getElementById("date").value;
-    const formattedDateTime = inputDate ? `${inputDate} ${timeSuffix}` : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${timeSuffix}`;
+    const inputTime = document.getElementById("time").value;
+
+    const defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const selectedTime = inputTime || defaultTime;
+    const formattedDateTime = inputDate ? `${inputDate} ${selectedTime}` : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${selectedTime}`;
 
     const data = {
         date: formattedDateTime,
@@ -140,9 +157,9 @@ async function handleFormSubmit(event) {
         showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
         closeInspectionModal();
         
-        // Reset form
+        // Reset form and reset default date/time to current
         document.getElementById("inspectionForm").reset();
-        document.getElementById("date").valueAsDate = new Date();
+        setCurrentDateTimeDefaults();
         
         // Optimistic UI update: Push record immediately so UI updates with Date & Time
         inspectionRecords.unshift(data);
