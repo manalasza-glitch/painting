@@ -2,21 +2,37 @@ let inspectionRecords = [];
 let dailyChartInstance = null;
 let donutChartInstance = null;
 
-function formatDateForDisplay(dateVal) {
-    if (!dateVal) return '-';
-    let str = String(dateVal).trim();
+function formatDateForDisplay(dateVal, timestampVal) {
+    if (!dateVal && !timestampVal) return '-';
+    
+    // Prefer timestamp for displaying both Date & Time (e.g. 2026-07-24 14:30)
+    let source = timestampVal || dateVal;
+    let str = String(source).trim();
     if (!str) return '-';
 
-    // If ISO date string like "2026-07-23T17:00:00.000Z"
-    if (str.includes('T')) {
-        str = str.split('T')[0];
-    }
+    try {
+        let d = new Date(str);
+        if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
 
-    // Match YYYY-MM-DD or YYYY/MM/DD
-    const match = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-    if (match) {
-        const [_, yyyy, mm, dd] = match;
-        return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+            // If time is 00:00 and we have dateVal, return YYYY-MM-DD HH:mm if time exists
+            if (hh === "00" && min === "00" && dateVal && !timestampVal) {
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+        }
+    } catch (e) {}
+
+    // Fallback: If string contains T (ISO format)
+    if (str.includes('T')) {
+        const parts = str.split('T');
+        const dPart = parts[0];
+        const tPart = parts[1] ? parts[1].substring(0, 5) : '';
+        return tPart ? `${dPart} ${tPart}` : dPart;
     }
 
     return str;
@@ -42,7 +58,7 @@ async function loadDataFromAPI() {
     inspectionRecords = await fetchInspectionDataFromAPI();
     
     // Sort records by date descending
-    inspectionRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+    inspectionRecords.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
 
     renderDashboard();
     renderTables();
@@ -104,6 +120,7 @@ async function handleFormSubmit(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = `กำลังบันทึก...`;
 
+    const now = new Date();
     const data = {
         date: document.getElementById("date").value,
         rust: Number(document.getElementById("rust").value) || 0,
@@ -111,7 +128,8 @@ async function handleFormSubmit(event) {
         weld: Number(document.getElementById("weld").value) || 0,
         chemical: Number(document.getElementById("chemical").value) || 0,
         oil: Number(document.getElementById("oil").value) || 0,
-        note: document.getElementById("note").value.trim()
+        note: document.getElementById("note").value.trim(),
+        timestamp: now.toISOString()
     };
 
     try {
@@ -123,7 +141,7 @@ async function handleFormSubmit(event) {
         document.getElementById("inspectionForm").reset();
         document.getElementById("date").valueAsDate = new Date();
         
-        // Optimistic UI update: Push record immediately so UI updates without waiting
+        // Optimistic UI update: Push record immediately so UI updates with Date & Time
         inspectionRecords.unshift(data);
         renderDashboard();
         renderTables();
@@ -164,7 +182,8 @@ function renderDashboard() {
         totalChemical += chemical;
         totalOil += oil;
 
-        if (formatDateForDisplay(r.date) === todayStr) {
+        const recordDateStr = String(r.date || r.timestamp || '').split('T')[0].substring(0, 10);
+        if (recordDateStr === todayStr) {
             todayDefects += rowTotal;
         }
     });
@@ -213,7 +232,7 @@ function renderDailyChart() {
 
     // Aggregate last 7 days of records
     const recentRecords = [...inspectionRecords].reverse().slice(-7);
-    const labels = recentRecords.map(r => formatDateForDisplay(r.date));
+    const labels = recentRecords.map(r => String(r.date || r.timestamp || '').split('T')[0].substring(0, 10));
     const rustData = recentRecords.map(r => Number(r.rust) || 0);
     const dentData = recentRecords.map(r => Number(r.dent) || 0);
     const weldData = recentRecords.map(r => Number(r.weld) || 0);
@@ -360,7 +379,7 @@ function renderRecentTable() {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
-        const dateFormatted = formatDateForDisplay(r.date);
+        const dateFormatted = formatDateForDisplay(r.date, r.timestamp);
 
         return `
             <tr>
@@ -393,7 +412,7 @@ function renderFullHistoryTable(records) {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
-        const dateFormatted = formatDateForDisplay(r.date);
+        const dateFormatted = formatDateForDisplay(r.date, r.timestamp);
 
         return `
             <tr>
@@ -413,7 +432,7 @@ function renderFullHistoryTable(records) {
 function filterHistoryTable() {
     const query = document.getElementById("globalSearch").value.toLowerCase();
     const filtered = inspectionRecords.filter(r => {
-        const dStr = formatDateForDisplay(r.date).toLowerCase();
+        const dStr = formatDateForDisplay(r.date, r.timestamp).toLowerCase();
         return dStr.includes(query) || (r.note && r.note.toLowerCase().includes(query));
     });
     renderFullHistoryTable(filtered);

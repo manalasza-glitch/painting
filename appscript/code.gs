@@ -1,14 +1,34 @@
 const SHEET_NAME = "Inspection";
 
-function formatDateStr(d) {
+function formatDateStr(d, includeTime) {
   if (!d) return "";
   if (d instanceof Date) {
     var yyyy = d.getFullYear();
     var mm = ('0' + (d.getMonth() + 1)).slice(-2);
     var dd = ('0' + d.getDate()).slice(-2);
+    if (includeTime) {
+      var hh = ('0' + d.getHours()).slice(-2);
+      var min = ('0' + d.getMinutes()).slice(-2);
+      return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min;
+    }
     return yyyy + '-' + mm + '-' + dd;
   }
-  return String(d).split('T')[0];
+  var str = String(d).trim();
+  if (str.includes('T')) {
+    try {
+      var dt = new Date(str);
+      if (!isNaN(dt.getTime())) {
+        var y = dt.getFullYear();
+        var m = ('0' + (dt.getMonth() + 1)).slice(-2);
+        var day = ('0' + dt.getDate()).slice(-2);
+        var h = ('0' + dt.getHours()).slice(-2);
+        var mi = ('0' + dt.getMinutes()).slice(-2);
+        return y + '-' + m + '-' + day + (includeTime ? (' ' + h + ':' + mi) : '');
+      }
+    } catch(e) {}
+    return str.split('T')[0];
+  }
+  return str;
 }
 
 function doPost(e) {
@@ -31,7 +51,7 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    const dateVal = data.date || formatDateStr(new Date());
+    const dateVal = data.date || formatDateStr(new Date(), false);
     const rustVal = Number(data.rust) || 0;
     const dentVal = Number(data.dent) || 0;
     const weldVal = Number(data.weld) || 0;
@@ -50,7 +70,7 @@ function doPost(e) {
       new Date()
     ]);
 
-    // Force Google Sheet to commit all pending writes immediately to prevent race conditions
+    // Force Google Sheet to commit all pending writes immediately
     SpreadsheetApp.flush();
 
     return ContentService
@@ -90,14 +110,14 @@ function doGet() {
     const header = values.shift();
 
     const result = values.map(r => ({
-      date: formatDateStr(r[0]),
+      date: formatDateStr(r[0], false),
       rust: Number(r[1]) || 0,
       dent: Number(r[2]) || 0,
       weld: Number(r[3]) || 0,
       chemical: Number(r[4]) || 0,
       oil: Number(r[5]) || 0,
       note: r[6] || "",
-      timestamp: formatDateStr(r[7])
+      timestamp: formatDateStr(r[7] || r[0], true)
     }));
 
     return ContentService
