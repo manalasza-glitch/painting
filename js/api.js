@@ -1,9 +1,9 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyUmkPPAATb2vXjVa-yUuSn3DtsI2Q4H1xU5bdJUwUET5g9rzsZtiDYZNf1YBb1sOa-/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
-// Force reset to latest active deployment URL containing explicit action query parameters
-if (!API_URL.includes("AKfycbyUmkPPAATb2vXjVa-yUuSn3DtsI2Q4H1xU5bdJUwUET5g9rzsZtiDYZNf1YBb1sOa-")) {
+// Ensure API URL points to active deployment
+if (!API_URL.includes("AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
@@ -22,7 +22,7 @@ function getApiUrl() {
 // Fetch historical inspection records from Google Sheet API
 async function fetchInspectionDataFromAPI() {
     const url = getApiUrl();
-    if (!url) return generateSampleData();
+    if (!url) return getCachedOrSampleData();
 
     try {
         const response = await fetch(url, {
@@ -44,7 +44,7 @@ async function fetchInspectionDataFromAPI() {
         }
         return getCachedOrSampleData();
     } catch (err) {
-        console.warn("Failed to fetch from Google Apps Script API. Using sample/cached data:", err);
+        console.warn("Failed to fetch from Google Apps Script API. Using cached data:", err);
         return getCachedOrSampleData();
     }
 }
@@ -90,6 +90,22 @@ async function updateDataToAPI(data) {
     }).toString();
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
+    // 1. Update in localStorage cache immediately
+    const cache = getCachedOrSampleData();
+    const updatedCache = cache.map(item => {
+        if (data.rowIndex && item.rowIndex && Number(item.rowIndex) === Number(data.rowIndex)) {
+            return { ...item, ...data };
+        }
+        const itemDate = String(item.date || item.timestamp || '').trim();
+        const targetDate = String(data.originalDate || data.date || '').trim();
+        if (itemDate && targetDate && itemDate === targetDate) {
+            return { ...item, ...data };
+        }
+        return item;
+    });
+    localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(updatedCache));
+
+    // 2. Send POST update request to Google Sheet API
     try {
         await fetch(url, {
             method: "POST",
@@ -107,7 +123,7 @@ async function updateDataToAPI(data) {
     }
 }
 
-// Delete inspection record from Google Sheet API (Deletes row from backend Google Sheet)
+// Delete inspection record from Google Sheet API (Deletes row from backend Google Sheet & Cache)
 async function deleteDataFromAPI(data) {
     const baseUrl = getApiUrl();
     const queryParams = new URLSearchParams({
@@ -118,6 +134,22 @@ async function deleteDataFromAPI(data) {
     }).toString();
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
+    // 1. Remove from localStorage cache immediately
+    const cache = getCachedOrSampleData();
+    const filteredCache = cache.filter(item => {
+        if (data.rowIndex && item.rowIndex && Number(item.rowIndex) === Number(data.rowIndex)) {
+            return false;
+        }
+        const itemDate = String(item.date || item.timestamp || '').trim();
+        const targetDate = String(data.date || data.originalDate || '').trim();
+        if (itemDate && targetDate && itemDate === targetDate) {
+            return false;
+        }
+        return true;
+    });
+    localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(filteredCache));
+
+    // 2. Send POST delete request to Google Sheet API
     try {
         await fetch(url, {
             method: "POST",

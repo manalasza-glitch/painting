@@ -203,17 +203,15 @@ async function deleteInspectionRecord(index) {
     const confirmMsg = `คุณต้องการลบรายการตรวจเช็คของวันที่ "${formatDateForDisplay(record.date, record.timestamp)}" ใช่หรือไม่?`;
     if (!confirm(confirmMsg)) return;
 
-    // Optimistic UI Update: Remove locally first
+    // Remove locally from memory and re-render immediately
     inspectionRecords.splice(index, 1);
     renderDashboard();
     renderTables();
-    showToast("ลบข้อมูลเรียบร้อยแล้ว!", "success");
+    showToast("กำลังลบข้อมูลออกจากระบบ...", "info");
 
     try {
         await deleteDataFromAPI(record);
-        setTimeout(async () => {
-            await loadDataFromAPI();
-        }, 1500);
+        showToast("ลบข้อมูลเรียบร้อยแล้ว!", "success");
     } catch (err) {
         showToast("เกิดข้อผิดพลาดในการลบ: " + err.message, "error");
     }
@@ -287,15 +285,8 @@ async function handleFormSubmit(event) {
         }
         
         closeInspectionModal();
-        
-        // Reset form and default date/time
         document.getElementById("inspectionForm").reset();
         setCurrentDateTimeDefaults();
-        
-        // Refresh data from API after delay
-        setTimeout(async () => {
-            await loadDataFromAPI();
-        }, 1500);
     } catch (err) {
         showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
     } finally {
