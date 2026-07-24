@@ -13,17 +13,40 @@ function formatDateStr(d) {
 
 function doPost(e) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp"]);
+    }
+
+    let data = {};
+    if (e && e.postData && e.postData.contents) {
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (pErr) {
+        data = e.parameter || {};
+      }
+    } else if (e && e.parameter) {
+      data = e.parameter;
+    }
+
+    const dateVal = data.date || formatDateStr(new Date());
+    const rustVal = Number(data.rust) || 0;
+    const dentVal = Number(data.dent) || 0;
+    const weldVal = Number(data.weld) || 0;
+    const chemicalVal = Number(data.chemical) || 0;
+    const oilVal = Number(data.oil) || 0;
+    const noteVal = data.note || "";
 
     sheet.appendRow([
-      data.date,
-      data.rust,
-      data.dent,
-      data.weld,
-      data.chemical,
-      data.oil,
-      data.note,
+      dateVal,
+      rustVal,
+      dentVal,
+      weldVal,
+      chemicalVal,
+      oilVal,
+      noteVal,
       new Date()
     ]);
 
@@ -45,7 +68,14 @@ function doPost(e) {
 
 function doGet() {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      return ContentService
+        .createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     const values = sheet.getDataRange().getValues();
 
     if (!values || values.length <= 1) {
@@ -79,5 +109,3 @@ function doGet() {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
-
-

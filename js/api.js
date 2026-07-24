@@ -1,4 +1,12 @@
-let API_URL = localStorage.getItem("PAINTING_API_URL") || "https://script.google.com/macros/s/AKfycbxP00LCfuR6M3Q949UIX5HVRttyEcPJOtcfYgPvhpRKV8v8uS2kE1wyuLQHsIZi-EFG/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxfO_wupxmk7iqteAvTFPvFCPZqdM9ko-cIktx1t2V-iJVkehNPaAp5P1oVL4Wlr5mc/exec";
+
+let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
+
+// Ensure mobile devices reset to latest deployed URL if old URL is stored
+if (!API_URL.includes("AKfycbxfO_wupxmk7iqteAvTFPvFCPZqdM9ko")) {
+    API_URL = DEFAULT_API_URL;
+    localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
+}
 
 function setApiUrl(url) {
     if (url) {
@@ -13,10 +21,11 @@ function getApiUrl() {
 
 // Fetch historical inspection records from Google Sheet API
 async function fetchInspectionDataFromAPI() {
-    if (!API_URL) return generateSampleData();
+    const url = getApiUrl();
+    if (!url) return generateSampleData();
 
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(url, {
             method: "GET",
             headers: { "Accept": "application/json" }
         });
@@ -41,15 +50,15 @@ async function fetchInspectionDataFromAPI() {
     }
 }
 
-// Send inspection form data to Google Sheet API
+// Send inspection form data to Google Sheet API (Compatible with iOS & Android Mobile Safari/Chrome)
 async function sendDataToAPI(data) {
+    const url = getApiUrl();
     try {
-        const response = await fetch(API_URL, {
+        // Send simple text/plain POST to avoid browser CORS preflight blocking on mobile devices
+        await fetch(url, {
             method: "POST",
             mode: "no-cors",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            cache: "no-cache",
             body: JSON.stringify(data)
         });
 
