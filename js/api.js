@@ -1,9 +1,9 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCtDgJbRAMqU7Io5jKwgJu_jVxvUIbgIDoXVMyX3DnIpPUzhEo8mXnpWX1wQBhz463/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
-// Ensure API URL points to active deployment
-if (!API_URL.includes("AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22")) {
+// Force reset to active deployment Version 27
+if (!API_URL.includes("AKfycbwCtDgJbRAMqU7Io5jKwgJu_jVxvUIbgIDoXVMyX3DnIpPUzhEo8mXnpWX1wQBhz463")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
