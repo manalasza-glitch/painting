@@ -1,4 +1,4 @@
-let API_URL = localStorage.getItem("PAINTING_API_URL") || "https://script.google.com/macros/s/AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22/exec";
+let API_URL = localStorage.getItem("PAINTING_API_URL") || "https://script.google.com/macros/s/AKfycbxP00LCfuR6M3Q949UIX5HVRttyEcPJOtcfYgPvhpRKV8v8uS2kE1wyuLQHsIZi-EFG/exec";
 
 function setApiUrl(url) {
     if (url) {
