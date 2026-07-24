@@ -39,18 +39,19 @@ function formatDateForDisplay(dateVal, timestampVal) {
 
 function setCurrentDateTimeDefaults() {
     const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+
     const dateInput = document.getElementById("date");
     if (dateInput) {
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
         dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
     const timeInput = document.getElementById("time");
     if (timeInput) {
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        timeInput.value = `${hh}:${hh !== '00' ? min : '00'}`;
+        timeInput.value = `${hh}:${min}`;
     }
 }
 
