@@ -123,7 +123,15 @@ async function handleFormSubmit(event) {
         document.getElementById("inspectionForm").reset();
         document.getElementById("date").valueAsDate = new Date();
         
-        await loadDataFromAPI();
+        // Optimistic UI update: Push record immediately so UI updates without waiting
+        inspectionRecords.unshift(data);
+        renderDashboard();
+        renderTables();
+
+        // Refresh data from API after a 1.5s delay to allow Google Sheet time to write row
+        setTimeout(async () => {
+            await loadDataFromAPI();
+        }, 1500);
     } catch (err) {
         showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
     } finally {

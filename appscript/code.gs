@@ -50,6 +50,9 @@ function doPost(e) {
       new Date()
     ]);
 
+    // Force Google Sheet to commit all pending writes immediately to prevent race conditions
+    SpreadsheetApp.flush();
+
     return ContentService
       .createTextOutput(JSON.stringify({
         status: "success"
