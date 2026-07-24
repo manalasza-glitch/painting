@@ -1,9 +1,9 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxfO_wupxmk7iqteAvTFPvFCPZqdM9ko-cIktx1t2V-iJVkehNPaAp5P1oVL4Wlr5mc/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
-// Ensure mobile devices reset to latest deployed URL if old URL is stored
-if (!API_URL.includes("AKfycbxfO_wupxmk7iqteAvTFPvFCPZqdM9ko")) {
+// Ensure mobile devices reset to working deployment URL if old broken URL is stored
+if (!API_URL.includes("AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
