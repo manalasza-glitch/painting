@@ -1,9 +1,9 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw46LeqmfXigwxaGoHpkb4DzFaIpdPL6cxFu4UmZ-WxEU1DnH48ao7CD9uolLm02rJ2/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyUmkPPAATb2vXjVa-yUuSn3DtsI2Q4H1xU5bdJUwUET5g9rzsZtiDYZNf1YBb1sOa-/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
-// Force reset to latest active deployment URL containing update & delete actions
-if (!API_URL.includes("AKfycbw46LeqmfXigwxaGoHpkb4DzFaIpdPL6cxFu4UmZ-WxEU1DnH48ao7CD9uolLm02rJ2")) {
+// Force reset to latest active deployment URL containing explicit action query parameters
+if (!API_URL.includes("AKfycbyUmkPPAATb2vXjVa-yUuSn3DtsI2Q4H1xU5bdJUwUET5g9rzsZtiDYZNf1YBb1sOa-")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
@@ -107,7 +107,7 @@ async function updateDataToAPI(data) {
     }
 }
 
-// Delete inspection record from Google Sheet API
+// Delete inspection record from Google Sheet API (Deletes row from backend Google Sheet)
 async function deleteDataFromAPI(data) {
     const baseUrl = getApiUrl();
     const queryParams = new URLSearchParams({
