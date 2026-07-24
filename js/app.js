@@ -2,6 +2,26 @@ let inspectionRecords = [];
 let dailyChartInstance = null;
 let donutChartInstance = null;
 
+function formatDateForDisplay(dateVal) {
+    if (!dateVal) return '-';
+    let str = String(dateVal).trim();
+    if (!str) return '-';
+
+    // If ISO date string like "2026-07-23T17:00:00.000Z"
+    if (str.includes('T')) {
+        str = str.split('T')[0];
+    }
+
+    // Match YYYY-MM-DD or YYYY/MM/DD
+    const match = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (match) {
+        const [_, yyyy, mm, dd] = match;
+        return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    }
+
+    return str;
+}
+
 window.onload = async () => {
     // Set default date to today
     const dateInput = document.getElementById("date");
@@ -136,7 +156,7 @@ function renderDashboard() {
         totalChemical += chemical;
         totalOil += oil;
 
-        if (r.date === todayStr) {
+        if (formatDateForDisplay(r.date) === todayStr) {
             todayDefects += rowTotal;
         }
     });
@@ -185,7 +205,7 @@ function renderDailyChart() {
 
     // Aggregate last 7 days of records
     const recentRecords = [...inspectionRecords].reverse().slice(-7);
-    const labels = recentRecords.map(r => r.date || "");
+    const labels = recentRecords.map(r => formatDateForDisplay(r.date));
     const rustData = recentRecords.map(r => Number(r.rust) || 0);
     const dentData = recentRecords.map(r => Number(r.dent) || 0);
     const weldData = recentRecords.map(r => Number(r.weld) || 0);
@@ -332,10 +352,11 @@ function renderRecentTable() {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
+        const dateFormatted = formatDateForDisplay(r.date);
 
         return `
             <tr>
-                <td style="font-weight: 700;">${r.date || '-'}</td>
+                <td style="font-weight: 700;">${dateFormatted}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -364,10 +385,11 @@ function renderFullHistoryTable(records) {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
+        const dateFormatted = formatDateForDisplay(r.date);
 
         return `
             <tr>
-                <td style="font-weight: 800; color: #2563eb;">${r.date || '-'}</td>
+                <td style="font-weight: 800; color: #2563eb;">${dateFormatted}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -383,8 +405,8 @@ function renderFullHistoryTable(records) {
 function filterHistoryTable() {
     const query = document.getElementById("globalSearch").value.toLowerCase();
     const filtered = inspectionRecords.filter(r => {
-        return (r.date && r.date.toLowerCase().includes(query)) ||
-               (r.note && r.note.toLowerCase().includes(query));
+        const dStr = formatDateForDisplay(r.date).toLowerCase();
+        return dStr.includes(query) || (r.note && r.note.toLowerCase().includes(query));
     });
     renderFullHistoryTable(filtered);
 }

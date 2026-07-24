@@ -1,5 +1,16 @@
 const SHEET_NAME = "Inspection";
 
+function formatDateStr(d) {
+  if (!d) return "";
+  if (d instanceof Date) {
+    var yyyy = d.getFullYear();
+    var mm = ('0' + (d.getMonth() + 1)).slice(-2);
+    var dd = ('0' + d.getDate()).slice(-2);
+    return yyyy + '-' + mm + '-' + dd;
+  }
+  return String(d).split('T')[0];
+}
+
 function doPost(e) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
@@ -46,14 +57,14 @@ function doGet() {
     const header = values.shift();
 
     const result = values.map(r => ({
-      date: r[0],
+      date: formatDateStr(r[0]),
       rust: Number(r[1]) || 0,
       dent: Number(r[2]) || 0,
       weld: Number(r[3]) || 0,
       chemical: Number(r[4]) || 0,
       oil: Number(r[5]) || 0,
       note: r[6] || "",
-      timestamp: r[7] || ""
+      timestamp: formatDateStr(r[7])
     }));
 
     return ContentService
@@ -68,4 +79,5 @@ function doGet() {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
+
 
