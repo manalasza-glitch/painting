@@ -1,29 +1,411 @@
-window.onload = () => {
+let inspectionRecords = [];
+let dailyChartInstance = null;
+let donutChartInstance = null;
 
-    document.getElementById("date").valueAsDate = new Date();
+window.onload = async () => {
+    // Set default date to today
+    const dateInput = document.getElementById("date");
+    if (dateInput) {
+        dateInput.valueAsDate = new Date();
+    }
 
+    const settingInput = document.getElementById("settingApiUrl");
+    if (settingInput) {
+        settingInput.value = getApiUrl();
+    }
+
+    await loadDataFromAPI();
+};
+
+async function loadDataFromAPI() {
+    showToast("กำลังโหลดข้อมูล...", "info");
+    inspectionRecords = await fetchInspectionDataFromAPI();
+    
+    // Sort records by date descending
+    inspectionRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    renderDashboard();
+    renderTables();
+    showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
 }
 
-function saveData(){
+function switchTab(tabId, element) {
+    document.querySelectorAll(".tab-page").forEach(page => page.classList.remove("active"));
+    document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) targetTab.classList.add("active");
+
+    if (element) {
+        element.classList.add("active");
+    } else {
+        const matchingNav = document.querySelector(`.nav-link[onclick*="${tabId}"]`);
+        if (matchingNav) matchingNav.classList.add("active");
+    }
+
+    if (tabId === "dashboard-tab") {
+        renderDashboard();
+    }
+}
+
+function openInspectionModal() {
+    const modal = document.getElementById("inspectionModal");
+    if (modal) {
+        modal.classList.add("active");
+        calculateTotalDefects();
+    }
+}
+
+function closeInspectionModal() {
+    const modal = document.getElementById("inspectionModal");
+    if (modal) {
+        modal.classList.remove("active");
+    }
+}
+
+function calculateTotalDefects() {
+    const rust = Number(document.getElementById("rust").value) || 0;
+    const dent = Number(document.getElementById("dent").value) || 0;
+    const weld = Number(document.getElementById("weld").value) || 0;
+    const chemical = Number(document.getElementById("chemical").value) || 0;
+    const oil = Number(document.getElementById("oil").value) || 0;
+
+    const total = rust + dent + weld + chemical + oil;
+    const previewEl = document.getElementById("modalTotalPreview");
+    if (previewEl) {
+        previewEl.innerText = `${total} ชิ้น`;
+    }
+    return total;
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...`;
 
     const data = {
-
         date: document.getElementById("date").value,
-
-        rust: Number(document.getElementById("rust").value),
-
-        dent: Number(document.getElementById("dent").value),
-
-        weld: Number(document.getElementById("weld").value),
-
-        chemical: Number(document.getElementById("chemical").value),
-
-        oil: Number(document.getElementById("oil").value),
-
-        note: document.getElementById("note").value
-
+        rust: Number(document.getElementById("rust").value) || 0,
+        dent: Number(document.getElementById("dent").value) || 0,
+        weld: Number(document.getElementById("weld").value) || 0,
+        chemical: Number(document.getElementById("chemical").value) || 0,
+        oil: Number(document.getElementById("oil").value) || 0,
+        note: document.getElementById("note").value.trim()
     };
 
-    sendData(data);
+    try {
+        await sendDataToAPI(data);
+        showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
+        closeInspectionModal();
+        
+        // Reset form
+        document.getElementById("inspectionForm").reset();
+        document.getElementById("date").valueAsDate = new Date();
+        
+        await loadDataFromAPI();
+    } catch (err) {
+        showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="bi bi-send me-1"></i> บันทึกข้อมูล`;
+    }
+}
 
+function renderDashboard() {
+    if (!inspectionRecords || inspectionRecords.length === 0) return;
+
+    // 1. Calculate KPI Metrics
+    let totalInspections = inspectionRecords.length;
+    let totalRust = 0, totalDent = 0, totalWeld = 0, totalChemical = 0, totalOil = 0;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let todayDefects = 0;
+
+    inspectionRecords.forEach(r => {
+        const rust = Number(r.rust) || 0;
+        const dent = Number(r.dent) || 0;
+        const weld = Number(r.weld) || 0;
+        const chemical = Number(r.chemical) || 0;
+        const oil = Number(r.oil) || 0;
+        const rowTotal = rust + dent + weld + chemical + oil;
+
+        totalRust += rust;
+        totalDent += dent;
+        totalWeld += weld;
+        totalChemical += chemical;
+        totalOil += oil;
+
+        if (r.date === todayStr) {
+            todayDefects += rowTotal;
+        }
+    });
+
+    const grandTotalDefects = totalRust + totalDent + totalWeld + totalChemical + totalOil;
+    const avgDefects = totalInspections > 0 ? (grandTotalDefects / totalInspections).toFixed(1) : 0;
+
+    // Determine Top Defect Category
+    const defectsCategory = [
+        { name: "งานเป็นสนิม", val: totalRust, color: "#f59e0b" },
+        { name: "รอยบุบ", val: totalDent, color: "#3b82f6" },
+        { name: "สะเก็ดรอยเชื่อม", val: totalWeld, color: "#ef4444" },
+        { name: "คราบน้ำยา", val: totalChemical, color: "#06b6d4" },
+        { name: "คราบน้ำมัน", val: totalOil, color: "#8b5cf6" }
+    ];
+    defectsCategory.sort((a, b) => b.val - a.val);
+
+    document.getElementById("kpiTotalInspections").innerText = totalInspections;
+    document.getElementById("kpiTotalDefects").innerText = grandTotalDefects;
+    document.getElementById("kpiAvgDefectPerJob").innerText = `เฉลี่ย ${avgDefects} ชิ้น/ครั้ง`;
+
+    const topCategory = defectsCategory[0];
+    document.getElementById("kpiTopDefect").innerText = topCategory.val > 0 ? topCategory.name : "-";
+    document.getElementById("kpiTopDefectCount").innerText = topCategory.val > 0 ? `${topCategory.val} ชิ้น` : "0 ชิ้น";
+
+    document.getElementById("kpiTodayDefects").innerText = todayDefects;
+
+    // 2. Render Daily Statistics Chart
+    renderDailyChart();
+
+    // 3. Render Defect Donut Chart
+    renderDonutChart(defectsCategory, grandTotalDefects);
+
+    // 4. Render Defect Progress Bars
+    renderSeverityBars(defectsCategory, grandTotalDefects);
+}
+
+function renderDailyChart() {
+    const ctx = document.getElementById("dailyChart");
+    if (!ctx) return;
+
+    // Aggregate last 7 days of records
+    const recentRecords = [...inspectionRecords].reverse().slice(-7);
+    const labels = recentRecords.map(r => r.date || "");
+    const rustData = recentRecords.map(r => Number(r.rust) || 0);
+    const dentData = recentRecords.map(r => Number(r.dent) || 0);
+    const weldData = recentRecords.map(r => Number(r.weld) || 0);
+    const totalsData = recentRecords.map(r => (Number(r.rust)||0)+(Number(r.dent)||0)+(Number(r.weld)||0)+(Number(r.chemical)||0)+(Number(r.oil)||0));
+
+    if (dailyChartInstance) {
+        dailyChartInstance.destroy();
+    }
+
+    dailyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'รวมของเสียทั้งหมด',
+                    data: totalsData,
+                    borderColor: '#00b4d8',
+                    backgroundColor: 'rgba(0, 180, 216, 0.2)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    type: 'bar',
+                    label: 'สนิม (Rust)',
+                    data: rustData,
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                },
+                {
+                    type: 'bar',
+                    label: 'รอยบุบ (Dent)',
+                    data: dentData,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                },
+                {
+                    type: 'bar',
+                    label: 'สะเก็ดเชื่อม (Weld)',
+                    data: weldData,
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#e2e8f0', font: { family: 'Sarabun' } }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                },
+                y: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                }
+            }
+        }
+    });
+}
+
+function renderDonutChart(defectsCategory, grandTotal) {
+    const ctx = document.getElementById("donutChart");
+    if (!ctx) return;
+
+    if (donutChartInstance) {
+        donutChartInstance.destroy();
+    }
+
+    donutChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: defectsCategory.map(c => c.name),
+            datasets: [{
+                data: defectsCategory.map(c => c.val),
+                backgroundColor: defectsCategory.map(c => c.color),
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12 }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+function renderSeverityBars(defectsCategory, grandTotal) {
+    const container = document.getElementById("defectProgressList");
+    if (!container) return;
+
+    container.innerHTML = defectsCategory.map(item => {
+        const pct = grandTotal > 0 ? Math.round((item.val / grandTotal) * 100) : 0;
+        return `
+            <div class="severity-item">
+                <div class="severity-info">
+                    <span>${item.name}</span>
+                    <span>${item.val} ชิ้น (${pct}%)</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: ${pct}%; background-color: ${item.color};"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTables() {
+    renderRecentTable();
+    renderFullHistoryTable(inspectionRecords);
+}
+
+function renderRecentTable() {
+    const tbody = document.getElementById("recentTableBody");
+    if (!tbody) return;
+
+    const recent = inspectionRecords.slice(0, 5);
+    if (recent.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = recent.map(r => {
+        const rust = Number(r.rust) || 0;
+        const dent = Number(r.dent) || 0;
+        const weld = Number(r.weld) || 0;
+        const chemical = Number(r.chemical) || 0;
+        const oil = Number(r.oil) || 0;
+        const total = rust + dent + weld + chemical + oil;
+
+        return `
+            <tr>
+                <td class="fw-semibold">${r.date || '-'}</td>
+                <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
+                <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
+                <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
+                <td><span class="badge-defect ${chemical > 0 ? 'badge-has-defect' : 'badge-zero'}">${chemical}</span></td>
+                <td><span class="badge-defect ${oil > 0 ? 'badge-has-defect' : 'badge-zero'}">${oil}</span></td>
+                <td><span class="badge-defect badge-total">${total}</span></td>
+                <td class="text-muted small">${r.note || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderFullHistoryTable(records) {
+    const tbody = document.getElementById("fullHistoryTableBody");
+    if (!tbody) return;
+
+    if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = records.map(r => {
+        const rust = Number(r.rust) || 0;
+        const dent = Number(r.dent) || 0;
+        const weld = Number(r.weld) || 0;
+        const chemical = Number(r.chemical) || 0;
+        const oil = Number(r.oil) || 0;
+        const total = rust + dent + weld + chemical + oil;
+
+        return `
+            <tr>
+                <td class="fw-bold text-primary">${r.date || '-'}</td>
+                <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
+                <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
+                <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
+                <td><span class="badge-defect ${chemical > 0 ? 'badge-has-defect' : 'badge-zero'}">${chemical}</span></td>
+                <td><span class="badge-defect ${oil > 0 ? 'badge-has-defect' : 'badge-zero'}">${oil}</span></td>
+                <td><span class="badge-defect badge-total">${total} ชิ้น</span></td>
+                <td>${r.note || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterHistoryTable() {
+    const query = document.getElementById("globalSearch").value.toLowerCase();
+    const filtered = inspectionRecords.filter(r => {
+        return (r.date && r.date.toLowerCase().includes(query)) ||
+               (r.note && r.note.toLowerCase().includes(query));
+    });
+    renderFullHistoryTable(filtered);
+}
+
+function saveSettings() {
+    const url = document.getElementById("settingApiUrl").value.trim();
+    if (url) {
+        setApiUrl(url);
+        showToast("บันทึก URL API เรียบร้อยแล้ว", "success");
+        loadDataFromAPI();
+    }
+}
+
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast-msg ${type === 'error' ? 'error' : ''}`;
+    toast.innerHTML = `
+        <i class="bi ${type === 'error' ? 'bi-x-circle-fill text-danger' : 'bi-check-circle-fill text-success'}"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(30px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }

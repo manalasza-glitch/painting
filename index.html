@@ -4,161 +4,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painting Inspection Dashboard</title>
 
-    <title>Painting Inspection</title>
-
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<div class="container py-4">
+    <div class="app-container">
 
-    <h2 class="text-center mb-4">
-        Painting Inspection
-    </h2>
-
-    <div class="card shadow">
-
-        <div class="card-body">
-
-            <div class="mb-3">
-
-                <label class="form-label">วันที่</label>
-
-                <input type="date"
-                       id="date"
-                       class="form-control">
-
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+            <div class="brand-header">
+                <div class="brand-icon">
+                    <i class="bi bi-paint-bucket"></i>
+                </div>
+                <div>
+                    <div class="brand-title">Tlete UI/UX</div>
+                    <div class="brand-subtitle">Painting Inspection</div>
+                </div>
             </div>
 
-            <table class="table table-bordered align-middle">
+            <ul class="nav-menu">
+                <li>
+                    <a class="nav-link active" onclick="switchTab('dashboard-tab', this)">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="openInspectionModal()">
+                        <i class="bi bi-plus-square-fill"></i>
+                        <span class="nav-text">บันทึกงานตรวจ</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="switchTab('history-tab', this)">
+                        <i class="bi bi-table"></i>
+                        <span class="nav-text">ประวัติย้อนหลัง</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="switchTab('settings-tab', this)">
+                        <i class="bi bi-gear-fill"></i>
+                        <span class="nav-text">ตั้งค่า API</span>
+                    </a>
+                </li>
+            </ul>
 
-                <thead class="table-primary">
-
-                    <tr>
-
-                        <th>ประเภท</th>
-
-                        <th width="150">จำนวน</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    <tr>
-
-                        <td>งานเป็นสนิม</td>
-
-                        <td>
-                            <input type="number"
-                                   id="rust"
-                                   class="form-control"
-                                   value="0">
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>รอยบุบ</td>
-
-                        <td>
-
-                            <input type="number"
-                                   id="dent"
-                                   class="form-control"
-                                   value="0">
-
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>สะเก็ดรอยเชื่อม</td>
-
-                        <td>
-
-                            <input type="number"
-                                   id="weld"
-                                   class="form-control"
-                                   value="0">
-
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>คราบน้ำยา</td>
-
-                        <td>
-
-                            <input type="number"
-                                   id="chemical"
-                                   class="form-control"
-                                   value="0">
-
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>คราบน้ำมัน</td>
-
-                        <td>
-
-                            <input type="number"
-                                   id="oil"
-                                   class="form-control"
-                                   value="0">
-
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    หมายเหตุ
-
-                </label>
-
-                <textarea
-                    id="note"
-                    class="form-control"
-                    rows="3"></textarea>
-
+            <div class="sidebar-footer">
+                <div>Copfiaind Management v2.0</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">© 2026 Painting App</div>
             </div>
+        </aside>
 
-            <button
-                class="btn btn-primary w-100"
-                onclick="saveData()">
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
 
-                บันทึกข้อมูล
+            <!-- Top Header -->
+            <header class="app-header">
+                <div class="header-search">
+                    <i class="bi bi-search text-muted"></i>
+                    <input type="text" id="globalSearch" placeholder="ค้นหาข้อมูล..." onkeyup="filterHistoryTable()">
+                </div>
 
-            </button>
+                <div class="header-actions">
+                    <div class="status-badge" id="statusBadge">
+                        <span class="status-dot"></span>
+                        <span id="statusText">เชื่อมต่อระบบแล้ว</span>
+                    </div>
 
+                    <button class="btn-primary-custom" onclick="openInspectionModal()">
+                        <i class="bi bi-plus-lg"></i>
+                        <span>บันทึกข้อมูล</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Body Content Area -->
+            <main class="content-body">
+
+                <!-- TAB 1: DASHBOARD OVERVIEW -->
+                <section id="dashboard-tab" class="tab-page active">
+                    
+                    <div class="section-title-bar">
+                        <h1 class="page-title">Culoute Dashboard</h1>
+                        <div class="date-filter-wrap">
+                            <i class="bi bi-calendar3 text-primary"></i>
+                            <input type="date" id="dashboardDateFilter" class="form-control form-control-sm border-0 bg-transparent" onchange="renderDashboard()">
+                        </div>
+                    </div>
+
+                    <!-- KPI Stat Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card blue">
+                            <div class="kpi-info">
+                                <span class="kpi-label">จำนวนการตรวจทั้งหมด</span>
+                                <span class="kpi-value" id="kpiTotalInspections">0</span>
+                                <span class="kpi-subtext"><i class="bi bi-arrow-up-short"></i> รายการทั้งหมด</span>
+                            </div>
+                            <div class="kpi-icon-box">
+                                <i class="bi bi-clipboard-data-fill"></i>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card teal">
+                            <div class="kpi-info">
+                                <span class="kpi-label">ของเสียรวมทั้งหมด</span>
+                                <span class="kpi-value" id="kpiTotalDefects">0</span>
+                                <span class="kpi-subtext" id="kpiAvgDefectPerJob">เฉลี่ย 0 ชิ้น/งาน</span>
+                            </div>
+                            <div class="kpi-icon-box">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card cyan">
+                            <div class="kpi-info">
+                                <span class="kpi-label">ปัญหาที่พบมากที่สุด</span>
+                                <span class="kpi-value" id="kpiTopDefect" style="font-size: 1.35rem;">-</span>
+                                <span class="kpi-subtext" id="kpiTopDefectCount">0 ชิ้น</span>
+                            </div>
+                            <div class="kpi-icon-box">
+                                <i class="bi bi-pie-chart-fill"></i>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card amber">
+                            <div class="kpi-info">
+                                <span class="kpi-label">อัตราของเสียวันนี้</span>
+                                <span class="kpi-value" id="kpiTodayDefects">0</span>
+                                <span class="kpi-subtext" id="kpiTodayDate">วันนี้</span>
+                            </div>
+                            <div class="kpi-icon-box">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid Section -->
+                    <div class="dashboard-grid">
+                        
+                        <!-- Main Daily Chart Card (Navy Theme like mockup) -->
+                        <div class="chart-card navy-theme">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                    <span>DAILY STATISTICS</span>
+                                </div>
+                                <span class="badge bg-primary bg-opacity-25 text-info px-2 py-1" style="font-size: 0.75rem;">Defect Trends</span>
+                            </div>
+                            <div class="chart-container-wrapper">
+                                <canvas id="dailyChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Defect Proportion Donut Chart Card -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <i class="bi bi-donut-chart"></i>
+                                    <span>สัดส่วนของเสีย (Sertufy Troes)</span>
+                                </div>
+                            </div>
+                            <div class="chart-container-wrapper" style="height: 220px;">
+                                <canvas id="donutChart"></canvas>
+                            </div>
+                            
+                            <!-- Defect Breakdown Bars -->
+                            <div class="severity-bars-container" id="defectProgressList">
+                                <!-- Dynamic progress bars will be rendered here -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Recent Inspections Table Section -->
+                    <div class="table-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold m-0 text-navy"><i class="bi bi-clock-history me-2"></i>รายการตรวจเช็คล่าสุด</h5>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="switchTab('history-tab')">ดูทั้งหมด</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่</th>
+                                        <th>สนิม</th>
+                                        <th>รอยบุบ</th>
+                                        <th>สะเก็ดเชื่อม</th>
+                                        <th>คราบน้ำยา</th>
+                                        <th>คราบน้ำมัน</th>
+                                        <th>รวม (ชิ้น)</th>
+                                        <th>หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- TAB 2: HISTORY TABLE -->
+                <section id="history-tab" class="tab-page">
+                    <div class="section-title-bar">
+                        <h1 class="page-title">ประวัติการตรวจเช็คทั้งหมด</h1>
+                        <button class="btn btn-success rounded-pill px-3" onclick="loadDataFromAPI()">
+                            <i class="bi bi-arrow-clockwise me-1"></i> รีเฟรชข้อมูล
+                        </button>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่</th>
+                                        <th>สนิม (Rust)</th>
+                                        <th>รอยบุบ (Dent)</th>
+                                        <th>สะเก็ดเชื่อม (Weld)</th>
+                                        <th>คราบน้ำยา (Chemical)</th>
+                                        <th>คราบน้ำมัน (Oil)</th>
+                                        <th>ยอดรวม</th>
+                                        <th>หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fullHistoryTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">กำลังโหลดข้อมูล...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: SETTINGS -->
+                <section id="settings-tab" class="tab-page">
+                    <div class="section-title-bar">
+                        <h1 class="page-title">ตั้งค่าการเชื่อมต่อ API</h1>
+                    </div>
+
+                    <div class="card shadow-sm border-0 rounded-4 p-4" style="max-width: 700px;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Google Apps Script Web App URL</label>
+                            <input type="text" id="settingApiUrl" class="form-control form-control-lg" placeholder="https://script.google.com/macros/s/.../exec">
+                            <div class="form-text text-muted">URL ของ Web App ที่ deploy จาก Google Apps Script (code.gs)</div>
+                        </div>
+
+                        <button class="btn btn-primary px-4 rounded-pill" onclick="saveSettings()">
+                            <i class="bi bi-save me-1"></i> บันทึกตั้งค่า
+                        </button>
+                    </div>
+                </section>
+
+            </main>
         </div>
-
     </div>
 
-</div>
+    <!-- NEW INSPECTION MODAL FORM -->
+    <div class="modal-overlay" id="inspectionModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
+                </div>
+                <button class="modal-close" onclick="closeInspectionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="inspectionForm" onsubmit="handleFormSubmit(event)">
+                    <div class="form-grid">
+                        
+                        <div class="form-group full-width">
+                            <label><i class="bi bi-calendar-event me-1"></i> วันที่ตรวจเช็ค</label>
+                            <input type="date" id="date" class="form-control-custom" required>
+                        </div>
 
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
+                        <div class="form-group">
+                            <label><i class="bi bi-shield-exclamation text-warning me-1"></i> งานเป็นสนิม (Rust)</label>
+                            <input type="number" id="rust" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                        </div>
 
+                        <div class="form-group">
+                            <label><i class="bi bi-circle text-primary me-1"></i> รอยบุบ (Dent)</label>
+                            <input type="number" id="dent" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="bi bi-lightning text-danger me-1"></i> สะเก็ดรอยเชื่อม (Weld)</label>
+                            <input type="number" id="weld" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="bi bi-droplet text-info me-1"></i> คราบน้ำยา (Chemical)</label>
+                            <input type="number" id="chemical" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="bi bi-moisture text-secondary me-1"></i> คราบน้ำมัน (Oil)</label>
+                            <input type="number" id="oil" class="form-control-custom defect-input" value="0" min="0" oninput="calculateTotalDefects()">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <div class="total-preview-box">
+                                <span><i class="bi bi-calculator me-2"></i>รวมข้อผิดพลาดทั้งหมด:</span>
+                                <span class="total-preview-value" id="modalTotalPreview">0 ชิ้น</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label><i class="bi bi-card-text me-1"></i> หมายเหตุ</label>
+                            <textarea id="note" class="form-control-custom" rows="3" placeholder="ระบุข้อความหรือหมายเหตุเพิ่มเติม..."></textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" onclick="closeInspectionModal()">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4" id="submitBtn">
+                            <i class="bi bi-send me-1"></i> บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
 </body>
 
 </html>
