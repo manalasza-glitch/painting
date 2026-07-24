@@ -6,9 +6,9 @@ function formatDateStr(d, includeTime) {
     var yyyy = d.getFullYear();
     var mm = ('0' + (d.getMonth() + 1)).slice(-2);
     var dd = ('0' + d.getDate()).slice(-2);
+    var hh = ('0' + d.getHours()).slice(-2);
+    var min = ('0' + d.getMinutes()).slice(-2);
     if (includeTime) {
-      var hh = ('0' + d.getHours()).slice(-2);
-      var min = ('0' + d.getMinutes()).slice(-2);
       return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min;
     }
     return yyyy + '-' + mm + '-' + dd;
@@ -51,7 +51,7 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    const dateVal = data.date || formatDateStr(new Date(), false);
+    const dateVal = data.date || formatDateStr(new Date(), true);
     const rustVal = Number(data.rust) || 0;
     const dentVal = Number(data.dent) || 0;
     const weldVal = Number(data.weld) || 0;
@@ -110,7 +110,7 @@ function doGet() {
     const header = values.shift();
 
     const result = values.map(r => ({
-      date: formatDateStr(r[0], false),
+      date: formatDateStr(r[0], true),
       rust: Number(r[1]) || 0,
       dent: Number(r[2]) || 0,
       weld: Number(r[3]) || 0,

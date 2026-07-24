@@ -3,12 +3,16 @@ let dailyChartInstance = null;
 let donutChartInstance = null;
 
 function formatDateForDisplay(dateVal, timestampVal) {
-    if (!dateVal && !timestampVal) return '-';
-    
-    // Prefer timestamp for displaying both Date & Time (e.g. 2026-07-24 14:30)
     let source = timestampVal || dateVal;
+    if (!source) return '-';
+
     let str = String(source).trim();
     if (!str) return '-';
+
+    // If it's already "YYYY-MM-DD HH:mm" or "YYYY-MM-DD HH:mm:ss"
+    if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(str)) {
+        return str.substring(0, 16);
+    }
 
     try {
         let d = new Date(str);
@@ -18,11 +22,6 @@ function formatDateForDisplay(dateVal, timestampVal) {
             const dd = String(d.getDate()).padStart(2, '0');
             const hh = String(d.getHours()).padStart(2, '0');
             const min = String(d.getMinutes()).padStart(2, '0');
-
-            // If time is 00:00 and we have dateVal, return YYYY-MM-DD HH:mm if time exists
-            if (hh === "00" && min === "00" && dateVal && !timestampVal) {
-                return `${yyyy}-${mm}-${dd}`;
-            }
             return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
         }
     } catch (e) {}
@@ -31,8 +30,8 @@ function formatDateForDisplay(dateVal, timestampVal) {
     if (str.includes('T')) {
         const parts = str.split('T');
         const dPart = parts[0];
-        const tPart = parts[1] ? parts[1].substring(0, 5) : '';
-        return tPart ? `${dPart} ${tPart}` : dPart;
+        const tPart = parts[1] ? parts[1].substring(0, 5) : '00:00';
+        return `${dPart} ${tPart}`;
     }
 
     return str;
@@ -121,15 +120,19 @@ async function handleFormSubmit(event) {
     submitBtn.innerHTML = `กำลังบันทึก...`;
 
     const now = new Date();
+    const timeSuffix = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const inputDate = document.getElementById("date").value;
+    const formattedDateTime = inputDate ? `${inputDate} ${timeSuffix}` : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${timeSuffix}`;
+
     const data = {
-        date: document.getElementById("date").value,
+        date: formattedDateTime,
         rust: Number(document.getElementById("rust").value) || 0,
         dent: Number(document.getElementById("dent").value) || 0,
         weld: Number(document.getElementById("weld").value) || 0,
         chemical: Number(document.getElementById("chemical").value) || 0,
         oil: Number(document.getElementById("oil").value) || 0,
         note: document.getElementById("note").value.trim(),
-        timestamp: now.toISOString()
+        timestamp: formattedDateTime
     };
 
     try {
@@ -383,7 +386,7 @@ function renderRecentTable() {
 
         return `
             <tr>
-                <td style="font-weight: 700;">${dateFormatted}</td>
+                <td style="font-weight: 700; white-space: nowrap;">${dateFormatted}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -416,7 +419,7 @@ function renderFullHistoryTable(records) {
 
         return `
             <tr>
-                <td style="font-weight: 800; color: #2563eb;">${dateFormatted}</td>
+                <td style="font-weight: 800; color: #2563eb; white-space: nowrap;">${dateFormatted}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
