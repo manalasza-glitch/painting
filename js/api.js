@@ -2,6 +2,28 @@ const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCtDgJbRAMqU7I
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
+let activeSyncRequests = 0;
+
+function updateSyncUI() {
+    const statusText = document.getElementById("statusText");
+    const statusBadge = document.getElementById("statusBadge");
+    if (!statusText || !statusBadge) return;
+
+    if (activeSyncRequests > 0) {
+        statusText.innerText = `กำลังซิงค์... (${activeSyncRequests} รายการ)`;
+        statusBadge.style.backgroundColor = "rgba(245, 158, 11, 0.1)"; // Warning yellow tint
+        statusBadge.style.color = "#f59e0b";
+        const dot = statusBadge.querySelector('.status-dot');
+        if (dot) dot.style.backgroundColor = "#f59e0b";
+    } else {
+        statusText.innerText = `ซิงค์ข้อมูลล่าสุดแล้ว`;
+        statusBadge.style.backgroundColor = "rgba(16, 185, 129, 0.1)"; // Success green tint
+        statusBadge.style.color = "#10b981";
+        const dot = statusBadge.querySelector('.status-dot');
+        if (dot) dot.style.backgroundColor = "#10b981";
+    }
+}
+
 // Force reset to active deployment Version 27
 if (!API_URL.includes("AKfycbwCtDgJbRAMqU7Io5jKwgJu_jVxvUIbgIDoXVMyX3DnIpPUzhEo8mXnpWX1wQBhz463")) {
     API_URL = DEFAULT_API_URL;
@@ -55,6 +77,9 @@ async function sendDataToAPI(data) {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=create';
 
     try {
+        activeSyncRequests++;
+        updateSyncUI();
+
         await fetch(url, {
             method: "POST",
             mode: "no-cors",
@@ -76,6 +101,9 @@ async function sendDataToAPI(data) {
     } catch (err) {
         console.error("Post Error:", err);
         throw err;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
     }
 }
 
@@ -107,6 +135,9 @@ async function updateDataToAPI(data) {
 
     // 2. Send POST update request to Google Sheet API
     try {
+        activeSyncRequests++;
+        updateSyncUI();
+
         await fetch(url, {
             method: "POST",
             mode: "no-cors",
@@ -120,6 +151,9 @@ async function updateDataToAPI(data) {
     } catch (err) {
         console.error("Update Error:", err);
         throw err;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
     }
 }
 
@@ -151,6 +185,9 @@ async function deleteDataFromAPI(data) {
 
     // 2. Send POST delete request to Google Sheet API
     try {
+        activeSyncRequests++;
+        updateSyncUI();
+
         await fetch(url, {
             method: "POST",
             mode: "no-cors",
@@ -164,6 +201,9 @@ async function deleteDataFromAPI(data) {
     } catch (err) {
         console.error("Delete Error:", err);
         throw err;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
     }
 }
 

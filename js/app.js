@@ -80,10 +80,23 @@ window.onload = async () => {
     }
 
     await loadDataFromAPI();
+
+    // Poll data every 15 seconds only if there are no pending sync requests
+    setInterval(() => {
+        if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests === 0) {
+            loadDataFromAPI(true); // silent reload
+        }
+    }, 15000);
 };
 
-async function loadDataFromAPI() {
-    showToast("กำลังโหลดข้อมูล...", "info");
+async function loadDataFromAPI(silent = false) {
+    if (!silent) showToast("กำลังโหลดข้อมูล...", "info");
+    
+    // Only fetch if not currently syncing to avoid race conditions overriding local cache
+    if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests > 0) {
+        return;
+    }
+
     inspectionRecords = await fetchInspectionDataFromAPI();
     
     // Sort records by date descending
@@ -91,7 +104,8 @@ async function loadDataFromAPI() {
 
     renderDashboard();
     renderTables();
-    showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
+    
+    if (!silent) showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
 }
 
 function switchTab(tabId, element) {
