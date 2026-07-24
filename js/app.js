@@ -109,9 +109,10 @@ function switchTab(tabId, element) {
 function openInspectionModal() {
     const modal = document.getElementById("inspectionModal");
     if (modal) {
-        // Reset to Create mode
+        // Clear Edit Mode Flags
         document.getElementById("editRowIndex").value = "";
         document.getElementById("editOriginalDate").value = "";
+        document.getElementById("editIndexInArray").value = "";
         const titleEl = document.getElementById("modalTitleText");
         if (titleEl) titleEl.innerText = "📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)";
 
@@ -132,9 +133,11 @@ function closeInspectionModal() {
         modal.classList.remove("active");
         document.getElementById("editRowIndex").value = "";
         document.getElementById("editOriginalDate").value = "";
+        document.getElementById("editIndexInArray").value = "";
     }
 }
 
+// Edit Inspection Record: Pre-fills PREVIOUSLY SAVED Date & Time so user can modify or preserve it
 function editInspectionRecord(index) {
     const record = inspectionRecords[index];
     if (!record) return;
@@ -146,11 +149,12 @@ function editInspectionRecord(index) {
     const titleEl = document.getElementById("modalTitleText");
     if (titleEl) titleEl.innerText = "✏️ แก้ไขข้อมูลการตรวจเช็ค (Painting Inspection)";
 
-    // Set Hidden Inputs
-    document.getElementById("editRowIndex").value = record.rowIndex || "";
+    // Set Hidden Inputs for exact in-place overwrite
+    document.getElementById("editRowIndex").value = record.rowIndex || (index + 2);
     document.getElementById("editOriginalDate").value = record.date || record.timestamp || "";
+    document.getElementById("editIndexInArray").value = index;
 
-    // Extract Date & Time
+    // Extract PREVIOUSLY SAVED Date & Time
     const rawDateStr = String(record.date || record.timestamp || "").trim();
     let datePart = "";
     let timePart = "12:00";
@@ -167,14 +171,25 @@ function editInspectionRecord(index) {
         datePart = rawDateStr.substring(0, 10);
     }
 
-    if (datePart) document.getElementById("date").value = datePart;
-    if (timePart) document.getElementById("time").value = timePart;
+    // Set Date & Time to PREVIOUSLY SAVED values
+    const dateInput = document.getElementById("date");
+    if (dateInput && datePart) dateInput.value = datePart;
 
-    document.getElementById("rust").value = record.rust || 0;
-    document.getElementById("dent").value = record.dent || 0;
-    document.getElementById("weld").value = record.weld || 0;
-    document.getElementById("chemical").value = record.chemical || 0;
-    document.getElementById("oil").value = record.oil || 0;
+    const timeInput = document.getElementById("time");
+    if (timeInput && timePart) {
+        timeInput.value = timePart;
+        timeInput.setAttribute("value", timePart);
+        try {
+            timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            timeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch(e){}
+    }
+
+    document.getElementById("rust").value = Number(record.rust) || 0;
+    document.getElementById("dent").value = Number(record.dent) || 0;
+    document.getElementById("weld").value = Number(record.weld) || 0;
+    document.getElementById("chemical").value = Number(record.chemical) || 0;
+    document.getElementById("oil").value = Number(record.oil) || 0;
     document.getElementById("note").value = record.note || "";
 
     modal.classList.add("active");
@@ -224,10 +239,11 @@ async function handleFormSubmit(event) {
     const submitBtn = document.getElementById("submitBtn");
     const editRowIndex = document.getElementById("editRowIndex").value;
     const editOriginalDate = document.getElementById("editOriginalDate").value;
-    const isEditMode = Boolean(editRowIndex || editOriginalDate);
+    const editIndexInArray = document.getElementById("editIndexInArray").value;
+    const isEditMode = Boolean(editRowIndex || editOriginalDate || editIndexInArray !== "");
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = isEditMode ? `กำลังอัปเดต...` : `กำลังบันทึก...`;
+    submitBtn.innerHTML = isEditMode ? `กำลังบันทึกทับข้อมูลเดิม...` : `กำลังบันทึก...`;
 
     const now = new Date();
     const inputDate = document.getElementById("date").value;
@@ -252,8 +268,19 @@ async function handleFormSubmit(event) {
 
     try {
         if (isEditMode) {
+            // Overwrite in-place in local array to prevent duplicate rows
+            const arrIndex = Number(editIndexInArray);
+            if (!isNaN(arrIndex) && arrIndex >= 0 && arrIndex < inspectionRecords.length) {
+                inspectionRecords[arrIndex] = {
+                    ...data,
+                    rowIndex: editRowIndex || inspectionRecords[arrIndex].rowIndex
+                };
+            }
+            renderDashboard();
+            renderTables();
+
             await updateDataToAPI(data);
-            showToast("แก้ไขข้อมูลเรียบร้อยแล้ว!", "success");
+            showToast("แก้ไขบันทึกทับข้อมูลเดิมเรียบร้อยแล้ว!", "success");
         } else {
             await sendDataToAPI(data);
             showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
@@ -265,7 +292,7 @@ async function handleFormSubmit(event) {
         document.getElementById("inspectionForm").reset();
         setCurrentDateTimeDefaults();
         
-        // Refresh data from API
+        // Refresh data from API after delay
         setTimeout(async () => {
             await loadDataFromAPI();
         }, 1500);
