@@ -128,6 +128,72 @@ function doPost(e) {
       }
     }
 
+    // Handle submitDailyReport action
+    if (action === "submitDailyReport") {
+      // 1. Production Sheet
+      let prodSheet = ss.getSheetByName("Painting_Production");
+      if (!prodSheet) {
+        prodSheet = ss.insertSheet("Painting_Production");
+        prodSheet.appendRow(["Timestamp", "Date", "Shift", "Recorder", "Checker", "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"]);
+      }
+      
+      const now = new Date();
+      const dateVal = data.date || formatDateStr(now, false);
+      const shiftVal = data.shift || "";
+      const recorderVal = data.recorder || "";
+      const checkerVal = data.checker || "";
+      
+      if (data.records && Array.isArray(data.records)) {
+        data.records.forEach(r => {
+          prodSheet.appendRow([
+            now,
+            dateVal,
+            shiftVal,
+            recorderVal,
+            checkerVal,
+            r.model,
+            r.timeSlot,
+            r.prodQty,
+            r.dent,
+            r.colorDrop,
+            r.thinPaint,
+            r.thickPaint,
+            r.waterStain,
+            r.otherDefect,
+            r.totalDefect
+          ]);
+        });
+      }
+
+      // 2. Downtime Sheet
+      if (data.downtime) {
+        let dtSheet = ss.getSheetByName("Painting_Downtime");
+        if (!dtSheet) {
+          dtSheet = ss.insertSheet("Painting_Downtime");
+          dtSheet.appendRow(["Timestamp", "Date", "Shift", "Recorder", "Checker", "Burner", "Wash", "Oven", "Gun", "Power", "Motor", "Other", "Note"]);
+        }
+        
+        dtSheet.appendRow([
+          now,
+          dateVal,
+          shiftVal,
+          recorderVal,
+          checkerVal,
+          data.downtime.burner || 0,
+          data.downtime.wash || 0,
+          data.downtime.oven || 0,
+          data.downtime.gun || 0,
+          data.downtime.power || 0,
+          data.downtime.motor || 0,
+          data.downtime.other || 0,
+          data.downtime.note || ""
+        ]);
+      }
+
+      SpreadsheetApp.flush();
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle CREATE action ONLY
     if (action === "create") {
       const dateVal = data.date || (e && e.parameter && e.parameter.date) || formatDateStr(new Date(), true);

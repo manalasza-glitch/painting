@@ -485,6 +485,65 @@ button, input, textarea, select {
   flex-direction: column;
   gap: 0.35rem;
 }
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table th, .data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #475569;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.badge-defect {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.badge-has-defect {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.badge-zero {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+.btn-action-delete {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-action-delete:hover {
+    background: #fca5a5;
+    color: #b91c1c;
+}
 
 .severity-info {
   display: flex;

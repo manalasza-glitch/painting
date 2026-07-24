@@ -195,32 +195,28 @@
                 </div>
             </div>
 
-            <ul class="nav-menu">
-                <li>
-                    <a class="nav-link active" onclick="switchTab('dashboard-tab', this)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link" onclick="openInspectionModal()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                        <span class="nav-text">บันทึกงานตรวจ</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link" onclick="switchTab('history-tab', this)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-                        <span class="nav-text">ประวัติย้อนหลัง</span>
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link" onclick="switchTab('settings-tab', this)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                        <span class="nav-text">ตั้งค่า API</span>
-                    </a>
-                </li>
-            </ul>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" onclick="switchTab('dashboard-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-link" onclick="openInspectionModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                    บันทึกงานตรวจ
+                </a>
+                <a href="#" class="nav-link" onclick="switchTab('daily-report-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    แบบฟอร์มผลิตรายวัน
+                </a>
+                <a href="#" class="nav-link" onclick="switchTab('history-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    ประวัติย้อนหลัง
+                </a>
+                <a href="#" class="nav-link" onclick="switchTab('settings-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    ตั้งค่า API
+                </a>
+            </nav>
 
             <div class="sidebar-footer">
                 <div>Copfiaind Management v2.0</div>
@@ -379,6 +375,110 @@
                         </div>
                     </div>
 
+                </section>
+
+                <!-- TAB: DAILY REPORT (แบบฟอร์มผลิตรายวัน) -->
+                <section id="daily-report-tab" class="tab-page" style="display: none;">
+                    <div class="section-title-bar">
+                        <h1 class="page-title">📝 บันทึกแบบฟอร์มไลน์พ่นสี (Production Daily Report)</h1>
+                        <button style="background: #10b981; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 20px; font-weight: 700; cursor: pointer;" id="submitDailyBtn" onclick="submitDailyReport()">
+                            💾 บันทึกแบบฟอร์มประจำวัน
+                        </button>
+                    </div>
+
+                    <!-- Step 1: ข้อมูลทั่วไป -->
+                    <div class="kpi-card" style="margin-bottom: 1rem;">
+                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>วันที่ (Date)</label>
+                                <input type="date" id="reportDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>กะการทำงาน (Shift)</label>
+                                <div style="display: flex; gap: 1rem; padding-top: 0.5rem;">
+                                    <label><input type="radio" name="shift" value="Day" checked> Day (กลางวัน)</label>
+                                    <label><input type="radio" name="shift" value="Night"> Night (กลางคืน)</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>บันทึกโดย</label>
+                                <input type="text" id="recorderName" class="form-control" placeholder="ชื่อพนักงานผู้บันทึก" required>
+                            </div>
+                            <div class="form-group">
+                                <label>ตรวจสอบโดย</label>
+                                <input type="text" id="checkerName" class="form-control" placeholder="ชื่อผู้ตรวจสอบ (ถ้ามี)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: ยอดผลิตและของเสีย -->
+                    <div class="kpi-card" style="margin-bottom: 1rem;">
+                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 2: บันทึกยอดผลิตและของเสียรายชั่วโมง</h3>
+                        
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                            <h4 style="margin-bottom: 1rem; color: #334155;">➕ เพิ่มรายการผลิตใหม่</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>รุ่นงาน (Model)</label>
+                                    <select id="drModel" class="form-control model-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>ช่วงเวลา</label>
+                                    <select id="drTime" class="form-control time-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>ยอดผลิต (ชิ้น)</label>
+                                    <input type="number" id="drProdQty" class="form-control" min="0" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="form-grid" style="margin-top: 1rem;">
+                                <div class="form-group"><label>บุบ/เสียรูป</label><input type="number" id="drDent" class="form-control" min="0" placeholder="0"></div>
+                                <div class="form-group"><label>เม็ดสี</label><input type="number" id="drColorDrop" class="form-control" min="0" placeholder="0"></div>
+                                <div class="form-group"><label>สีบาง</label><input type="number" id="drThinPaint" class="form-control" min="0" placeholder="0"></div>
+                                <div class="form-group"><label>สีหนา/สีปูด</label><input type="number" id="drThickPaint" class="form-control" min="0" placeholder="0"></div>
+                                <div class="form-group"><label>คราบน้ำ/จาระบี</label><input type="number" id="drWaterStain" class="form-control" min="0" placeholder="0"></div>
+                                <div class="form-group"><label>อื่นๆ</label><input type="number" id="drOtherDefect" class="form-control" min="0" placeholder="0"></div>
+                            </div>
+                            <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="margin-top: 1rem; width: 100%;">
+                                ➕ เพิ่มลงในตาราง
+                            </button>
+                        </div>
+
+                        <!-- Table showing added records -->
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>รุ่นงาน</th>
+                                        <th>ช่วงเวลา</th>
+                                        <th>ยอดผลิต</th>
+                                        <th>ของเสียรวม</th>
+                                        <th style="text-align: center;">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dailyReportListBody">
+                                    <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีรายการที่เพิ่ม</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: เวลาสูญเสีย -->
+                    <div class="kpi-card" style="margin-bottom: 1rem;">
+                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
+                        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;">ระบุเป็น "นาที" (ปล่อยว่างได้ถ้าไม่มีปัญหา)</p>
+                        <div class="form-grid">
+                            <div class="form-group"><label>เบอร์เนอร์จุดไม่ติด</label><input type="number" id="dtBurner" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>งานร่วงในไลน์ล้าง</label><input type="number" id="dtWash" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>งานร่วงในเตาอบ</label><input type="number" id="dtOven" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>ระบบปืนมีปัญหา</label><input type="number" id="dtGun" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>ไฟฟ้าดับ</label><input type="number" id="dtPower" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>มอร์เตอร์เสีย</label><input type="number" id="dtMotor" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>อื่นๆ</label><input type="number" id="dtOther" class="form-control" min="0" placeholder="นาที"></div>
+                            <div class="form-group"><label>หมายเหตุ</label><input type="text" id="dtNote" class="form-control" placeholder="ระบุสาเหตุอื่นๆ"></div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- TAB 2: HISTORY TABLE -->
@@ -541,8 +641,9 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=1.5.0"></script>
-    <script src="js/app.js?v=1.5.0"></script>
+    <script src="js/api.js?v=1.6.0"></script>
+    <script src="js/app.js?v=1.6.0"></script>
+    <script src="js/daily-report.js?v=1.6.0"></script>
 </body>
 
 </html>

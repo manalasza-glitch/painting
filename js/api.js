@@ -207,6 +207,31 @@ async function deleteDataFromAPI(data) {
     }
 }
 
+// Send the entire Daily Report to Google Sheet API
+async function sendDailyReportToAPI(payload) {
+    const baseUrl = getApiUrl();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitDailyReport';
+
+    try {
+        activeSyncRequests++;
+        updateSyncUI();
+
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            cache: "no-cache",
+            body: JSON.stringify(payload)
+        });
+        return { status: "success" };
+    } catch (err) {
+        console.error("Daily Report Submit Error:", err);
+        throw err;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
+    }
+}
+
 function getCachedOrSampleData() {
     const cached = localStorage.getItem("PAINTING_INSPECTION_CACHE");
     if (cached) {
