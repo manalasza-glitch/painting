@@ -1,9 +1,9 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw46LeqmfXigwxaGoHpkb4DzFaIpdPL6cxFu4UmZ-WxEU1DnH48ao7CD9uolLm02rJ2/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
-// Ensure mobile devices reset to working deployment URL if old broken URL is stored
-if (!API_URL.includes("AKfycbxglNkez35o5iiV0UxNRm0w_R3QesAGfOutj3TxysvHu4JPrtsFWnNxTMeiWAarnm22")) {
+// Force reset to latest active deployment URL containing update & delete actions
+if (!API_URL.includes("AKfycbw46LeqmfXigwxaGoHpkb4DzFaIpdPL6cxFu4UmZ-WxEU1DnH48ao7CD9uolLm02rJ2")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
@@ -78,7 +78,7 @@ async function sendDataToAPI(data) {
     }
 }
 
-// Update existing inspection record in Google Sheet API
+// Update existing inspection record in Google Sheet API (Overwrites row in-place)
 async function updateDataToAPI(data) {
     const url = getApiUrl();
     try {
@@ -133,9 +133,7 @@ function getCachedOrSampleData() {
 function generateSampleData() {
     const sample = [
         { rowIndex: 2, date: "2026-07-24 14:00", rust: 5, dent: 2, weld: 8, chemical: 1, oil: 3, note: "การตรวจช่วงเช้า พบคราบสนิมและรอยเชื่อมบางจุด" },
-        { rowIndex: 3, date: "2026-07-23 11:30", rust: 2, dent: 4, weld: 3, chemical: 0, oil: 1, note: "ผ่านเกณฑ์มาตรฐาน" },
-        { rowIndex: 4, date: "2026-07-22 09:15", rust: 7, dent: 1, weld: 6, chemical: 4, oil: 2, note: "พบสะเก็ดรอยเชื่อมเยอะเกินปกติ" },
-        { rowIndex: 5, date: "2026-07-21 16:45", rust: 3, dent: 5, weld: 2, chemical: 2, oil: 0, note: "เรียบร้อย" }
+        { rowIndex: 3, date: "2026-07-23 11:30", rust: 2, dent: 4, weld: 3, chemical: 0, oil: 1, note: "ผ่านเกณฑ์มาตรฐาน" }
     ];
     localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(sample));
     return sample;
