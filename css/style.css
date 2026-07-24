@@ -113,11 +113,11 @@ button, input, textarea, select {
   height: 38px !important;
   max-width: 38px !important;
   max-height: 38px !important;
-  border-radius: var(--radius-md) !important;
-  object-fit: cover !important;
+  object-fit: contain !important;
   flex-shrink: 0 !important;
-  box-shadow: 0 4px 14px rgba(0, 180, 216, 0.4);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .brand-title {
