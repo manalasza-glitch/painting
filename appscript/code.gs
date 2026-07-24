@@ -51,17 +51,24 @@ function doPost(e) {
       data = e.parameter;
     }
 
-    const action = data.action || "create";
+    // Explicitly check URL parameter first, then JSON body
+    const action = (e && e.parameter && e.parameter.action) || (data && data.action) || "create";
 
     // Handle DELETE action
     if (action === "delete") {
-      let targetRowIndex = Number(data.rowIndex);
-      
-      // Fallback matching if rowIndex is missing
-      if (!targetRowIndex || targetRowIndex < 2) {
-        const values = sheet.getDataRange().getValues();
+      let targetRowIndex = Number((e && e.parameter && e.parameter.rowIndex) || data.rowIndex);
+      const searchDate = (e && e.parameter && e.parameter.date) || data.date || data.originalDate;
+      const searchNote = String((e && e.parameter && e.parameter.note) || data.note || "");
+
+      const values = sheet.getDataRange().getValues();
+
+      // If rowIndex is provided and valid, verify or use directly
+      if (!targetRowIndex || targetRowIndex < 2 || targetRowIndex > values.length) {
+        targetRowIndex = 0;
         for (let i = 1; i < values.length; i++) {
-          if (formatDateStr(values[i][0], true) === data.date && String(values[i][6]) === String(data.note || "")) {
+          const rowDateStr = formatDateStr(values[i][0], true);
+          const rowNoteStr = String(values[i][6] || "");
+          if (rowDateStr === searchDate || (searchNote && rowNoteStr === searchNote)) {
             targetRowIndex = i + 1;
             break;
           }
@@ -71,28 +78,32 @@ function doPost(e) {
       if (targetRowIndex && targetRowIndex >= 2 && targetRowIndex <= sheet.getLastRow()) {
         sheet.deleteRow(targetRowIndex);
         SpreadsheetApp.flush();
-        return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Deleted row " + targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "delete", deletedRow: targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
       } else {
-        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Row not found for deletion" })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", action: "delete", message: "Row not found for deletion" })).setMimeType(ContentService.MimeType.JSON);
       }
     }
 
     // Handle UPDATE action
-    const dateVal = data.date || formatDateStr(new Date(), true);
-    const rustVal = Number(data.rust) || 0;
-    const dentVal = Number(data.dent) || 0;
-    const weldVal = Number(data.weld) || 0;
-    const chemicalVal = Number(data.chemical) || 0;
-    const oilVal = Number(data.oil) || 0;
-    const noteVal = data.note || "";
-
     if (action === "update") {
-      let targetRowIndex = Number(data.rowIndex);
+      const dateVal = data.date || (e && e.parameter && e.parameter.date) || formatDateStr(new Date(), true);
+      const rustVal = Number(data.rust || (e && e.parameter && e.parameter.rust)) || 0;
+      const dentVal = Number(data.dent || (e && e.parameter && e.parameter.dent)) || 0;
+      const weldVal = Number(data.weld || (e && e.parameter && e.parameter.weld)) || 0;
+      const chemicalVal = Number(data.chemical || (e && e.parameter && e.parameter.chemical)) || 0;
+      const oilVal = Number(data.oil || (e && e.parameter && e.parameter.oil)) || 0;
+      const noteVal = data.note || (e && e.parameter && e.parameter.note) || "";
 
-      if (!targetRowIndex || targetRowIndex < 2) {
-        const values = sheet.getDataRange().getValues();
+      let targetRowIndex = Number((e && e.parameter && e.parameter.rowIndex) || data.rowIndex);
+      const origDate = data.originalDate || (e && e.parameter && e.parameter.originalDate) || dateVal;
+
+      const values = sheet.getDataRange().getValues();
+
+      if (!targetRowIndex || targetRowIndex < 2 || targetRowIndex > values.length) {
+        targetRowIndex = 0;
         for (let i = 1; i < values.length; i++) {
-          if (formatDateStr(values[i][0], true) === data.originalDate || String(values[i][6]) === String(data.originalNote || "")) {
+          const rowDateStr = formatDateStr(values[i][0], true);
+          if (rowDateStr === origDate || rowDateStr === dateVal) {
             targetRowIndex = i + 1;
             break;
           }
@@ -111,29 +122,45 @@ function doPost(e) {
           new Date()
         ]]);
         SpreadsheetApp.flush();
-        return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Updated row " + targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "update", updatedRow: targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", action: "update", message: "Row not found for update" })).setMimeType(ContentService.MimeType.JSON);
       }
     }
 
-    // Default: CREATE action
-    sheet.appendRow([
-      dateVal,
-      rustVal,
-      dentVal,
-      weldVal,
-      chemicalVal,
-      oilVal,
-      noteVal,
-      new Date()
-    ]);
+    // Handle CREATE action ONLY
+    if (action === "create") {
+      const dateVal = data.date || (e && e.parameter && e.parameter.date) || formatDateStr(new Date(), true);
+      const rustVal = Number(data.rust || (e && e.parameter && e.parameter.rust)) || 0;
+      const dentVal = Number(data.dent || (e && e.parameter && e.parameter.dent)) || 0;
+      const weldVal = Number(data.weld || (e && e.parameter && e.parameter.weld)) || 0;
+      const chemicalVal = Number(data.chemical || (e && e.parameter && e.parameter.chemical)) || 0;
+      const oilVal = Number(data.oil || (e && e.parameter && e.parameter.oil)) || 0;
+      const noteVal = data.note || (e && e.parameter && e.parameter.note) || "";
 
-    SpreadsheetApp.flush();
+      sheet.appendRow([
+        dateVal,
+        rustVal,
+        dentVal,
+        weldVal,
+        chemicalVal,
+        oilVal,
+        noteVal,
+        new Date()
+      ]);
+
+      SpreadsheetApp.flush();
+
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          status: "success",
+          action: "create"
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
     return ContentService
-      .createTextOutput(JSON.stringify({
-        status: "success",
-        action: "create"
-      }))
+      .createTextOutput(JSON.stringify({ status: "error", message: "Unknown action: " + action }))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {

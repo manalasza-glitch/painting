@@ -36,7 +36,6 @@ async function fetchInspectionDataFromAPI() {
 
         const data = await response.json();
         if (Array.isArray(data)) {
-            // Save to localStorage as cache
             localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(data));
             return data;
         } else if (data.status === "error") {
@@ -52,7 +51,9 @@ async function fetchInspectionDataFromAPI() {
 
 // Send new inspection form data to Google Sheet API
 async function sendDataToAPI(data) {
-    const url = getApiUrl();
+    const baseUrl = getApiUrl();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=create';
+
     try {
         await fetch(url, {
             method: "POST",
@@ -80,7 +81,15 @@ async function sendDataToAPI(data) {
 
 // Update existing inspection record in Google Sheet API (Overwrites row in-place)
 async function updateDataToAPI(data) {
-    const url = getApiUrl();
+    const baseUrl = getApiUrl();
+    const queryParams = new URLSearchParams({
+        action: 'update',
+        rowIndex: data.rowIndex || '',
+        date: data.date || '',
+        originalDate: data.originalDate || ''
+    }).toString();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+
     try {
         await fetch(url, {
             method: "POST",
@@ -100,7 +109,15 @@ async function updateDataToAPI(data) {
 
 // Delete inspection record from Google Sheet API
 async function deleteDataFromAPI(data) {
-    const url = getApiUrl();
+    const baseUrl = getApiUrl();
+    const queryParams = new URLSearchParams({
+        action: 'delete',
+        rowIndex: data.rowIndex || '',
+        date: data.date || '',
+        note: data.note || ''
+    }).toString();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+
     try {
         await fetch(url, {
             method: "POST",
