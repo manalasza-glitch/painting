@@ -45,13 +45,22 @@ function setCurrentDateTimeDefaults() {
     const hh = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
 
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+    const timeStr = `${hh}:${min}`;
+
     const dateInput = document.getElementById("date");
     if (dateInput) {
-        dateInput.value = `${yyyy}-${mm}-${dd}`;
+        dateInput.value = dateStr;
+        dateInput.setAttribute("value", dateStr);
     }
     const timeInput = document.getElementById("time");
     if (timeInput) {
-        timeInput.value = `${hh}:${min}`;
+        timeInput.value = timeStr;
+        timeInput.setAttribute("value", timeStr);
+        try {
+            timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            timeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {}
     }
 }
 
@@ -103,6 +112,10 @@ function openInspectionModal() {
         modal.classList.add("active");
         setCurrentDateTimeDefaults();
         calculateTotalDefects();
+
+        // Extra fallbacks to guarantee desktop Chrome/Edge/Firefox populates time value after modal transition
+        setTimeout(setCurrentDateTimeDefaults, 50);
+        setTimeout(setCurrentDateTimeDefaults, 250);
     }
 }
 
