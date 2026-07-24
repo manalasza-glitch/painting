@@ -50,19 +50,20 @@ async function fetchInspectionDataFromAPI() {
     }
 }
 
-// Send inspection form data to Google Sheet API (Compatible with iOS & Android Mobile Safari/Chrome)
+// Send new inspection form data to Google Sheet API
 async function sendDataToAPI(data) {
     const url = getApiUrl();
     try {
-        // Send simple text/plain POST to avoid browser CORS preflight blocking on mobile devices
         await fetch(url, {
             method: "POST",
             mode: "no-cors",
             cache: "no-cache",
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+                action: "create",
+                ...data
+            })
         });
 
-        // Save locally to cache so UI updates instantly
         const cache = getCachedOrSampleData();
         cache.unshift({
             ...data,
@@ -73,6 +74,46 @@ async function sendDataToAPI(data) {
         return { status: "success" };
     } catch (err) {
         console.error("Post Error:", err);
+        throw err;
+    }
+}
+
+// Update existing inspection record in Google Sheet API
+async function updateDataToAPI(data) {
+    const url = getApiUrl();
+    try {
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            cache: "no-cache",
+            body: JSON.stringify({
+                action: "update",
+                ...data
+            })
+        });
+        return { status: "success" };
+    } catch (err) {
+        console.error("Update Error:", err);
+        throw err;
+    }
+}
+
+// Delete inspection record from Google Sheet API
+async function deleteDataFromAPI(data) {
+    const url = getApiUrl();
+    try {
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            cache: "no-cache",
+            body: JSON.stringify({
+                action: "delete",
+                ...data
+            })
+        });
+        return { status: "success" };
+    } catch (err) {
+        console.error("Delete Error:", err);
         throw err;
     }
 }
@@ -91,13 +132,10 @@ function getCachedOrSampleData() {
 
 function generateSampleData() {
     const sample = [
-        { date: "2026-07-24", rust: 5, dent: 2, weld: 8, chemical: 1, oil: 3, note: "การตรวจช่วงเช้า พบคราบสนิมและรอยเชื่อมบางจุด" },
-        { date: "2026-07-23", rust: 2, dent: 4, weld: 3, chemical: 0, oil: 1, note: "ผ่านเกณฑ์มาตรฐาน" },
-        { date: "2026-07-22", rust: 7, dent: 1, weld: 6, chemical: 4, oil: 2, note: "พบสะเก็ดรอยเชื่อมเยอะเกินปกติ" },
-        { date: "2026-07-21", rust: 3, dent: 5, weld: 2, chemical: 2, oil: 0, note: "เรียบร้อย" },
-        { date: "2026-07-20", rust: 1, dent: 0, weld: 4, chemical: 1, oil: 5, note: "มีคราบน้ำมันเกาะชิ้นงานเล็กน้อย" },
-        { date: "2026-07-19", rust: 4, dent: 3, weld: 5, chemical: 3, oil: 2, note: "งานกะดึก" },
-        { date: "2026-07-18", rust: 6, dent: 2, weld: 7, chemical: 0, oil: 1, note: "แจ้งทีมเชื่อมปรับปรุงแก้ไข" }
+        { rowIndex: 2, date: "2026-07-24 14:00", rust: 5, dent: 2, weld: 8, chemical: 1, oil: 3, note: "การตรวจช่วงเช้า พบคราบสนิมและรอยเชื่อมบางจุด" },
+        { rowIndex: 3, date: "2026-07-23 11:30", rust: 2, dent: 4, weld: 3, chemical: 0, oil: 1, note: "ผ่านเกณฑ์มาตรฐาน" },
+        { rowIndex: 4, date: "2026-07-22 09:15", rust: 7, dent: 1, weld: 6, chemical: 4, oil: 2, note: "พบสะเก็ดรอยเชื่อมเยอะเกินปกติ" },
+        { rowIndex: 5, date: "2026-07-21 16:45", rust: 3, dent: 5, weld: 2, chemical: 2, oil: 0, note: "เรียบร้อย" }
     ];
     localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(sample));
     return sample;

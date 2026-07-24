@@ -51,6 +51,33 @@ function doPost(e) {
       data = e.parameter;
     }
 
+    const action = data.action || "create";
+
+    // Handle DELETE action
+    if (action === "delete") {
+      let targetRowIndex = Number(data.rowIndex);
+      
+      // Fallback matching if rowIndex is missing
+      if (!targetRowIndex || targetRowIndex < 2) {
+        const values = sheet.getDataRange().getValues();
+        for (let i = 1; i < values.length; i++) {
+          if (formatDateStr(values[i][0], true) === data.date && String(values[i][6]) === String(data.note || "")) {
+            targetRowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (targetRowIndex && targetRowIndex >= 2 && targetRowIndex <= sheet.getLastRow()) {
+        sheet.deleteRow(targetRowIndex);
+        SpreadsheetApp.flush();
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Deleted row " + targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Row not found for deletion" })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // Handle UPDATE action
     const dateVal = data.date || formatDateStr(new Date(), true);
     const rustVal = Number(data.rust) || 0;
     const dentVal = Number(data.dent) || 0;
@@ -59,6 +86,36 @@ function doPost(e) {
     const oilVal = Number(data.oil) || 0;
     const noteVal = data.note || "";
 
+    if (action === "update") {
+      let targetRowIndex = Number(data.rowIndex);
+
+      if (!targetRowIndex || targetRowIndex < 2) {
+        const values = sheet.getDataRange().getValues();
+        for (let i = 1; i < values.length; i++) {
+          if (formatDateStr(values[i][0], true) === data.originalDate || String(values[i][6]) === String(data.originalNote || "")) {
+            targetRowIndex = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (targetRowIndex && targetRowIndex >= 2 && targetRowIndex <= sheet.getLastRow()) {
+        sheet.getRange(targetRowIndex, 1, 1, 8).setValues([[
+          dateVal,
+          rustVal,
+          dentVal,
+          weldVal,
+          chemicalVal,
+          oilVal,
+          noteVal,
+          new Date()
+        ]]);
+        SpreadsheetApp.flush();
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Updated row " + targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // Default: CREATE action
     sheet.appendRow([
       dateVal,
       rustVal,
@@ -70,12 +127,12 @@ function doPost(e) {
       new Date()
     ]);
 
-    // Force Google Sheet to commit all pending writes immediately
     SpreadsheetApp.flush();
 
     return ContentService
       .createTextOutput(JSON.stringify({
-        status: "success"
+        status: "success",
+        action: "create"
       }))
       .setMimeType(ContentService.MimeType.JSON);
 
@@ -109,7 +166,8 @@ function doGet() {
 
     const header = values.shift();
 
-    const result = values.map(r => ({
+    const result = values.map((r, i) => ({
+      rowIndex: i + 2,
       date: formatDateStr(r[0], true),
       rust: Number(r[1]) || 0,
       dent: Number(r[2]) || 0,

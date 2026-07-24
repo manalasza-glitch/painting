@@ -109,11 +109,18 @@ function switchTab(tabId, element) {
 function openInspectionModal() {
     const modal = document.getElementById("inspectionModal");
     if (modal) {
-        modal.classList.add("active");
+        // Reset to Create mode
+        document.getElementById("editRowIndex").value = "";
+        document.getElementById("editOriginalDate").value = "";
+        const titleEl = document.getElementById("modalTitleText");
+        if (titleEl) titleEl.innerText = "📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)";
+
+        document.getElementById("inspectionForm").reset();
         setCurrentDateTimeDefaults();
+
+        modal.classList.add("active");
         calculateTotalDefects();
 
-        // Extra fallbacks to guarantee desktop Chrome/Edge/Firefox populates time value after modal transition
         setTimeout(setCurrentDateTimeDefaults, 50);
         setTimeout(setCurrentDateTimeDefaults, 250);
     }
@@ -123,6 +130,77 @@ function closeInspectionModal() {
     const modal = document.getElementById("inspectionModal");
     if (modal) {
         modal.classList.remove("active");
+        document.getElementById("editRowIndex").value = "";
+        document.getElementById("editOriginalDate").value = "";
+    }
+}
+
+function editInspectionRecord(index) {
+    const record = inspectionRecords[index];
+    if (!record) return;
+
+    const modal = document.getElementById("inspectionModal");
+    if (!modal) return;
+
+    // Set Edit Mode Title
+    const titleEl = document.getElementById("modalTitleText");
+    if (titleEl) titleEl.innerText = "✏️ แก้ไขข้อมูลการตรวจเช็ค (Painting Inspection)";
+
+    // Set Hidden Inputs
+    document.getElementById("editRowIndex").value = record.rowIndex || "";
+    document.getElementById("editOriginalDate").value = record.date || record.timestamp || "";
+
+    // Extract Date & Time
+    const rawDateStr = String(record.date || record.timestamp || "").trim();
+    let datePart = "";
+    let timePart = "12:00";
+
+    if (rawDateStr.includes(" ")) {
+        const parts = rawDateStr.split(" ");
+        datePart = parts[0];
+        timePart = parts[1] ? parts[1].substring(0, 5) : "12:00";
+    } else if (rawDateStr.includes("T")) {
+        const parts = rawDateStr.split("T");
+        datePart = parts[0];
+        timePart = parts[1] ? parts[1].substring(0, 5) : "12:00";
+    } else {
+        datePart = rawDateStr.substring(0, 10);
+    }
+
+    if (datePart) document.getElementById("date").value = datePart;
+    if (timePart) document.getElementById("time").value = timePart;
+
+    document.getElementById("rust").value = record.rust || 0;
+    document.getElementById("dent").value = record.dent || 0;
+    document.getElementById("weld").value = record.weld || 0;
+    document.getElementById("chemical").value = record.chemical || 0;
+    document.getElementById("oil").value = record.oil || 0;
+    document.getElementById("note").value = record.note || "";
+
+    modal.classList.add("active");
+    calculateTotalDefects();
+}
+
+async function deleteInspectionRecord(index) {
+    const record = inspectionRecords[index];
+    if (!record) return;
+
+    const confirmMsg = `คุณต้องการลบรายการตรวจเช็คของวันที่ "${formatDateForDisplay(record.date, record.timestamp)}" ใช่หรือไม่?`;
+    if (!confirm(confirmMsg)) return;
+
+    // Optimistic UI Update: Remove locally first
+    inspectionRecords.splice(index, 1);
+    renderDashboard();
+    renderTables();
+    showToast("ลบข้อมูลเรียบร้อยแล้ว!", "success");
+
+    try {
+        await deleteDataFromAPI(record);
+        setTimeout(async () => {
+            await loadDataFromAPI();
+        }, 1500);
+    } catch (err) {
+        showToast("เกิดข้อผิดพลาดในการลบ: " + err.message, "error");
     }
 }
 
@@ -144,8 +222,12 @@ function calculateTotalDefects() {
 async function handleFormSubmit(event) {
     event.preventDefault();
     const submitBtn = document.getElementById("submitBtn");
+    const editRowIndex = document.getElementById("editRowIndex").value;
+    const editOriginalDate = document.getElementById("editOriginalDate").value;
+    const isEditMode = Boolean(editRowIndex || editOriginalDate);
+
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `กำลังบันทึก...`;
+    submitBtn.innerHTML = isEditMode ? `กำลังอัปเดต...` : `กำลังบันทึก...`;
 
     const now = new Date();
     const inputDate = document.getElementById("date").value;
@@ -156,6 +238,8 @@ async function handleFormSubmit(event) {
     const formattedDateTime = inputDate ? `${inputDate} ${selectedTime}` : `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${selectedTime}`;
 
     const data = {
+        rowIndex: editRowIndex,
+        originalDate: editOriginalDate,
         date: formattedDateTime,
         rust: Number(document.getElementById("rust").value) || 0,
         dent: Number(document.getElementById("dent").value) || 0,
@@ -167,20 +251,21 @@ async function handleFormSubmit(event) {
     };
 
     try {
-        await sendDataToAPI(data);
-        showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
+        if (isEditMode) {
+            await updateDataToAPI(data);
+            showToast("แก้ไขข้อมูลเรียบร้อยแล้ว!", "success");
+        } else {
+            await sendDataToAPI(data);
+            showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
+        }
+        
         closeInspectionModal();
         
-        // Reset form and reset default date/time to current
+        // Reset form and default date/time
         document.getElementById("inspectionForm").reset();
         setCurrentDateTimeDefaults();
         
-        // Optimistic UI update: Push record immediately so UI updates with Date & Time
-        inspectionRecords.unshift(data);
-        renderDashboard();
-        renderTables();
-
-        // Refresh data from API after a 1.5s delay to allow Google Sheet time to write row
+        // Refresh data from API
         setTimeout(async () => {
             await loadDataFromAPI();
         }, 1500);
@@ -402,11 +487,11 @@ function renderRecentTable() {
 
     const recent = inspectionRecords.slice(0, 5);
     if (recent.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = recent.map(r => {
+    tbody.innerHTML = recent.map((r, i) => {
         const rust = Number(r.rust) || 0;
         const dent = Number(r.dent) || 0;
         const weld = Number(r.weld) || 0;
@@ -425,6 +510,12 @@ function renderRecentTable() {
                 <td><span class="badge-defect ${oil > 0 ? 'badge-has-defect' : 'badge-zero'}">${oil}</span></td>
                 <td><span class="badge-defect badge-total">${total}</span></td>
                 <td style="color: #64748b; font-size: 0.85rem;">${r.note || '-'}</td>
+                <td style="text-align: center;">
+                    <div class="action-btn-group">
+                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข">✏️ แก้ไข</button>
+                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ">🗑️ ลบ</button>
+                    </div>
+                </td>
             </tr>
         `;
     }).join('');
@@ -435,11 +526,11 @@ function renderFullHistoryTable(records) {
     if (!tbody) return;
 
     if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = records.map(r => {
+    tbody.innerHTML = records.map((r, i) => {
         const rust = Number(r.rust) || 0;
         const dent = Number(r.dent) || 0;
         const weld = Number(r.weld) || 0;
@@ -458,6 +549,12 @@ function renderFullHistoryTable(records) {
                 <td><span class="badge-defect ${oil > 0 ? 'badge-has-defect' : 'badge-zero'}">${oil}</span></td>
                 <td><span class="badge-defect badge-total">${total} ชิ้น</span></td>
                 <td>${r.note || '-'}</td>
+                <td style="text-align: center;">
+                    <div class="action-btn-group">
+                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข">✏️ แก้ไข</button>
+                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ">🗑️ ลบ</button>
+                    </div>
+                </td>
             </tr>
         `;
     }).join('');

@@ -11,16 +11,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Painting App">
     <meta name="theme-color" content="#0c2340">
-    <link rel="icon" type="image/png" href="assets/logo.png?v=1.1.0">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=1.1.0">
+    <link rel="icon" type="image/png" href="assets/logo.png?v=1.2.0">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=1.2.0">
 
     <!-- PWA Web App Manifest -->
-    <link rel="manifest" href="manifest.json?v=1.1.0">
+    <link rel="manifest" href="manifest.json?v=1.2.0">
 
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=1.1.0">
+    <link rel="stylesheet" href="css/style.css?v=1.2.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -367,11 +367,12 @@
                                         <th>คราบน้ำมัน</th>
                                         <th>รวม (ชิ้น)</th>
                                         <th>หมายเหตุ</th>
+                                        <th>จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="recentTableBody">
                                     <tr>
-                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -402,6 +403,7 @@
                                         <th>คราบน้ำมัน (Oil)</th>
                                         <th>ยอดรวม</th>
                                         <th>หมายเหตุ</th>
+                                        <th>จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="fullHistoryTableBody">
@@ -464,12 +466,14 @@
         <div class="modal-box">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span>📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
+                    <span id="modalTitleText">📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
                 </div>
                 <button class="modal-close" onclick="closeInspectionModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="inspectionForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="editRowIndex" value="">
+                    <input type="hidden" id="editOriginalDate" value="">
                     <div class="form-grid">
                         
                         <div class="form-group">
