@@ -492,18 +492,25 @@ button, input, textarea, select {
 }
 
 .section-header-centered {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 2rem;
     margin-top: 0.5rem;
 }
 
+.section-header-centered::before,
+.section-header-centered::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+
 .section-header-centered h3 {
-    display: inline-block;
+    padding: 0 1rem;
     color: #1e3a8a; /* Deep navy */
     font-weight: 800;
     font-size: 1.35rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 3px solid #e2e8f0;
     margin: 0;
 }
 
