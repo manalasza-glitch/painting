@@ -379,23 +379,37 @@ function renderDashboard() {
     document.getElementById("kpiTotalDefects").innerText = grandTotalDefects;
     document.getElementById("kpiAvgDefectPerJob").innerText = `เฉลี่ย ${avgDefects} ชิ้น/ครั้ง`;
 
+    // Update KPI 1 subtext
+    const kpi1Subtext = document.querySelector('.kpi-card.blue .kpi-subtext');
+    if (kpi1Subtext) {
+        kpi1Subtext.innerText = filterDate ? `↑ รายการวันที่เลือก` : `↑ รายการทั้งหมด`;
+    }
+
     const topCategory = defectsCategory[0];
     document.getElementById("kpiTopDefect").innerText = topCategory.val > 0 ? topCategory.name : "-";
     document.getElementById("kpiTopDefectCount").innerText = topCategory.val > 0 ? `${topCategory.val} ชิ้น` : "0 ชิ้น";
 
-    document.getElementById("kpiTodayDefects").innerText = todayDefects;
+    // Update KPI 4
+    document.getElementById("kpiTodayDefects").innerText = filterDate ? grandTotalDefects : todayDefects;
+    const kpi4Title = document.querySelector('.kpi-card.yellow .kpi-label');
+    const kpi4Subtext = document.querySelector('.kpi-card.yellow .kpi-subtext');
+    if (kpi4Title) kpi4Title.innerText = filterDate ? 'อัตราของเสียที่เลือก' : 'อัตราของเสียวันนี้';
+    if (kpi4Subtext) kpi4Subtext.innerText = filterDate ? 'วันที่เลือก' : 'วันนี้';
 
     // 2. Render Daily Statistics Chart
-    renderDailyChart();
+    renderDailyChart(filterDate ? filteredRecords : inspectionRecords, filterDate);
 
     // 3. Render Defect Donut Chart
     renderDonutChart(defectsCategory, grandTotalDefects);
 
     // 4. Render Defect Progress Bars
     renderSeverityBars(defectsCategory, grandTotalDefects);
+
+    // 5. Update Recent Table to reflect filtered date
+    renderRecentTable(filterDate ? filteredRecords : inspectionRecords);
 }
 
-function renderDailyChart() {
+function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
     const ctx = document.getElementById("dailyChart");
     if (!ctx) return;
 
@@ -404,8 +418,14 @@ function renderDailyChart() {
         return;
     }
 
-    // Aggregate last 7 days of records
-    const recentRecords = [...inspectionRecords].reverse().slice(-7);
+    // Aggregate last 7 days of records, or just the filtered date if filterDate is set
+    let recentRecords = [];
+    if (filterDate) {
+        recentRecords = [...recordsData].reverse();
+    } else {
+        recentRecords = [...recordsData].reverse().slice(-7);
+    }
+    
     const labels = recentRecords.map(r => String(r.date || r.timestamp || '').split('T')[0].substring(0, 10));
     const rustData = recentRecords.map(r => Number(r.rust) || 0);
     const dentData = recentRecords.map(r => Number(r.dent) || 0);
@@ -532,15 +552,15 @@ function renderSeverityBars(defectsCategory, grandTotal) {
 }
 
 function renderTables() {
-    renderRecentTable();
+    renderRecentTable(inspectionRecords);
     renderFullHistoryTable(inspectionRecords);
 }
 
-function renderRecentTable() {
+function renderRecentTable(recordsData = inspectionRecords) {
     const tbody = document.getElementById("recentTableBody");
     if (!tbody) return;
 
-    const recent = inspectionRecords.slice(0, 5);
+    const recent = recordsData.slice(0, 5);
     if (recent.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
