@@ -130,11 +130,15 @@ function doPost(e) {
 
     // Handle submitDailyReport action
     if (action === "submitDailyReport") {
-      // 1. Production Sheet
-      let prodSheet = ss.getSheetByName("Painting_Production");
-      if (!prodSheet) {
-        prodSheet = ss.insertSheet("Painting_Production");
-        prodSheet.appendRow(["Timestamp", "Date", "Shift", "Recorder", "Checker", "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"]);
+      let prodSheet = ss.getSheetByName("Painting_Production") || ss.getSheetByName("แบบฟอร์มไลน์พ่นสี") || ss.getSheets()[0];
+      
+      // If sheet is empty, create header row
+      if (prodSheet.getLastRow() === 0) {
+        prodSheet.appendRow([
+          "Timestamp", "Date", "Shift", "Recorder", "Checker", 
+          "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"
+        ]);
       }
       
       const now = new Date();
@@ -142,52 +146,39 @@ function doPost(e) {
       const shiftVal = data.shift || "";
       const recorderVal = data.recorder || "";
       const checkerVal = data.checker || "";
+
+      const dt = data.downtime || {};
+      const burner = dt.burner || 0;
+      const wash = dt.wash || 0;
+      const ovenEtc = (dt.oven||0) + (dt.gun||0) + (dt.power||0) + (dt.motor||0) + (dt.other||0);
+      const dtNote = dt.note || "";
       
       if (data.records && Array.isArray(data.records)) {
         data.records.forEach(r => {
+          // Columns A-I (1-9): General Info & Downtime
+          // Column J (10) onwards: Model, TimeSlot, ProdQty, Dent, ColorDrop, ThinPaint, ThickPaint, WaterStain, OtherDefect, TotalDefect
           prodSheet.appendRow([
             now,
             dateVal,
             shiftVal,
             recorderVal,
             checkerVal,
-            r.model,
-            r.timeSlot,
-            r.prodQty,
-            r.dent,
-            r.colorDrop,
-            r.thinPaint,
-            r.thickPaint,
-            r.waterStain,
-            r.otherDefect,
-            r.totalDefect
+            burner,
+            wash,
+            ovenEtc,
+            dtNote,
+            r.model,          // Column J (Column 10)
+            r.timeSlot,       // Column K (Column 11)
+            r.prodQty,        // Column L (Column 12)
+            r.dent,           // Column M (Column 13)
+            r.colorDrop,      // Column N (Column 14)
+            r.thinPaint,      // Column O (Column 15)
+            r.thickPaint,     // Column P (Column 16)
+            r.waterStain,     // Column Q (Column 17)
+            r.otherDefect,    // Column R (Column 18)
+            r.totalDefect     // Column S (Column 19)
           ]);
         });
-      }
-
-      // 2. Downtime Sheet
-      if (data.downtime) {
-        let dtSheet = ss.getSheetByName("Painting_Downtime");
-        if (!dtSheet) {
-          dtSheet = ss.insertSheet("Painting_Downtime");
-          dtSheet.appendRow(["Timestamp", "Date", "Shift", "Recorder", "Checker", "Burner", "Wash", "Oven", "Gun", "Power", "Motor", "Other", "Note"]);
-        }
-        
-        dtSheet.appendRow([
-          now,
-          dateVal,
-          shiftVal,
-          recorderVal,
-          checkerVal,
-          data.downtime.burner || 0,
-          data.downtime.wash || 0,
-          data.downtime.oven || 0,
-          data.downtime.gun || 0,
-          data.downtime.power || 0,
-          data.downtime.motor || 0,
-          data.downtime.other || 0,
-          data.downtime.note || ""
-        ]);
       }
 
       SpreadsheetApp.flush();
