@@ -497,17 +497,72 @@ button, input, textarea, select {
     margin-top: 0.5rem;
 }
 
-.section-header-left h3 {
-    color: #1e3a8a; /* Deep navy */
-    font-weight: 800;
-    font-size: 1.35rem;
-    margin: 0;
+/* ===== Daily Report Mobile-First Layout ===== */
+.dr-card {
+    background: var(--bg-card-light, #ffffff);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
 }
 
-.form-grid-2col {
+.dr-section-title {
+    color: #1e3a8a;
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.dr-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dr-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.dr-row .form-group {
+    min-width: 0; /* Prevent overflow */
+}
+
+.dr-radio-group {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dr-radio-group label {
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.dr-defect-label {
+    font-weight: 700;
+    color: #1e3a8a;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #cbd5e1;
+}
+
+.dr-card .form-control {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.75rem;
+    min-height: 40px;
+}
+
+.dr-card .form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
 }
 
 .data-table {

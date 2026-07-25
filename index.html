@@ -384,57 +384,52 @@
 
                 <!-- TAB: DAILY REPORT (แบบฟอร์มผลิตรายวัน) -->
                 <section id="daily-report-tab" class="tab-page" style="display: none;">
-                    <div class="section-title-bar">
-                        <h1 class="page-title">📝 บันทึกแบบฟอร์มไลน์พ่นสี (Production Daily Report)</h1>
-                        <button style="background: #10b981; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 20px; font-weight: 700; cursor: pointer;" id="submitDailyBtn" onclick="submitDailyReport()">
+                    <div class="section-title-bar" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+                        <h1 class="page-title" style="font-size: 1.15rem;">📝 ฟอร์มผลิตรายวัน</h1>
+                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="width: 100%;">
                             💾 บันทึกแบบฟอร์มประจำวัน
                         </button>
                     </div>
 
                     <!-- Step 1: ข้อมูลทั่วไป -->
-                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
-                        <div class="section-header-left">
-                            <h3>ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
-                        </div>
-                        <div class="form-grid-2col">
-                            <div class="form-group">
-                                <label>วันที่ (Date)</label>
-                                <input type="date" id="reportDate" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>กะการทำงาน (Shift)</label>
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.5rem;">
-                                    <label style="white-space: nowrap;"><input type="radio" name="shift" value="Day" checked> Day (กลางวัน)</label>
-                                    <label style="white-space: nowrap;"><input type="radio" name="shift" value="Night"> Night (กลางคืน)</label>
+                    <div class="dr-card">
+                        <h3 class="dr-section-title">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
+                        <div class="dr-form-stack">
+                            <div class="dr-row">
+                                <div class="form-group">
+                                    <label>วันที่ (Date)</label>
+                                    <input type="date" id="reportDate" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>กะทำงาน (Shift)</label>
+                                    <div class="dr-radio-group">
+                                        <label><input type="radio" name="shift" value="Day" checked> Day</label>
+                                        <label><input type="radio" name="shift" value="Night"> Night</label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>บันทึกโดย</label>
-                                <input type="text" id="recorderName" class="form-control" placeholder="ชื่อพนักงานผู้บันทึก" required>
-                            </div>
-                            <div class="form-group">
-                                <label>ตรวจสอบโดย</label>
-                                <input type="text" id="checkerName" class="form-control" placeholder="ชื่อผู้ตรวจสอบ (ถ้ามี)">
+                            <div class="dr-row">
+                                <div class="form-group">
+                                    <label>บันทึกโดย</label>
+                                    <input type="text" id="recorderName" class="form-control" placeholder="ชื่อผู้บันทึก" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>ตรวจสอบโดย</label>
+                                    <input type="text" id="checkerName" class="form-control" placeholder="ชื่อผู้ตรวจสอบ">
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Step 2: ยอดผลิตและของเสีย -->
-                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
-                        <div class="section-header-left">
-                            <h3>ส่วนที่ 2: บันทึกยอดผลิตและของเสียรายชั่วโมง</h3>
-                        </div>
-                        
-                        <div style="background: #ffffff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                            <h4 style="margin-bottom: 1.25rem; color: #1e3a8a; display: flex; align-items: center; gap: 0.5rem;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                เพิ่มรายการผลิตใหม่
-                            </h4>
-                            <div class="form-grid-2col" style="padding-left: 0;">
-                                <div class="form-group">
-                                    <label>รุ่นงาน (Model)</label>
-                                    <select id="drModel" class="form-control model-select"></select>
-                                </div>
+                    <div class="dr-card">
+                        <h3 class="dr-section-title">ส่วนที่ 2: ยอดผลิตและของเสีย</h3>
+                        <div class="dr-form-stack">
+                            <div class="form-group">
+                                <label>รุ่นงาน (Model)</label>
+                                <select id="drModel" class="form-control model-select"></select>
+                            </div>
+                            <div class="dr-row">
                                 <div class="form-group">
                                     <label>ช่วงเวลา</label>
                                     <select id="drTime" class="form-control time-select"></select>
@@ -444,53 +439,67 @@
                                     <input type="number" id="drProdQty" class="form-control" min="0" placeholder="0">
                                 </div>
                             </div>
-                            <div class="form-grid defect-grid" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #cbd5e1;">
+                            <div class="dr-defect-label">ของเสีย</div>
+                            <div class="dr-row">
                                 <div class="form-group"><label>บุบ/เสียรูป</label><input type="number" id="drDent" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>เม็ดสี</label><input type="number" id="drColorDrop" class="form-control" min="0" placeholder="0"></div>
+                            </div>
+                            <div class="dr-row">
                                 <div class="form-group"><label>สีบาง</label><input type="number" id="drThinPaint" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>สีหนา/สีปูด</label><input type="number" id="drThickPaint" class="form-control" min="0" placeholder="0"></div>
+                            </div>
+                            <div class="dr-row">
                                 <div class="form-group"><label>คราบน้ำ/จาระบี</label><input type="number" id="drWaterStain" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>อื่นๆ</label><input type="number" id="drOtherDefect" class="form-control" min="0" placeholder="0"></div>
                             </div>
-                            <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="margin-top: 1rem; width: 100%;">
-                                ➕ เพิ่มลงในตาราง
-                            </button>
                         </div>
+                        <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="margin-top: 1rem; width: 100%;">
+                            ➕ เพิ่มลงในตาราง
+                        </button>
 
                         <!-- Table showing added records -->
-                        <div class="table-responsive">
+                        <div class="table-responsive" style="margin-top: 1rem;">
                             <table class="data-table">
                                 <thead>
                                     <tr>
                                         <th>รุ่นงาน</th>
-                                        <th>ช่วงเวลา</th>
-                                        <th>ยอดผลิต</th>
-                                        <th>ของเสียรวม</th>
-                                        <th style="text-align: center;">จัดการ</th>
+                                        <th>เวลา</th>
+                                        <th>ผลิต</th>
+                                        <th>เสีย</th>
+                                        <th>ลบ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dailyReportListBody">
-                                    <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีรายการที่เพิ่ม</td></tr>
+                                    <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีรายการ</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Step 3: เวลาสูญเสีย -->
-                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
-                        <div class="section-header-left">
-                            <h3>ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
-                        </div>
-                        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;">ระบุเป็น "นาที" (ปล่อยว่างได้ถ้าไม่มีปัญหา)</p>
-                        <div class="form-grid defect-grid">
-                            <div class="form-group"><label>เบอร์เนอร์จุดไม่ติด</label><input type="number" id="dtBurner" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>งานร่วงในไลน์ล้าง</label><input type="number" id="dtWash" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>งานร่วงในเตาอบ</label><input type="number" id="dtOven" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>ระบบปืนมีปัญหา</label><input type="number" id="dtGun" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>ไฟฟ้าดับ</label><input type="number" id="dtPower" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>มอร์เตอร์เสีย</label><input type="number" id="dtMotor" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group"><label>อื่นๆ</label><input type="number" id="dtOther" class="form-control" min="0" placeholder="นาที"></div>
-                            <div class="form-group" style="grid-column: 1 / -1;"><label>หมายเหตุ</label><input type="text" id="dtNote" class="form-control" placeholder="ระบุสาเหตุอื่นๆ"></div>
+                    <div class="dr-card">
+                        <h3 class="dr-section-title">ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
+                        <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;">ระบุเป็น "นาที" (ปล่อยว่างได้)</p>
+                        <div class="dr-form-stack">
+                            <div class="dr-row">
+                                <div class="form-group"><label>เบอร์เนอร์</label><input type="number" id="dtBurner" class="form-control" min="0" placeholder="นาที"></div>
+                                <div class="form-group"><label>ไลน์ล้าง</label><input type="number" id="dtWash" class="form-control" min="0" placeholder="นาที"></div>
+                            </div>
+                            <div class="dr-row">
+                                <div class="form-group"><label>เตาอบ</label><input type="number" id="dtOven" class="form-control" min="0" placeholder="นาที"></div>
+                                <div class="form-group"><label>ระบบปืน</label><input type="number" id="dtGun" class="form-control" min="0" placeholder="นาที"></div>
+                            </div>
+                            <div class="dr-row">
+                                <div class="form-group"><label>ไฟฟ้าดับ</label><input type="number" id="dtPower" class="form-control" min="0" placeholder="นาที"></div>
+                                <div class="form-group"><label>มอร์เตอร์</label><input type="number" id="dtMotor" class="form-control" min="0" placeholder="นาที"></div>
+                            </div>
+                            <div class="dr-row">
+                                <div class="form-group"><label>อื่นๆ</label><input type="number" id="dtOther" class="form-control" min="0" placeholder="นาที"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>หมายเหตุ</label>
+                                <input type="text" id="dtNote" class="form-control" placeholder="ระบุสาเหตุอื่นๆ">
+                            </div>
                         </div>
                     </div>
                 </section>
