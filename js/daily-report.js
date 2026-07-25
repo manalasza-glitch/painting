@@ -61,6 +61,31 @@ const PAINTING_TIMESLOTS = [
     "20.00 - 21.00"
 ];
 
+function getCurrentTimeSlot() {
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+
+    for (let slot of PAINTING_TIMESLOTS) {
+        const parts = slot.split("-");
+        if (parts.length === 2) {
+            const startStr = parts[0].trim();
+            const endStr = parts[1].trim();
+            
+            const startParts = startStr.split(".");
+            const startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            
+            const endParts = endStr.split(".");
+            const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+            
+            // Allow a small grace period for the end time or just strictly within bounds
+            if (currentMins >= startMins && currentMins <= endMins) {
+                return slot;
+            }
+        }
+    }
+    return "";
+}
+
 let dailyReportRecords = [];
 
 function initDailyReportForm() {
@@ -81,7 +106,13 @@ function initDailyReportForm() {
     PAINTING_TIMESLOTS.forEach(t => {
         timeHtml += `<option value="${t}">${t}</option>`;
     });
-    timeSelects.forEach(sel => sel.innerHTML = timeHtml);
+    timeSelects.forEach(sel => {
+        sel.innerHTML = timeHtml;
+        const currentSlot = getCurrentTimeSlot();
+        if (currentSlot) {
+            sel.value = currentSlot;
+        }
+    });
 }
 
 function addDailyReportRecord() {
@@ -125,8 +156,9 @@ function addDailyReportRecord() {
 
     renderDailyReportList();
     
-    // Clear inputs for next entry
-    document.getElementById('drTime').value = "";
+    // Clear inputs for next entry, but keep current time slot auto-selected
+    const currentSlot = getCurrentTimeSlot();
+    document.getElementById('drTime').value = currentSlot || "";
     document.getElementById('drProdQty').value = "";
     document.getElementById('drDent').value = "";
     document.getElementById('drColorDrop').value = "";
