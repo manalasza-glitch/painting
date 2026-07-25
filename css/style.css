@@ -499,13 +499,6 @@ button, input, textarea, select {
     margin-top: 0.5rem;
 }
 
-.section-header-centered::before,
-.section-header-centered::after {
-    content: "";
-    flex: 1;
-    border-bottom: 1px solid #e2e8f0;
-}
-
 .section-header-centered h3 {
     padding: 0 1rem;
     color: #1e3a8a; /* Deep navy */
@@ -918,8 +911,11 @@ button, input, textarea, select {
     height: 42px;
     font-size: 1.2rem;
   }
-  .form-grid, .form-grid-2col {
+  .form-grid {
     grid-template-columns: 1fr !important;
+  }
+  .form-grid-2col {
+    gap: 1rem 0.5rem; /* Slightly smaller gap on mobile */
   }
   .defect-grid {
     grid-template-columns: repeat(2, 1fr) !important;
