@@ -65,6 +65,9 @@ function getCurrentTimeSlot() {
     const now = new Date();
     const currentMins = now.getHours() * 60 + now.getMinutes();
 
+    let closestSlot = "";
+    let minDiff = Infinity;
+
     for (let slot of PAINTING_TIMESLOTS) {
         const parts = slot.split("-");
         if (parts.length === 2) {
@@ -77,13 +80,23 @@ function getCurrentTimeSlot() {
             const endParts = endStr.split(".");
             const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
             
-            // Allow a small grace period for the end time or just strictly within bounds
+            // If strictly inside the slot, return it immediately
             if (currentMins >= startMins && currentMins <= endMins) {
                 return slot;
             }
+
+            // Otherwise find distance to the closest edge (start or end)
+            const diffStart = Math.abs(currentMins - startMins);
+            const diffEnd = Math.abs(currentMins - endMins);
+            const minEdgeDiff = Math.min(diffStart, diffEnd);
+
+            if (minEdgeDiff < minDiff) {
+                minDiff = minEdgeDiff;
+                closestSlot = slot;
+            }
         }
     }
-    return "";
+    return closestSlot;
 }
 
 let dailyReportRecords = [];
