@@ -724,7 +724,7 @@ button, input, textarea, select {
   color: var(--text-navy);
 }
 
-.form-control-custom {
+.form-control, .form-control-custom {
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -733,9 +733,11 @@ button, input, textarea, select {
   transition: var(--transition-fast);
   background: #f8fafc;
   min-height: 46px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.form-control-custom:focus {
+.form-control:focus, .form-control-custom:focus {
   border-color: var(--accent-blue);
   background: #ffffff;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
@@ -887,6 +889,10 @@ button, input, textarea, select {
   }
   .form-grid {
     grid-template-columns: 1fr !important;
+  }
+  .defect-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem;
   }
   .form-group.full-width {
     grid-column: span 1 !important;
