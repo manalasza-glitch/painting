@@ -392,9 +392,11 @@
                     </div>
 
                     <!-- Step 1: ข้อมูลทั่วไป -->
-                    <div class="kpi-card" style="margin-bottom: 1rem;">
-                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
-                        <div class="form-grid">
+                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
+                        <div class="section-header-centered">
+                            <h3>ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
+                        </div>
+                        <div class="form-grid-2col">
                             <div class="form-group">
                                 <label>วันที่ (Date)</label>
                                 <input type="date" id="reportDate" class="form-control" required>
@@ -418,12 +420,17 @@
                     </div>
 
                     <!-- Step 2: ยอดผลิตและของเสีย -->
-                    <div class="kpi-card" style="margin-bottom: 1rem;">
-                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 2: บันทึกยอดผลิตและของเสียรายชั่วโมง</h3>
+                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
+                        <div class="section-header-centered">
+                            <h3>ส่วนที่ 2: บันทึกยอดผลิตและของเสียรายชั่วโมง</h3>
+                        </div>
                         
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                            <h4 style="margin-bottom: 1rem; color: #334155;">➕ เพิ่มรายการผลิตใหม่</h4>
-                            <div class="form-grid">
+                        <div style="background: #ffffff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                            <h4 style="margin-bottom: 1.25rem; color: #1e3a8a; display: flex; align-items: center; gap: 0.5rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                เพิ่มรายการผลิตใหม่
+                            </h4>
+                            <div class="form-grid-2col">
                                 <div class="form-group">
                                     <label>รุ่นงาน (Model)</label>
                                     <select id="drModel" class="form-control model-select"></select>
@@ -437,7 +444,7 @@
                                     <input type="number" id="drProdQty" class="form-control" min="0" placeholder="0">
                                 </div>
                             </div>
-                            <div class="form-grid defect-grid" style="margin-top: 1rem;">
+                            <div class="form-grid defect-grid" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed #cbd5e1;">
                                 <div class="form-group"><label>บุบ/เสียรูป</label><input type="number" id="drDent" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>เม็ดสี</label><input type="number" id="drColorDrop" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>สีบาง</label><input type="number" id="drThinPaint" class="form-control" min="0" placeholder="0"></div>
@@ -470,9 +477,11 @@
                     </div>
 
                     <!-- Step 3: เวลาสูญเสีย -->
-                    <div class="kpi-card" style="margin-bottom: 1rem;">
-                        <h3 style="margin-bottom: 1rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
-                        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;">ระบุเป็น "นาที" (ปล่อยว่างได้ถ้าไม่มีปัญหา)</p>
+                    <div class="kpi-card" style="margin-bottom: 1.5rem; border: none; box-shadow: none; background: transparent; padding: 0;">
+                        <div class="section-header-centered">
+                            <h3>ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
+                        </div>
+                        <p style="text-align: center; color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;">ระบุเป็น "นาที" (ปล่อยว่างได้ถ้าไม่มีปัญหา)</p>
                         <div class="form-grid defect-grid">
                             <div class="form-group"><label>เบอร์เนอร์จุดไม่ติด</label><input type="number" id="dtBurner" class="form-control" min="0" placeholder="นาที"></div>
                             <div class="form-group"><label>งานร่วงในไลน์ล้าง</label><input type="number" id="dtWash" class="form-control" min="0" placeholder="นาที"></div>
