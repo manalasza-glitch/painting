@@ -323,14 +323,26 @@ async function handleFormSubmit(event) {
 function renderDashboard() {
     if (!inspectionRecords || inspectionRecords.length === 0) return;
 
-    // 1. Calculate KPI Metrics
-    let totalInspections = inspectionRecords.length;
+    // Apply Date Filter
+    const filterInput = document.getElementById("dashboardDateFilter");
+    const filterDate = filterInput ? filterInput.value : "";
+
+    let filteredRecords = inspectionRecords;
+    if (filterDate) {
+        filteredRecords = inspectionRecords.filter(r => {
+            const recordDateStr = String(r.date || r.timestamp || '').split('T')[0].substring(0, 10);
+            return recordDateStr === filterDate;
+        });
+    }
+
+    // 1. Calculate KPI Metrics using Filtered Data
+    let totalInspections = filteredRecords.length;
     let totalRust = 0, totalDent = 0, totalWeld = 0, totalChemical = 0, totalOil = 0;
 
     const todayStr = new Date().toISOString().split('T')[0];
     let todayDefects = 0;
 
-    inspectionRecords.forEach(r => {
+    filteredRecords.forEach(r => {
         const rust = Number(r.rust) || 0;
         const dent = Number(r.dent) || 0;
         const weld = Number(r.weld) || 0;
