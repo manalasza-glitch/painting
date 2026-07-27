@@ -283,7 +283,7 @@ function doGet(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
 
-    // Handle getRecorders action
+    // Handle getRecorders action (Cloud Sync)
     if (action === "getRecorders") {
       let recSheet = ss.getSheetByName("Recorders");
       if (!recSheet) {
@@ -302,6 +302,50 @@ function doGet(e) {
       }
 
       return ContentService.createTextOutput(JSON.stringify({ status: "success", recorders: list })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle addRecorder action via GET fallback
+    if (action === "addRecorder") {
+      let recSheet = ss.getSheetByName("Recorders");
+      if (!recSheet) {
+        recSheet = ss.insertSheet("Recorders");
+        recSheet.appendRow(["Name"]);
+      }
+      const newName = String((e && e.parameter && e.parameter.name) || "").trim();
+      if (newName) {
+        const values = recSheet.getDataRange().getValues();
+        let exists = false;
+        for (let i = 1; i < values.length; i++) {
+          if (String(values[i][0]).trim() === newName) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          recSheet.appendRow([newName]);
+          SpreadsheetApp.flush();
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", name: newName })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle deleteRecorder action via GET fallback
+    if (action === "deleteRecorder") {
+      let recSheet = ss.getSheetByName("Recorders");
+      if (recSheet) {
+        const targetName = String((e && e.parameter && e.parameter.name) || "").trim();
+        if (targetName) {
+          const values = recSheet.getDataRange().getValues();
+          for (let i = 1; i < values.length; i++) {
+            if (String(values[i][0]).trim() === targetName) {
+              recSheet.deleteRow(i + 1);
+              SpreadsheetApp.flush();
+              break;
+            }
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     let sheet = ss.getSheetByName(SHEET_NAME);

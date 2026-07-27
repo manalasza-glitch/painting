@@ -89,6 +89,9 @@ window.onload = async () => {
     setInterval(() => {
         if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests === 0) {
             loadDataFromAPI(true); // silent reload
+            if (typeof renderStaffDropdowns === 'function') {
+                renderStaffDropdowns();
+            }
         }
     }, 15000);
 };
@@ -137,6 +140,10 @@ function switchTab(tabId, element) {
 
     if (tabId === "dashboard-tab") {
         renderDashboard();
+    } else if (tabId === "daily-report-tab") {
+        if (typeof renderStaffDropdowns === 'function') {
+            renderStaffDropdowns();
+        }
     }
 }
 
