@@ -387,23 +387,8 @@ function doGet(e) {
     }
 
     // Handle 5M1E Events (getEvents)
-    if (action === "getEvents" || (e && e.parameter && e.parameter.sheet === "events")) {
-      let evtSheet = ss.getSheetByName("events");
-      if (!evtSheet) {
-        evtSheet = ss.insertSheet("events");
-        evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
-        
-        // Seed sample 5M1E Events for Painting Line
-        const samples = [
-          ["2026-07-27", "08:30", "กะเช้า", "Machine", "เตาอบสี (Baking Oven)", "ปรับเพิ่มอุณหภูมิตู้อบสี", "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่", "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%", "สมชาย ใจดี", "2026-07-27 08:30", "evt_101"],
-          ["2026-07-26", "10:15", "กะเช้า", "Material", "ห้องผสมสี (Color Mix Room)", "เปลี่ยนล็อตสีพ่นผงชั่วคราว", "เปิดใช้สีผงล็อตใหม่ Batch #20260726-A เนื่องจากสีล็อตเดิมหมดสต็อก", "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน", "วิชัย มีสุข", "2026-07-26 10:15", "evt_102"],
-          ["2026-07-25", "13:40", "กะเช้า", "Man", "ไลน์พ่นสีชิ้นงาน", "เปลี่ยนตัวพนักงานพ่นสีหลัก", "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน", "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ", "สมศักดิ์ ขยันงาน", "2026-07-25 13:40", "evt_103"],
-          ["2026-07-24", "15:00", "กะเช้า", "Environment", "ห้องพ่นสี (Spray Booth)", "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี", "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม", "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ", "สมชาย ใจดี", "2026-07-24 15:00", "evt_104"],
-          ["2026-07-23", "09:20", "กะเช้า", "Measurement", "ห้อง QC ตรวจสอบ", "สอบเทียบเครื่องวัดความหนาสี (Elcometer)", "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี", "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง", "วิชัย มีสุข", "2026-07-23 09:20", "evt_105"]
-        ];
-        samples.forEach(row => evtSheet.appendRow(row));
-        SpreadsheetApp.flush();
-      }
+    if (action === "getEvents" || (e && e.parameter && e.parameter.sheet === "events") || (e && e.parameter && e.parameter.sheet === "5M1E_Events")) {
+      let evtSheet = getOrCreateEventsSheet(ss);
 
       const values = evtSheet.getDataRange().getValues();
       if (!values || values.length <= 1) {
@@ -429,13 +414,9 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", data: eventsData })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle createEvent action via GET fallback
+    // Handle createEvent action via GET/POST fallback
     if (action === "createEvent") {
-      let evtSheet = ss.getSheetByName("events");
-      if (!evtSheet) {
-        evtSheet = ss.insertSheet("events");
-        evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
-      }
+      let evtSheet = getOrCreateEventsSheet(ss);
       const eDate = String((e && e.parameter && e.parameter.date) || "").trim();
       const eTime = String((e && e.parameter && e.parameter.time) || "").trim();
       const eShift = String((e && e.parameter && e.parameter.shift) || "กะเช้า").trim();
@@ -454,9 +435,9 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", id: eId })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle deleteEvent action via GET fallback
+    // Handle deleteEvent action via GET/POST fallback
     if (action === "deleteEvent") {
-      let evtSheet = ss.getSheetByName("events");
+      let evtSheet = getOrCreateEventsSheet(ss);
       if (evtSheet) {
         const targetId = String((e && e.parameter && e.parameter.id) || "").trim();
         const targetRow = Number((e && e.parameter && e.parameter.rowIndex) || 0);
@@ -517,4 +498,28 @@ function doGet(e) {
       }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function getOrCreateEventsSheet(ss) {
+  let evtSheet = ss.getSheetByName("5M1E_Events") || ss.getSheetByName("events");
+  if (!evtSheet) {
+    evtSheet = ss.insertSheet("5M1E_Events");
+    evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
+    
+    // Seed sample 5M1E Events for Painting Line
+    const samples = [
+      ["2026-07-27", "08:30", "กะเช้า", "Machine", "เตาอบสี (Baking Oven)", "ปรับเพิ่มอุณหภูมิตู้อบสี", "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่", "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%", "สมชาย ใจดี", "2026-07-27 08:30", "evt_101"],
+      ["2026-07-26", "10:15", "กะเช้า", "Material", "ห้องผสมสี (Color Mix Room)", "เปลี่ยนล็อตสีพ่นผงชั่วคราว", "เปิดใช้สีผงล็อตใหม่ Batch #20260726-A เนื่องจากสีล็อตเดิมหมดสต็อก", "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน", "วิชัย มีสุข", "2026-07-26 10:15", "evt_102"],
+      ["2026-07-25", "13:40", "กะเช้า", "Man", "ไลน์พ่นสีชิ้นงาน", "เปลี่ยนตัวพนักงานพ่นสีหลัก", "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน", "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ", "สมศักดิ์ ขยันงาน", "2026-07-25 13:40", "evt_103"],
+      ["2026-07-24", "15:00", "กะเช้า", "Environment", "ห้องพ่นสี (Spray Booth)", "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี", "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม", "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ", "สมชาย ใจดี", "2026-07-24 15:00", "evt_104"],
+      ["2026-07-23", "09:20", "กะเช้า", "Measurement", "ห้อง QC ตรวจสอบ", "สอบเทียบเครื่องวัดความหนาสี (Elcometer)", "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี", "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง", "วิชัย มีสุข", "2026-07-23 09:20", "evt_105"]
+    ];
+    samples.forEach(row => evtSheet.appendRow(row));
+    SpreadsheetApp.flush();
+  } else if (evtSheet.getName() === "events" && !ss.getSheetByName("5M1E_Events")) {
+    try {
+      evtSheet.setName("5M1E_Events");
+    } catch(e) {}
+  }
+  return evtSheet;
 }
