@@ -130,7 +130,11 @@ function doPost(e) {
 
     // Handle submitDailyReport action
     if (action === "submitDailyReport") {
-      let prodSheet = ss.getSheetByName("Painting_Production") || ss.getSheetByName("แบบฟอร์มไลน์พ่นสี") || ss.getSheets()[0];
+      const TARGET_SHEET_NAME = "outputdiary";
+      let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
+      if (!prodSheet) {
+        prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
+      }
       
       // If sheet is empty, create header row
       if (prodSheet.getLastRow() === 0) {
