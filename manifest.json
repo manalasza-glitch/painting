@@ -1,22 +1,28 @@
 {
-  "name": "Painting Inspection Dashboard",
+  "name": "Painting Quality Inspection System",
   "short_name": "PaintingApp",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#dceaf7",
+  "background_color": "#0c2340",
   "theme_color": "#0c2340",
   "orientation": "any",
   "icons": [
     {
-      "src": "assets/logo.png?v=3.3.0",
+      "src": "assets/logo.png?v=4.0.0",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/logo.png?v=3.3.0",
+      "src": "assets/icon-192.png?v=4.0.0",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png?v=4.0.0",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]
