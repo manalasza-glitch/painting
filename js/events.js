@@ -148,7 +148,9 @@ function openEventModal() {
 
 function closeEventModal() {
     const modal = document.getElementById("eventModal");
-    if (!modal) modal.classList.remove("active");
+    if (modal) {
+        modal.classList.remove("active");
+    }
 }
 
 function populateEventRecorderDropdown() {

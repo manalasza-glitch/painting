@@ -198,6 +198,19 @@ function closeInspectionModal() {
     }
 }
 
+// Global modal dismiss listeners (Click backdrop or Press ESC)
+document.addEventListener("click", (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains("modal-overlay")) {
+        e.target.classList.remove("active");
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        document.querySelectorAll(".modal-overlay.active").forEach(m => m.classList.remove("active"));
+    }
+});
+
 // Edit Inspection Record: Pre-fills PREVIOUSLY SAVED Date & Time so user can modify or preserve it
 function editInspectionRecord(index) {
     const record = inspectionRecords[index];
