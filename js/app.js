@@ -922,12 +922,12 @@ async function renderDailyReportCharts() {
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#334155', font: { family: 'Sarabun', size: 10 } },
+                        ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
                         grid: { display: false }
                     },
                     y: {
-                        ticks: { color: '#64748b' },
-                        grid: { color: '#f1f5f9' }
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
                     }
                 }
             }
@@ -1005,7 +1005,7 @@ function renderQualityYieldChart() {
                 tension: 0.3
             }
         ];
-    } else if (currentQualityViewMode === 'yield') {
+    } else if (mode === 'yield') {
         // Zoom mode for % Yield Rate (e.g. 85% to 100%)
         yMin = Math.max(0, Math.floor(minOk - 3));
         yMax = 100;
