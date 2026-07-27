@@ -853,7 +853,6 @@ async function renderDailyReportCharts() {
                 }]
             },
             options: {
-                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -861,20 +860,31 @@ async function renderDailyReportCharts() {
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#64748b' },
-                        grid: { color: '#f1f5f9' }
+                        ticks: { color: '#334155', font: { family: 'Sarabun', size: 10 } },
+                        grid: { display: false }
                     },
                     y: {
-                        ticks: { color: '#334155', font: { family: 'Sarabun', size: 11 } },
-                        grid: { display: false }
+                        ticks: { color: '#64748b' },
+                        grid: { color: '#f1f5f9' }
                     }
                 }
             }
         });
     }
 
-    // 4. Render Quality OK vs NG Stacked Bar Chart
-    const goodQtyList = datesList.map(d => Math.max(0, dateMap[d].prodQty - dateMap[d].defects));
+    // 4. Render Quality % OK vs % NG Line Chart
+    const pctOkList = datesList.map(d => {
+        const total = dateMap[d].prodQty;
+        const defects = dateMap[d].defects;
+        const good = Math.max(0, total - defects);
+        return total > 0 ? Number(((good / total) * 100).toFixed(1)) : 100;
+    });
+
+    const pctNgList = datesList.map(d => {
+        const total = dateMap[d].prodQty;
+        const defects = dateMap[d].defects;
+        return total > 0 ? Number(((defects / total) * 100).toFixed(1)) : 0;
+    });
 
     const ctxQuality = document.getElementById("qualityYieldChart");
     if (ctxQuality && typeof Chart !== 'undefined') {
@@ -883,21 +893,29 @@ async function renderDailyReportCharts() {
         }
 
         qualityYieldChartInstance = new Chart(ctxQuality, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: datesList,
                 datasets: [
                     {
-                        label: 'งานดี / ใช้ได้ (ชิ้น)',
-                        data: goodQtyList,
-                        backgroundColor: '#10b981',
-                        borderRadius: 4
+                        label: '% งานดี (% OK Rate)',
+                        data: pctOkList,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3
                     },
                     {
-                        label: 'งานเสีย / Defect (ชิ้น)',
-                        data: defectsList,
-                        backgroundColor: '#ef4444',
-                        borderRadius: 4
+                        label: '% งานเสีย (% NG Rate)',
+                        data: pctNgList,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3
                     }
                 ]
             },
@@ -911,12 +929,12 @@ async function renderDailyReportCharts() {
                 },
                 scales: {
                     x: {
-                        stacked: true,
                         ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
                         grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     },
                     y: {
-                        stacked: true,
+                        min: 0,
+                        max: 100,
                         ticks: { color: '#94a3b8' },
                         grid: { color: 'rgba(255, 255, 255, 0.08)' }
                     }
