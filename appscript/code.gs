@@ -383,6 +383,9 @@ function doGet(e) {
           }
         }
       }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle 5M1E Events (getEvents)
     if (action === "getEvents" || (e && e.parameter && e.parameter.sheet === "events")) {
       let evtSheet = ss.getSheetByName("events");
