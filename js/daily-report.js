@@ -141,11 +141,148 @@ function getCurrentTimeSlot() {
     return closestSlot;
 }
 
+let currentTargetStaffType = "recorder";
+let PAINTING_STAFF_LIST = [
+    "สมชาย ใจดี",
+    "วิชัย มีสุข",
+    "สมศักดิ์ ขยันงาน",
+    "อนันต์ ราบรื่น"
+];
+
+function loadStaffList() {
+    const cached = localStorage.getItem("PAINTING_STAFF_CACHE");
+    if (cached) {
+        try {
+            const list = JSON.parse(cached);
+            if (Array.isArray(list) && list.length > 0) {
+                PAINTING_STAFF_LIST = list;
+            }
+        } catch (e) {}
+    }
+}
+
+function saveStaffList() {
+    localStorage.setItem("PAINTING_STAFF_CACHE", JSON.stringify(PAINTING_STAFF_LIST));
+}
+
+function renderStaffDropdowns() {
+    loadStaffList();
+    const recorderSelect = document.getElementById('recorderName');
+    const checkerSelect = document.getElementById('checkerName');
+
+    const currentRecorder = recorderSelect ? recorderSelect.value : "";
+    const currentChecker = checkerSelect ? checkerSelect.value : "";
+
+    let recorderHtml = '<option value="">-- เลือกผู้บันทึก --</option>';
+    let checkerHtml = '<option value="">-- เลือกผู้ตรวจสอบ (ถ้ามี) --</option>';
+
+    PAINTING_STAFF_LIST.forEach(name => {
+        recorderHtml += `<option value="${name}">${name}</option>`;
+        checkerHtml += `<option value="${name}">${name}</option>`;
+    });
+
+    if (recorderSelect) {
+        recorderSelect.innerHTML = recorderHtml;
+        if (currentRecorder && PAINTING_STAFF_LIST.includes(currentRecorder)) {
+            recorderSelect.value = currentRecorder;
+        }
+    }
+
+    if (checkerSelect) {
+        checkerSelect.innerHTML = checkerHtml;
+        if (currentChecker && PAINTING_STAFF_LIST.includes(currentChecker)) {
+            checkerSelect.value = currentChecker;
+        }
+    }
+}
+
+function openAddStaffModal(targetType = "recorder") {
+    currentTargetStaffType = targetType;
+    const modal = document.getElementById('addStaffModal');
+    if (modal) {
+        modal.classList.add('active');
+        const input = document.getElementById('newStaffInput');
+        if (input) input.value = "";
+        renderStaffListInModal();
+    }
+}
+
+function closeAddStaffModal() {
+    const modal = document.getElementById('addStaffModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function renderStaffListInModal() {
+    const container = document.getElementById('staffListContainer');
+    if (!container) return;
+
+    if (PAINTING_STAFF_LIST.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">ยังไม่มีรายชื่อพนักงาน</div>`;
+        return;
+    }
+
+    container.innerHTML = PAINTING_STAFF_LIST.map((name, index) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;">
+            <span style="font-weight: 600; color: #334155;">👤 ${name}</span>
+            <button type="button" onclick="deleteStaffName(${index})" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🗑️ ลบ</button>
+        </div>
+    `).join('');
+}
+
+function saveNewStaff() {
+    const input = document.getElementById('newStaffInput');
+    if (!input) return;
+
+    const newName = input.value.trim();
+    if (!newName) {
+        showToast("กรุณาระบุชื่อพนักงาน", "error");
+        return;
+    }
+
+    if (PAINTING_STAFF_LIST.includes(newName)) {
+        showToast("รายชื่อนี้มีอยู่ในระบบแล้ว", "warning");
+        return;
+    }
+
+    PAINTING_STAFF_LIST.push(newName);
+    saveStaffList();
+    renderStaffDropdowns();
+    renderStaffListInModal();
+
+    // Auto select newly added staff in the targeted dropdown
+    if (currentTargetStaffType === "recorder") {
+        const recorderSelect = document.getElementById('recorderName');
+        if (recorderSelect) recorderSelect.value = newName;
+    } else if (currentTargetStaffType === "checker") {
+        const checkerSelect = document.getElementById('checkerName');
+        if (checkerSelect) checkerSelect.value = newName;
+    }
+
+    input.value = "";
+    showToast(`เพิ่มรายชื่อ "${newName}" เรียบร้อยแล้ว`, "success");
+}
+
+function deleteStaffName(index) {
+    if (index >= 0 && index < PAINTING_STAFF_LIST.length) {
+        const removedName = PAINTING_STAFF_LIST[index];
+        PAINTING_STAFF_LIST.splice(index, 1);
+        saveStaffList();
+        renderStaffDropdowns();
+        renderStaffListInModal();
+        showToast(`ลบรายชื่อ "${removedName}" แล้ว`, "info");
+    }
+}
+
 let dailyReportRecords = [];
 
 function initDailyReportForm() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('reportDate').value = today;
+
+    // Populate Recorder & Checker Staff Dropdowns
+    renderStaffDropdowns();
 
     // Populate Part Category Dropdown
     const groupSelect = document.getElementById('drPartGroup');

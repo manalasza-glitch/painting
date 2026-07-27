@@ -410,12 +410,18 @@
                             </div>
                             <div class="dr-row">
                                 <div class="form-group">
-                                    <label>บันทึกโดย</label>
-                                    <input type="text" id="recorderName" class="form-control" placeholder="ชื่อผู้บันทึก" required>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="margin-bottom: 0;">บันทึกโดย</label>
+                                        <button type="button" onclick="openAddStaffModal('recorder')" style="background: none; border: none; color: #1d4ed8; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0;">+ เพิ่มชื่อ</button>
+                                    </div>
+                                    <select id="recorderName" class="form-control" required></select>
                                 </div>
                                 <div class="form-group">
-                                    <label>ตรวจสอบโดย</label>
-                                    <input type="text" id="checkerName" class="form-control" placeholder="ชื่อผู้ตรวจสอบ">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="margin-bottom: 0;">ตรวจสอบโดย</label>
+                                        <button type="button" onclick="openAddStaffModal('checker')" style="background: none; border: none; color: #1d4ed8; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0;">+ เพิ่มชื่อ</button>
+                                    </div>
+                                    <select id="checkerName" class="form-control"></select>
                                 </div>
                             </div>
                         </div>
@@ -664,6 +670,36 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD STAFF MODAL -->
+    <div class="modal-overlay" id="addStaffModal">
+        <div class="modal-box" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <span>👥 จัดการรายชื่อพนักงาน</span>
+                </h3>
+                <button class="modal-close" onclick="closeAddStaffModal()">&times;</button>
+            </div>
+            <div style="padding: 1.25rem 1.5rem;">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.4rem; display: block;">เพิ่มชื่อพนักงานใหม่</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newStaffInput" class="form-control" placeholder="ระบุ ชื่อ - นามสกุล" style="flex: 1;">
+                        <button type="button" class="btn-primary-custom" onclick="saveNewStaff()" style="white-space: nowrap; padding: 0.6rem 1rem;">➕ เพิ่ม</button>
+                    </div>
+                </div>
+
+                <label style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.4rem; display: block;">รายชื่อพนักงานในระบบ</label>
+                <div id="staffListContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.25rem;">
+                    <!-- Staff list items rendered dynamically -->
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+                    <button type="button" class="btn-primary-custom" onclick="closeAddStaffModal()" style="width: 100%;">เสร็จสิ้น</button>
+                </div>
             </div>
         </div>
     </div>
