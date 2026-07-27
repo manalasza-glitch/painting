@@ -339,6 +339,8 @@ async function handleFormSubmit(event) {
 }
 
 function renderDashboard() {
+    renderDailyReportCharts();
+
     if (!inspectionRecords || inspectionRecords.length === 0) return;
 
     // Apply Date Filter
