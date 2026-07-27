@@ -425,9 +425,15 @@
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 2: ยอดผลิตและของเสีย</h3>
                         <div class="dr-form-stack">
-                            <div class="form-group">
-                                <label>รุ่นงาน (Model)</label>
-                                <select id="drModel" class="form-control model-select"></select>
+                            <div class="dr-row">
+                                <div class="form-group">
+                                    <label>กลุ่มงาน (Part Category)</label>
+                                    <select id="drPartGroup" class="form-control" onchange="filterModelDropdown()"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>รุ่นงาน (Model)</label>
+                                    <select id="drModel" class="form-control model-select"></select>
+                                </div>
                             </div>
                             <div class="dr-row">
                                 <div class="form-group">

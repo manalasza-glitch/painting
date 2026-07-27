@@ -1,50 +1,92 @@
-const PAINTING_MODELS = [
-    "[75170148] Gland Plate LC600",
-    "[BRU53717] Gland Plate NLC600",
-    "[BRU30887] Box NMS 4/6 W. 240 mm.",
-    "[BRU30888] Box NMS 8/10W. 320 mm.",
-    "[BRU30889] Box NMS 14 W. 400 mm.",
-    "[BRU53714] U Box 450 mm.",
-    "[75170145] U Box LC600 mm.",
-    "[BRU53715] U Box NLC600 mm.",
-    "[BRU53716] U Box NLC750 mm.",
-    "[BRU53771] U Box NLC900 mm.",
-    "[75170162] Flat Door LC 600",
-    "[BRU53714] Door NLC 450 mm.",
-    "[BRU53715] Door NLC 600 mm.",
-    "[BRU53716] Door NLC 750 mm.",
-    "[BRU53717] Door NLC 900 mm.",
-    "[BRU30890] Cover NMS 4 w. 245 mm.",
-    "[BRU30891] Cover NMS 6 w. 245 mm.",
-    "[BRU30892] Cover NMS 8 w. 325 mm.",
-    "[BRU30893] Cover NMS 10 w. 325 mm.",
-    "[BRU30894] Cover NMS 14 w. 400 mm.",
-    "[BRU53718] Cover NLC EZ100 450 mm. 12 w.",
-    "[BRU53738] Cover NLC LUG250 450 mm. 12 w.",
-    "[BRU53724] Cover NLC EZ100 450 mm. 12 w.",
-    "[BRU53725] Cover NLC EZ100 450 mm. 18 w.",
-    "[BRU53719] Cover NLC EZ100 600 mm. 18 w.",
-    "[BRU53739] Cover NLC LUG250 600 mm. 18 w.",
-    "[BRU53727] Cover NLC LUG100 600 mm. 30 w.",
-    "[BRU53740] Cover NLC LUG250 600 mm. 24 w.",
-    "[BRU53741] Cover NLC LUG250 600 mm. 30 w.",
-    "[BRU53726] Cover NLC LUG100 600 mm. 24 w.",
-    "[BRU53728] Cover NLC LUG100 600 mm. 36 w.",
-    "[BRU53720] Cover NLC EZ100 600 mm. 24 w.",
-    "[BRU53721] Cover NLC EZ100 600 mm. 30 w.",
-    "[BRU53730] Cover NLC EZ250 600 mm. 12 w.",
-    "[BRU53731] Cover NLC EZ250 600 mm. 18 w.",
-    "[BRU53722] Cover NLC EZ100 750 mm. 36 w.",
-    "[BRU53723] Cover NLC EZ100 750 mm. 42 w.",
-    "[BRU53729] Cover NLC LUG100 750 mm. 42 w.",
-    "[BRU53742] Cover NLC LUG250 750 mm. 36 w.",
-    "[BRU53732] Cover NLC EZ250 750 mm. 24 w.",
-    "[BRU53734] Cover NLC EZ250 750 mm. 30 w.",
-    "[BRU53735] Cover NLC EZ250 900 mm. 36 w.",
-    "[BRU53736] Cover NLC EZ250 900 mm. 42 w.",
-    "[BRU53737] Cover NLC EZ250 900 mm. 48 w.",
-    "[BRU53746] Cover NLC LUG250 900 mm. 48 w."
-];
+const PAINTING_MODEL_GROUPS = {
+    "Gland Plate": [
+        "[75170148] Gland Plate LC600",
+        "[BRU53717] Gland Plate NLC600"
+    ],
+    "Box & U-Box": [
+        "[BRU30887] Box NMS 4/6 W. 240 mm.",
+        "[BRU30888] Box NMS 8/10W. 320 mm.",
+        "[BRU30889] Box NMS 14 W. 400 mm.",
+        "[BRU53714] U Box 450 mm.",
+        "[75170145] U Box LC600 mm.",
+        "[BRU53715] U Box NLC600 mm.",
+        "[BRU53716] U Box NLC750 mm.",
+        "[BRU53771] U Box NLC900 mm."
+    ],
+    "Door (บานประตู)": [
+        "[75170162] Flat Door LC 600",
+        "[BRU53714] Door NLC 450 mm.",
+        "[BRU53715] Door NLC 600 mm.",
+        "[BRU53716] Door NLC 750 mm.",
+        "[BRU53717] Door NLC 900 mm."
+    ],
+    "Cover NMS": [
+        "[BRU30890] Cover NMS 4 w. 245 mm.",
+        "[BRU30891] Cover NMS 6 w. 245 mm.",
+        "[BRU30892] Cover NMS 8 w. 325 mm.",
+        "[BRU30893] Cover NMS 10 w. 325 mm.",
+        "[BRU30894] Cover NMS 14 w. 400 mm."
+    ],
+    "Cover NLC (EZ / LUG)": [
+        "[BRU53718] Cover NLC EZ100 450 mm. 12 w.",
+        "[BRU53738] Cover NLC LUG250 450 mm. 12 w.",
+        "[BRU53724] Cover NLC EZ100 450 mm. 12 w.",
+        "[BRU53725] Cover NLC EZ100 450 mm. 18 w.",
+        "[BRU53719] Cover NLC EZ100 600 mm. 18 w.",
+        "[BRU53739] Cover NLC LUG250 600 mm. 18 w.",
+        "[BRU53727] Cover NLC LUG100 600 mm. 30 w.",
+        "[BRU53740] Cover NLC LUG250 600 mm. 24 w.",
+        "[BRU53741] Cover NLC LUG250 600 mm. 30 w.",
+        "[BRU53726] Cover NLC LUG100 600 mm. 24 w.",
+        "[BRU53728] Cover NLC LUG100 600 mm. 36 w.",
+        "[BRU53720] Cover NLC EZ100 600 mm. 24 w.",
+        "[BRU53721] Cover NLC EZ100 600 mm. 30 w.",
+        "[BRU53730] Cover NLC EZ250 600 mm. 12 w.",
+        "[BRU53731] Cover NLC EZ250 600 mm. 18 w.",
+        "[BRU53722] Cover NLC EZ100 750 mm. 36 w.",
+        "[BRU53723] Cover NLC EZ100 750 mm. 42 w.",
+        "[BRU53729] Cover NLC LUG100 750 mm. 42 w.",
+        "[BRU53742] Cover NLC LUG250 750 mm. 36 w.",
+        "[BRU53732] Cover NLC EZ250 750 mm. 24 w.",
+        "[BRU53734] Cover NLC EZ250 750 mm. 30 w.",
+        "[BRU53735] Cover NLC EZ250 900 mm. 36 w.",
+        "[BRU53736] Cover NLC EZ250 900 mm. 42 w.",
+        "[BRU53737] Cover NLC EZ250 900 mm. 48 w.",
+        "[BRU53746] Cover NLC LUG250 900 mm. 48 w."
+    ]
+};
+
+// Flattened list for backwards compatibility
+const PAINTING_MODELS = Object.values(PAINTING_MODEL_GROUPS).flat();
+
+function renderModelDropdownOptions(groupFilter = "") {
+    const modelSelects = document.querySelectorAll('.model-select');
+    let html = '<option value="">-- เลือกรุ่นงาน --</option>';
+
+    if (groupFilter && PAINTING_MODEL_GROUPS[groupFilter]) {
+        PAINTING_MODEL_GROUPS[groupFilter].forEach(m => {
+            html += `<option value="${m}">${m}</option>`;
+        });
+    } else {
+        for (const [groupName, models] of Object.entries(PAINTING_MODEL_GROUPS)) {
+            html += `<optgroup label="📦 ${groupName}">`;
+            models.forEach(m => {
+                html += `<option value="${m}">${m}</option>`;
+            });
+            html += `</optgroup>`;
+        }
+    }
+
+    modelSelects.forEach(sel => {
+        sel.innerHTML = html;
+    });
+}
+
+function filterModelDropdown() {
+    const groupSelect = document.getElementById('drPartGroup');
+    const selectedGroup = groupSelect ? groupSelect.value : "";
+    renderModelDropdownOptions(selectedGroup);
+}
 
 const PAINTING_TIMESLOTS = [
     "08.00 - 09.00",
@@ -105,13 +147,18 @@ function initDailyReportForm() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('reportDate').value = today;
 
-    // Populate Model Dropdowns
-    const modelSelects = document.querySelectorAll('.model-select');
-    let optionsHtml = '<option value="">-- เลือกรุ่นงาน --</option>';
-    PAINTING_MODELS.forEach(m => {
-        optionsHtml += `<option value="${m}">${m}</option>`;
-    });
-    modelSelects.forEach(sel => sel.innerHTML = optionsHtml);
+    // Populate Part Category Dropdown
+    const groupSelect = document.getElementById('drPartGroup');
+    if (groupSelect) {
+        let groupHtml = '<option value="">-- ทุกกลุ่มงาน (All Parts) --</option>';
+        Object.keys(PAINTING_MODEL_GROUPS).forEach(g => {
+            groupHtml += `<option value="${g}">${g}</option>`;
+        });
+        groupSelect.innerHTML = groupHtml;
+    }
+
+    // Populate Model Dropdown with optgroups
+    renderModelDropdownOptions();
 
     // Populate Time Dropdowns
     const timeSelects = document.querySelectorAll('.time-select');
