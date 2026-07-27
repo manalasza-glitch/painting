@@ -402,8 +402,9 @@ async function fetchEventsFromAPI() {
             const response = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
             if (response.ok) {
                 const res = await response.json();
-                if (res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
+                if (res.status === "success" && Array.isArray(res.data)) {
                     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(res.data));
+                    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
                     return res.data;
                 }
             }
@@ -412,12 +413,17 @@ async function fetchEventsFromAPI() {
         }
     }
 
+    const isInit = localStorage.getItem("PAINTING_EVENTS_INIT");
     const cached = localStorage.getItem("PAINTING_EVENTS_CACHE");
-    if (cached) {
+    if (cached !== null) {
         try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed)) return parsed;
         } catch (e) {}
+    }
+
+    if (isInit === "true") {
+        return [];
     }
 
     return generateSampleEventsData();
@@ -492,6 +498,7 @@ function generateSampleEventsData() {
         }
     ];
     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(sample));
+    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
     return sample;
 }
 
@@ -507,6 +514,7 @@ async function sendEventToAPI(eventData) {
     } catch (e) {}
     cache.unshift(newEvt);
     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(cache));
+    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
 
     if (baseUrl) {
         try {
@@ -525,22 +533,23 @@ async function sendEventToAPI(eventData) {
     return { status: "success", id: id };
 }
 
-async function deleteEventFromAPI(id, rowIndex) {
+async function deleteEventFromAPI(id, rowIndex, title) {
     let cache = [];
     try {
         const raw = localStorage.getItem("PAINTING_EVENTS_CACHE");
         if (raw) cache = JSON.parse(raw);
     } catch (e) {}
 
-    const updated = cache.filter(evt => String(evt.id) !== String(id));
+    const updated = cache.filter(evt => String(evt.id) !== String(id) && (title ? String(evt.title || "").trim() !== String(title).trim() : true));
     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(updated));
+    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
 
     const baseUrl = getApiUrl();
     if (baseUrl) {
         try {
             activeSyncRequests++;
             updateSyncUI();
-            const queryParams = new URLSearchParams({ action: "deleteEvent", id: id, rowIndex: rowIndex || 0 }).toString();
+            const queryParams = new URLSearchParams({ action: "deleteEvent", id: id || "", rowIndex: rowIndex || 0, title: title || "" }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
             await fetch(url, { method: "GET", mode: "no-cors" });
         } catch (e) {

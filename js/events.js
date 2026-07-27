@@ -113,7 +113,7 @@ function renderEventsTab() {
                     👤 ${evt.recorder || '-'}
                 </td>
                 <td style="text-align: center; white-space: nowrap;">
-                    <button class="btn-action btn-delete" onclick="deleteEventRecord('${evt.id}', ${evt.rowIndex || 0})" title="ลบรายการ">🗑️</button>
+                    <button class="btn-action btn-delete" onclick="deleteEventRecord('${evt.id}', ${evt.rowIndex || 0}, '${(evt.title || '').replace(/'/g, "\\'")}')" title="ลบรายการ">🗑️</button>
                 </td>
             </tr>
         `;
@@ -148,7 +148,7 @@ function openEventModal() {
 
 function closeEventModal() {
     const modal = document.getElementById("eventModal");
-    if (modal) modal.classList.remove("active");
+    if (!modal) modal.classList.remove("active");
 }
 
 function populateEventRecorderDropdown() {
@@ -205,14 +205,25 @@ async function handleEventFormSubmit(event) {
     await loadEventsData();
 }
 
-async function deleteEventRecord(id, rowIndex) {
-    if (!confirm("คุณต้องการลบบันทึกเหตุการณ์ 5M1E นี้ใช่หรือไม่?")) return;
+async function deleteEventRecord(id, rowIndex, title) {
+    if (!confirm("คุณต้องการลบบันทึกเหตุการณ์ 5M1E นี้อย่างถาวรใช่หรือไม่?")) return;
 
     if (typeof showToast === 'function') showToast("กำลังลบรายการ...", "info");
 
+    // Remove item in memory immediately
+    currentEvents = currentEvents.filter(evt => String(evt.id) !== String(id) && (title ? String(evt.title || "").trim() !== String(title).trim() : true));
+
+    // Save updated list to cache immediately and mark as initialized
+    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(currentEvents));
+    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
+
+    // Re-render UI table and update KPI cards immediately
+    renderEventsTab();
+
+    // Trigger cloud deletion
     if (typeof deleteEventFromAPI === 'function') {
-        await deleteEventFromAPI(id, rowIndex);
+        await deleteEventFromAPI(id, rowIndex, title);
     }
 
-    await loadEventsData();
+    if (typeof showToast === 'function') showToast("ลบรายการบันทึกเรียบร้อยแล้ว", "success");
 }
