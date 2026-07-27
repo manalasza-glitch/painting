@@ -394,13 +394,15 @@
                             </div>
                         </div>
 
-                        <!-- Production Charts Grid 1: Daily Output & Quality Yield -->
+                        <!-- Production Charts Grid 1: Daily Output & Top Models -->
                         <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
                             <!-- Output & Defect Daily Trend Chart -->
                             <div class="chart-card navy-theme">
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b4d8" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                                        <span>ยอดผลิตรายวันแบ่งตามกลุ่มงาน (Stacked) VS ของเสีย</span>
+                                    </div>
                                     <span style="background: rgba(0, 180, 216, 0.2); color: #38bdf8; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Stacked Breakdown</span>
                                 </div>
                                 <div class="chart-container-wrapper" style="height: 250px;">
@@ -408,8 +410,23 @@
                                 </div>
                             </div>
 
-                            <!-- Quality OK vs NG & % Pass Rate Chart -->
-                            <div class="chart-card navy-theme">
+                            <!-- Top Models Chart -->
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M5 92h3v12H5zM10 52h3v15h-3zM15 22h3v18h-3z"/></svg>
+                                        <span>5 อันดับรุ่นงานที่ผลิตสูงสุด</span>
+                                    </div>
+                                </div>
+                                <div class="chart-container-wrapper" style="height: 250px;">
+                                    <canvas id="topModelsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Production Charts Grid 2: Quality % Yield & % NG (Full Width) -->
+                        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                            <div class="chart-card navy-theme" style="grid-column: 1 / -1;">
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -426,21 +443,7 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Production Charts Grid 2: Top Models -->
-                        <div class="dashboard-grid" style="margin-bottom: 2rem;">
-                            <div class="chart-card" style="grid-column: 1 / -1;">
-                                <div class="chart-header">
-                                    <div class="chart-title">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M5 92h3v12H5zM10 52h3v15h-3zM15 22h3v18h-3z"/></svg>
-                                        <span>5 อันดับรุ่นงานที่ผลิตสูงสุด</span>
-                                    </div>
-                                </div>
-                                <div class="chart-container-wrapper" style="height: 250px;">
-                                    <canvas id="topModelsChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
                     </div>
                     <div class="table-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -791,9 +794,9 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=2.1.0"></script>
-    <script src="js/app.js?v=2.1.0"></script>
-    <script src="js/daily-report.js?v=2.1.0"></script>
+    <script src="js/api.js?v=2.2.0"></script>
+    <script src="js/app.js?v=2.2.0"></script>
+    <script src="js/daily-report.js?v=2.2.0"></script>
 </body>
 
 </html>
