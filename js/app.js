@@ -873,13 +873,8 @@ async function renderDailyReportCharts() {
         });
     }
 
-    // 4. Render Quality OK vs NG & % Pass Yield Rate Chart
+    // 4. Render Quality OK vs NG Stacked Bar Chart
     const goodQtyList = datesList.map(d => Math.max(0, dateMap[d].prodQty - dateMap[d].defects));
-    const passRateList = datesList.map(d => {
-        const total = dateMap[d].prodQty;
-        const good = Math.max(0, total - dateMap[d].defects);
-        return total > 0 ? Number(((good / total) * 100).toFixed(1)) : 100;
-    });
 
     const ctxQuality = document.getElementById("qualityYieldChart");
     if (ctxQuality && typeof Chart !== 'undefined') {
@@ -893,32 +888,16 @@ async function renderDailyReportCharts() {
                 labels: datesList,
                 datasets: [
                     {
-                        type: 'line',
-                        label: '% งานที่ใช้ได้ (% Pass Yield)',
-                        data: passRateList,
-                        borderColor: '#f59e0b',
-                        backgroundColor: '#f59e0b',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: false,
-                        tension: 0.3,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        type: 'bar',
-                        label: 'งานดี / ใช้ได้ (OK Pcs)',
+                        label: 'งานดี / ใช้ได้ (ชิ้น)',
                         data: goodQtyList,
                         backgroundColor: '#10b981',
-                        borderRadius: 6,
-                        yAxisID: 'y'
+                        borderRadius: 4
                     },
                     {
-                        type: 'bar',
-                        label: 'งานเสีย / Defect (NG Pcs)',
+                        label: 'งานเสีย / Defect (ชิ้น)',
                         data: defectsList,
                         backgroundColor: '#ef4444',
-                        borderRadius: 6,
-                        yAxisID: 'y'
+                        borderRadius: 4
                     }
                 ]
             },
@@ -928,38 +907,18 @@ async function renderDailyReportCharts() {
                 plugins: {
                     legend: {
                         labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.dataset.yAxisID === 'y1') {
-                                    return `${context.dataset.label}: ${context.raw}%`;
-                                }
-                                return `${context.dataset.label}: ${context.raw} ชิ้น`;
-                            }
-                        }
                     }
                 },
                 scales: {
                     x: {
+                        stacked: true,
                         ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
                         grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     },
                     y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
+                        stacked: true,
                         ticks: { color: '#94a3b8' },
                         grid: { color: 'rgba(255, 255, 255, 0.08)' }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        min: 0,
-                        max: 100,
-                        ticks: { color: '#f59e0b', callback: value => value + '%' },
-                        grid: { drawOnChartArea: false }
                     }
                 }
             }
