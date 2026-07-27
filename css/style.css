@@ -296,7 +296,7 @@ button, input, textarea, select {
 }
 
 .tab-page.active {
-  display: block !important;
+  display: block;
 }
 
 @keyframes fadeIn {

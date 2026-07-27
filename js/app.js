@@ -113,18 +113,27 @@ async function loadDataFromAPI(silent = false) {
 }
 
 function switchTab(tabId, element) {
-    document.querySelectorAll(".tab-page").forEach(page => page.style.display = "none");
-    document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+    // Hide all tab pages & remove active class
+    document.querySelectorAll(".tab-page").forEach(page => {
+        page.style.display = "none";
+        page.classList.remove("active");
+    });
+    
+    // Remove active class from all nav items (sidebar links & mobile bottom nav items)
+    document.querySelectorAll(".nav-link, .mobile-nav-item").forEach(link => link.classList.remove("active"));
 
+    // Show target tab page
     const targetTab = document.getElementById(tabId);
-    if (targetTab) targetTab.style.display = "block";
-
-    if (element) {
-        element.classList.add("active");
-    } else {
-        const matchingNav = document.querySelector(`.nav-link[onclick*="${tabId}"]`);
-        if (matchingNav) matchingNav.classList.add("active");
+    if (targetTab) {
+        targetTab.style.display = "block";
+        targetTab.classList.add("active");
     }
+
+    // Highlight all matching navigation items (both desktop & mobile)
+    document.querySelectorAll(`[onclick*="${tabId}"]`).forEach(el => el.classList.add("active"));
+
+    // Scroll window to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (tabId === "dashboard-tab") {
         renderDashboard();
