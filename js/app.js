@@ -936,15 +936,15 @@ async function renderDailyReportCharts() {
 
     // 4. Cache Quality Data & Render Quality Yield / NG Chart
     const pctOkList = datesList.map(d => {
-        const total = dateMap[d].prodQty;
-        const defects = dateMap[d].defects;
+        const total = dateTotalProdMap[d] || 0;
+        const defects = dateDefectsMap[d] || 0;
         const good = Math.max(0, total - defects);
         return total > 0 ? Number(((good / total) * 100).toFixed(1)) : 100;
     });
 
     const pctNgList = datesList.map(d => {
-        const total = dateMap[d].prodQty;
-        const defects = dateMap[d].defects;
+        const total = dateTotalProdMap[d] || 0;
+        const defects = dateDefectsMap[d] || 0;
         return total > 0 ? Number(((defects / total) * 100).toFixed(1)) : 0;
     });
 
