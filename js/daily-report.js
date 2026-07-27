@@ -181,6 +181,9 @@ function renderStaffDropdowns() {
         checkerHtml += `<option value="${name}">${name}</option>`;
     });
 
+    recorderHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อพนักงานใหม่...</option>`;
+    checkerHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อพนักงานใหม่...</option>`;
+
     if (recorderSelect) {
         recorderSelect.innerHTML = recorderHtml;
         if (currentRecorder && PAINTING_STAFF_LIST.includes(currentRecorder)) {
@@ -196,14 +199,37 @@ function renderStaffDropdowns() {
     }
 }
 
+function handleStaffSelectChange(selectEl, targetType) {
+    if (selectEl && selectEl.value === "__ADD_NEW__") {
+        selectEl.value = "";
+        openAddStaffModal(targetType);
+    }
+}
+
 function openAddStaffModal(targetType = "recorder") {
     currentTargetStaffType = targetType;
     const modal = document.getElementById('addStaffModal');
     if (modal) {
+        modal.style.display = "flex";
         modal.classList.add('active');
         const input = document.getElementById('newStaffInput');
-        if (input) input.value = "";
+        if (input) {
+            input.value = "";
+            setTimeout(() => input.focus(), 200);
+        }
         renderStaffListInModal();
+    } else {
+        // Fallback for prompt if DOM element missing
+        const newName = prompt("กรอกชื่อ - นามสกุล พนักงานใหม่:");
+        if (newName && newName.trim()) {
+            if (!PAINTING_STAFF_LIST.includes(newName.trim())) {
+                PAINTING_STAFF_LIST.push(newName.trim());
+                saveStaffList();
+                renderStaffDropdowns();
+            }
+            const sel = document.getElementById(targetType === "recorder" ? 'recorderName' : 'checkerName');
+            if (sel) sel.value = newName.trim();
+        }
     }
 }
 
