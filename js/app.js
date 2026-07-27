@@ -149,6 +149,10 @@ function switchTab(tabId, element) {
         if (typeof renderStaffDropdowns === 'function') {
             renderStaffDropdowns();
         }
+    } else if (tabId === "event-tab") {
+        if (typeof renderEventsTab === 'function') {
+            renderEventsTab();
+        }
     }
 }
 

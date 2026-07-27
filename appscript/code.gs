@@ -383,6 +383,94 @@ function doGet(e) {
           }
         }
       }
+    // Handle 5M1E Events (getEvents)
+    if (action === "getEvents" || (e && e.parameter && e.parameter.sheet === "events")) {
+      let evtSheet = ss.getSheetByName("events");
+      if (!evtSheet) {
+        evtSheet = ss.insertSheet("events");
+        evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
+        
+        // Seed sample 5M1E Events for Painting Line
+        const samples = [
+          ["2026-07-27", "08:30", "กะเช้า", "Machine", "เตาอบสี (Baking Oven)", "ปรับเพิ่มอุณหภูมิตู้อบสี", "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่", "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%", "สมชาย ใจดี", "2026-07-27 08:30", "evt_101"],
+          ["2026-07-26", "10:15", "กะเช้า", "Material", "ห้องผสมสี (Color Mix Room)", "เปลี่ยนล็อตสีพ่นผงชั่วคราว", "เปิดใช้สีผงล็อตใหม่ Batch #20260726-A เนื่องจากสีล็อตเดิมหมดสต็อก", "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน", "วิชัย มีสุข", "2026-07-26 10:15", "evt_102"],
+          ["2026-07-25", "13:40", "กะเช้า", "Man", "ไลน์พ่นสีชิ้นงาน", "เปลี่ยนตัวพนักงานพ่นสีหลัก", "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน", "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ", "สมศักดิ์ ขยันงาน", "2026-07-25 13:40", "evt_103"],
+          ["2026-07-24", "15:00", "กะเช้า", "Environment", "ห้องพ่นสี (Spray Booth)", "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี", "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม", "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ", "สมชาย ใจดี", "2026-07-24 15:00", "evt_104"],
+          ["2026-07-23", "09:20", "กะเช้า", "Measurement", "ห้อง QC ตรวจสอบ", "สอบเทียบเครื่องวัดความหนาสี (Elcometer)", "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี", "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง", "วิชัย มีสุข", "2026-07-23 09:20", "evt_105"]
+        ];
+        samples.forEach(row => evtSheet.appendRow(row));
+        SpreadsheetApp.flush();
+      }
+
+      const values = evtSheet.getDataRange().getValues();
+      if (!values || values.length <= 1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const header = values.shift();
+      const eventsData = values.map((r, i) => ({
+        rowIndex: i + 2,
+        date: formatDateStr(r[0], false),
+        time: String(r[1] || ""),
+        shift: String(r[2] || "กะเช้า"),
+        category: String(r[3] || "Machine"),
+        process: String(r[4] || ""),
+        title: String(r[5] || ""),
+        detail: String(r[6] || ""),
+        action: String(r[7] || ""),
+        recorder: String(r[8] || ""),
+        timestamp: formatDateStr(r[9] || r[0], true),
+        id: String(r[10] || ("evt_" + (i + 1)))
+      }));
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: eventsData })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle createEvent action via GET fallback
+    if (action === "createEvent") {
+      let evtSheet = ss.getSheetByName("events");
+      if (!evtSheet) {
+        evtSheet = ss.insertSheet("events");
+        evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
+      }
+      const eDate = String((e && e.parameter && e.parameter.date) || "").trim();
+      const eTime = String((e && e.parameter && e.parameter.time) || "").trim();
+      const eShift = String((e && e.parameter && e.parameter.shift) || "กะเช้า").trim();
+      const eCat = String((e && e.parameter && e.parameter.category) || "Machine").trim();
+      const eProc = String((e && e.parameter && e.parameter.process) || "").trim();
+      const eTitle = String((e && e.parameter && e.parameter.title) || "").trim();
+      const eDetail = String((e && e.parameter && e.parameter.detail) || "").trim();
+      const eAct = String((e && e.parameter && e.parameter.actionTaken) || (e && e.parameter && e.parameter.action) || "").trim();
+      const eRec = String((e && e.parameter && e.parameter.recorder) || "").trim();
+      const eId = "evt_" + new Date().getTime();
+      const nowStr = formatDateStr(new Date(), true);
+
+      evtSheet.appendRow([eDate, eTime, eShift, eCat, eProc, eTitle, eDetail, eAct, eRec, nowStr, eId]);
+      SpreadsheetApp.flush();
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", id: eId })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle deleteEvent action via GET fallback
+    if (action === "deleteEvent") {
+      let evtSheet = ss.getSheetByName("events");
+      if (evtSheet) {
+        const targetId = String((e && e.parameter && e.parameter.id) || "").trim();
+        const targetRow = Number((e && e.parameter && e.parameter.rowIndex) || 0);
+        if (targetRow && targetRow >= 2 && targetRow <= evtSheet.getLastRow()) {
+          evtSheet.deleteRow(targetRow);
+          SpreadsheetApp.flush();
+        } else if (targetId) {
+          const values = evtSheet.getDataRange().getValues();
+          for (let i = 1; i < values.length; i++) {
+            if (String(values[i][10]).trim() === targetId || String(values[i][5]).trim() === targetId) {
+              evtSheet.deleteRow(i + 1);
+              SpreadsheetApp.flush();
+              break;
+            }
+          }
+        }
+      }
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
     }
 

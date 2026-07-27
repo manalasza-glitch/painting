@@ -389,3 +389,166 @@ function generateSampleOutputDiaryData() {
     localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(sample));
     return sample;
 }
+
+// ==========================================
+// 5M1E Event Management API Functions
+// ==========================================
+
+async function fetchEventsFromAPI() {
+    const baseUrl = getApiUrl();
+    if (baseUrl) {
+        try {
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getEvents';
+            const response = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+            if (response.ok) {
+                const res = await response.json();
+                if (res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
+                    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(res.data));
+                    return res.data;
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to fetch 5M1E events from cloud API, using cache:", e);
+        }
+    }
+
+    const cached = localStorage.getItem("PAINTING_EVENTS_CACHE");
+    if (cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e) {}
+    }
+
+    return generateSampleEventsData();
+}
+
+function generateSampleEventsData() {
+    const sample = [
+        {
+            id: "evt_101",
+            date: "2026-07-27",
+            time: "08:30",
+            shift: "กะเช้า",
+            category: "Machine",
+            process: "เตาอบสี (Baking Oven)",
+            title: "ปรับเพิ่มอุณหภูมิตู้อบสี",
+            detail: "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่",
+            action: "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%",
+            recorder: "สมชาย ใจดี",
+            timestamp: "2026-07-27 08:30"
+        },
+        {
+            id: "evt_102",
+            date: "2026-07-26",
+            time: "10:15",
+            shift: "กะเช้า",
+            category: "Material",
+            process: "ห้องผสมสี (Color Mix Room)",
+            title: "เปลี่ยนล็อตสีพ่นผงชั่วคราว",
+            detail: "เปิดใช้สีผงล็อตใหม่ Batch #20260726-A เนื่องจากสีล็อตเดิมหมดสต็อก",
+            action: "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน",
+            recorder: "วิชัย มีสุข",
+            timestamp: "2026-07-26 10:15"
+        },
+        {
+            id: "evt_103",
+            date: "2026-07-25",
+            time: "13:40",
+            shift: "กะเช้า",
+            category: "Man",
+            process: "ไลน์พ่นสีชิ้นงาน",
+            title: "เปลี่ยนตัวพนักงานพ่นสีหลัก",
+            detail: "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน",
+            action: "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ",
+            recorder: "สมศักดิ์ ขยันงาน",
+            timestamp: "2026-07-25 13:40"
+        },
+        {
+            id: "evt_104",
+            date: "2026-07-24",
+            time: "15:00",
+            shift: "กะเช้า",
+            category: "Environment",
+            process: "ห้องพ่นสี (Spray Booth)",
+            title: "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี",
+            detail: "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม",
+            action: "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ",
+            recorder: "สมชาย ใจดี",
+            timestamp: "2026-07-24 15:00"
+        },
+        {
+            id: "evt_105",
+            date: "2026-07-23",
+            time: "09:20",
+            shift: "กะเช้า",
+            category: "Measurement",
+            process: "ห้อง QC ตรวจสอบ",
+            title: "สอบเทียบเครื่องวัดความหนาสี (Elcometer)",
+            detail: "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี",
+            action: "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง",
+            recorder: "วิชัย มีสุข",
+            timestamp: "2026-07-23 09:20"
+        }
+    ];
+    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(sample));
+    return sample;
+}
+
+async function sendEventToAPI(eventData) {
+    const baseUrl = getApiUrl();
+    const id = "evt_" + new Date().getTime();
+    const newEvt = { ...eventData, id: id, timestamp: `${eventData.date} ${eventData.time}` };
+
+    let cache = [];
+    try {
+        const raw = localStorage.getItem("PAINTING_EVENTS_CACHE");
+        if (raw) cache = JSON.parse(raw);
+    } catch (e) {}
+    cache.unshift(newEvt);
+    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(cache));
+
+    if (baseUrl) {
+        try {
+            activeSyncRequests++;
+            updateSyncUI();
+            const queryParams = new URLSearchParams({ action: "createEvent", ...newEvt }).toString();
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+            await fetch(url, { method: "GET", mode: "no-cors" });
+        } catch (e) {
+            console.warn("Failed to push 5M1E event to cloud API:", e);
+        } finally {
+            activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+            updateSyncUI();
+        }
+    }
+    return { status: "success", id: id };
+}
+
+async function deleteEventFromAPI(id, rowIndex) {
+    let cache = [];
+    try {
+        const raw = localStorage.getItem("PAINTING_EVENTS_CACHE");
+        if (raw) cache = JSON.parse(raw);
+    } catch (e) {}
+
+    const updated = cache.filter(evt => String(evt.id) !== String(id));
+    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(updated));
+
+    const baseUrl = getApiUrl();
+    if (baseUrl) {
+        try {
+            activeSyncRequests++;
+            updateSyncUI();
+            const queryParams = new URLSearchParams({ action: "deleteEvent", id: id, rowIndex: rowIndex || 0 }).toString();
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+            await fetch(url, { method: "GET", mode: "no-cors" });
+        } catch (e) {
+            console.warn("Failed to delete 5M1E event from cloud API:", e);
+        } finally {
+            activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+            updateSyncUI();
+        }
+    }
+    return { status: "success" };
+}
