@@ -291,12 +291,12 @@ button, input, textarea, select {
 }
 
 .tab-page {
-  display: none;
+  display: none !important;
   animation: fadeIn 0.3s ease-in-out forwards;
 }
 
 .tab-page.active {
-  display: block;
+  display: block !important;
 }
 
 @keyframes fadeIn {

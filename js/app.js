@@ -129,7 +129,6 @@ async function loadDataFromAPI(silent = false) {
 function switchTab(tabId, element) {
     // Hide all tab pages & remove active class
     document.querySelectorAll(".tab-page").forEach(page => {
-        page.style.display = "none";
         page.classList.remove("active");
     });
     
@@ -139,7 +138,6 @@ function switchTab(tabId, element) {
     // Show target tab page
     const targetTab = document.getElementById(tabId);
     if (targetTab) {
-        targetTab.style.display = "block";
         targetTab.classList.add("active");
     }
 
@@ -155,9 +153,16 @@ function switchTab(tabId, element) {
         if (typeof renderStaffDropdowns === 'function') {
             renderStaffDropdowns();
         }
+        if (typeof renderDailyReportList === 'function') {
+            renderDailyReportList();
+        }
     } else if (tabId === "event-tab") {
         if (typeof renderEventsTab === 'function') {
             renderEventsTab();
+        }
+    } else if (tabId === "history-tab") {
+        if (typeof renderTables === 'function') {
+            renderTables();
         }
     }
 }
