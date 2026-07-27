@@ -769,6 +769,9 @@ button, input, textarea, select {
   background: #ffffff;
   width: 90%;
   max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   overflow: hidden;
@@ -783,14 +786,15 @@ button, input, textarea, select {
 .modal-header {
   background: linear-gradient(135deg, var(--bg-card-navy), #1d4ed8);
   color: white;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modal-title {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -806,10 +810,11 @@ button, input, textarea, select {
   line-height: 1;
 }
 
-.modal-body {
-  padding: 1.75rem;
-  max-height: 80vh;
+.modal-body, .modal-box form {
+  padding: 1.25rem 1.5rem;
   overflow-y: auto;
+  flex: 1;
+  max-height: calc(85vh - 60px);
 }
 
 .form-grid {

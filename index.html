@@ -20,7 +20,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=2.9.0">
+    <link rel="stylesheet" href="css/style.css?v=3.1.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -897,29 +897,29 @@
                 <button class="modal-close" onclick="closeEventModal()">&times;</button>
             </div>
 
-            <form id="eventForm" onsubmit="handleEventFormSubmit(event)" style="padding: 1.25rem 1.5rem;">
-                <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 1rem;">
+            <form id="eventForm" onsubmit="handleEventFormSubmit(event)" style="padding: 1rem 1.25rem;">
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 0.75rem; gap: 0.75rem;">
                     <div class="form-group">
-                        <label>วันที่เกิดเหตุการณ์</label>
-                        <input type="date" id="eventDate" class="form-control" required>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">วันที่เกิดเหตุการณ์</label>
+                        <input type="date" id="eventDate" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                     </div>
                     <div class="form-group">
-                        <label>เวลา</label>
-                        <input type="time" id="eventTime" class="form-control" required>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">เวลา</label>
+                        <input type="time" id="eventTime" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                     </div>
                     <div class="form-group">
-                        <label>กะทำงาน (Shift)</label>
-                        <select id="eventShift" class="form-control">
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">กะทำงาน (Shift)</label>
+                        <select id="eventShift" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;">
                             <option value="กะเช้า">กะเช้า (Day)</option>
                             <option value="กะดึก">กะดึก (Night)</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-grid" style="margin-bottom: 1rem;">
+                <div class="form-grid" style="margin-bottom: 0.75rem; gap: 0.75rem;">
                     <div class="form-group">
-                        <label>หมวดหมู่ 5M1E</label>
-                        <select id="eventCategory" class="form-control" required>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">หมวดหมู่ 5M1E</label>
+                        <select id="eventCategory" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                             <option value="Man">👨‍🌾 Man (คน / พนักงาน)</option>
                             <option value="Machine" selected>⚙️ Machine (เครื่องจักร / อุปกรณ์)</option>
                             <option value="Material">📦 Material (วัตถุดิบ / สารเคมี / สี)</option>
@@ -929,34 +929,34 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>ขั้นตอน / สายการผลิต (Process)</label>
-                        <input type="text" id="eventProcess" class="form-control" placeholder="เช่น เตาอบสี, ห้องพ่นสีผง" required>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">ขั้นตอน / สายการผลิต (Process)</label>
+                        <input type="text" id="eventProcess" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" placeholder="เช่น เตาอบสี, ห้องพ่นสีผง" required>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>หัวข้อการเปลี่ยนแปลง (Title)</label>
-                    <input type="text" id="eventTitle" class="form-control" placeholder="ระบุหัวข้อสั้นๆ เช่น ปรับเพิ่มอุณหภูมิตู้อบ" required>
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">หัวข้อการเปลี่ยนแปลง (Title)</label>
+                    <input type="text" id="eventTitle" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" placeholder="ระบุหัวข้อสั้นๆ เช่น ปรับเพิ่มอุณหภูมิตู้อบ" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">รายละเอียดการเปลี่ยนแปลง (Detail)</label>
+                    <textarea id="eventDetail" class="form-control" rows="2" style="padding: 0.4rem 0.6rem; min-height: 50px;" placeholder="ระบุสาเหตุหรือรายละเอียดการเปลี่ยนแปลง..." required></textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">การรับมือ / การดำเนินการแก้ไข (Action Taken)</label>
+                    <textarea id="eventActionTaken" class="form-control" rows="2" style="padding: 0.4rem 0.6rem; min-height: 50px;" placeholder="ระบุผลกระทบ หรือ การตรวจสอบรองรับ..."></textarea>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>รายละเอียดการเปลี่ยนแปลง (Detail)</label>
-                    <textarea id="eventDetail" class="form-control" rows="3" placeholder="ระบุสาเหตุหรือรายละเอียดการเปลี่ยนแปลง..." required></textarea>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">ผู้บันทึก (Recorded By)</label>
+                    <select id="eventRecorderSelect" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required></select>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label>การรับมือ / การดำเนินการแก้ไข (Action Taken)</label>
-                    <textarea id="eventActionTaken" class="form-control" rows="2" placeholder="ระบุผลกระทบ หรือ การตรวจสอบรองรับ..."></textarea>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label>ผู้บันทึก (Recorded By)</label>
-                    <select id="eventRecorderSelect" class="form-control" required></select>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: #e2e8f0; color: #334155; border: none; padding: 0.6rem 1.25rem; border-radius: 20px; font-weight: 600;">ยกเลิก</button>
-                    <button type="submit" class="btn-primary-custom">💾 บันทึกเหตุการณ์ 5M1E</button>
+                <div style="position: sticky; bottom: 0; background: #ffffff; padding-top: 0.75rem; padding-bottom: 0.25rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 0.75rem; z-index: 10;">
+                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: #e2e8f0; color: #334155; border: none; padding: 0.5rem 1.25rem; border-radius: 20px; font-weight: 600;">ยกเลิก</button>
+                    <button type="submit" class="btn-primary-custom" style="padding: 0.5rem 1.25rem;">💾 บันทึกเหตุการณ์ 5M1E</button>
                 </div>
             </form>
         </div>
@@ -996,10 +996,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=3.0.0"></script>
-    <script src="js/app.js?v=3.0.0"></script>
-    <script src="js/daily-report.js?v=3.0.0"></script>
-    <script src="js/events.js?v=3.0.0"></script>
+    <script src="js/api.js?v=3.1.0"></script>
+    <script src="js/app.js?v=3.1.0"></script>
+    <script src="js/daily-report.js?v=3.1.0"></script>
+    <script src="js/events.js?v=3.1.0"></script>
 </body>
 
 </html>
