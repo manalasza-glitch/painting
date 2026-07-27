@@ -142,27 +142,46 @@ function getCurrentTimeSlot() {
 }
 
 let currentTargetStaffType = "recorder";
-let PAINTING_STAFF_LIST = [
+
+let PAINTING_RECORDERS_LIST = [
     "สมชาย ใจดี",
     "วิชัย มีสุข",
-    "สมศักดิ์ ขยันงาน",
-    "อนันต์ ราบรื่น"
+    "สมศักดิ์ ขยันงาน"
+];
+
+let PAINTING_CHECKERS_LIST = [
+    "อนันต์ ราบรื่น",
+    "ชูศักดิ์ ตรวจงาน",
+    "ประเสริฐ ดีเยี่ยม"
 ];
 
 function loadStaffList() {
-    const cached = localStorage.getItem("PAINTING_STAFF_CACHE");
-    if (cached) {
+    // Load Recorders
+    const cachedRecorders = localStorage.getItem("PAINTING_RECORDERS_CACHE");
+    if (cachedRecorders) {
         try {
-            const list = JSON.parse(cached);
+            const list = JSON.parse(cachedRecorders);
             if (Array.isArray(list) && list.length > 0) {
-                PAINTING_STAFF_LIST = list;
+                PAINTING_RECORDERS_LIST = list;
+            }
+        } catch (e) {}
+    }
+
+    // Load Checkers
+    const cachedCheckers = localStorage.getItem("PAINTING_CHECKERS_CACHE");
+    if (cachedCheckers) {
+        try {
+            const list = JSON.parse(cachedCheckers);
+            if (Array.isArray(list) && list.length > 0) {
+                PAINTING_CHECKERS_LIST = list;
             }
         } catch (e) {}
     }
 }
 
 function saveStaffList() {
-    localStorage.setItem("PAINTING_STAFF_CACHE", JSON.stringify(PAINTING_STAFF_LIST));
+    localStorage.setItem("PAINTING_RECORDERS_CACHE", JSON.stringify(PAINTING_RECORDERS_LIST));
+    localStorage.setItem("PAINTING_CHECKERS_CACHE", JSON.stringify(PAINTING_CHECKERS_LIST));
 }
 
 function renderStaffDropdowns() {
@@ -173,27 +192,28 @@ function renderStaffDropdowns() {
     const currentRecorder = recorderSelect ? recorderSelect.value : "";
     const currentChecker = checkerSelect ? checkerSelect.value : "";
 
-    let recorderHtml = '<option value="">-- เลือกผู้บันทึก --</option>';
-    let checkerHtml = '<option value="">-- เลือกผู้ตรวจสอบ (ถ้ามี) --</option>';
-
-    PAINTING_STAFF_LIST.forEach(name => {
-        recorderHtml += `<option value="${name}">${name}</option>`;
-        checkerHtml += `<option value="${name}">${name}</option>`;
-    });
-
-    recorderHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อพนักงานใหม่...</option>`;
-    checkerHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อพนักงานใหม่...</option>`;
-
+    // Render Recorders Dropdown
     if (recorderSelect) {
+        let recorderHtml = '<option value="">-- เลือกผู้บันทึก --</option>';
+        PAINTING_RECORDERS_LIST.forEach(name => {
+            recorderHtml += `<option value="${name}">${name}</option>`;
+        });
+        recorderHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อ "ผู้บันทึก" ใหม่...</option>`;
         recorderSelect.innerHTML = recorderHtml;
-        if (currentRecorder && PAINTING_STAFF_LIST.includes(currentRecorder)) {
+        if (currentRecorder && PAINTING_RECORDERS_LIST.includes(currentRecorder)) {
             recorderSelect.value = currentRecorder;
         }
     }
 
+    // Render Checkers Dropdown
     if (checkerSelect) {
+        let checkerHtml = '<option value="">-- เลือกผู้ตรวจสอบ (ถ้ามี) --</option>';
+        PAINTING_CHECKERS_LIST.forEach(name => {
+            checkerHtml += `<option value="${name}">${name}</option>`;
+        });
+        checkerHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อ "ผู้ตรวจสอบ" ใหม่...</option>`;
         checkerSelect.innerHTML = checkerHtml;
-        if (currentChecker && PAINTING_STAFF_LIST.includes(currentChecker)) {
+        if (currentChecker && PAINTING_CHECKERS_LIST.includes(currentChecker)) {
             checkerSelect.value = currentChecker;
         }
     }
@@ -209,21 +229,29 @@ function handleStaffSelectChange(selectEl, targetType) {
 function openAddStaffModal(targetType = "recorder") {
     currentTargetStaffType = targetType;
     const modal = document.getElementById('addStaffModal');
+    const modalTitle = document.getElementById('addStaffModalTitle');
+
+    if (modalTitle) {
+        modalTitle.innerText = targetType === "recorder" ? "👥 จัดการรายชื่อ \"ผู้บันทึก\"" : "👥 จัดการรายชื่อ \"ผู้ตรวจสอบ\"";
+    }
+
     if (modal) {
         modal.style.display = "flex";
         modal.classList.add('active');
         const input = document.getElementById('newStaffInput');
         if (input) {
             input.value = "";
+            input.placeholder = targetType === "recorder" ? "ระบุ ชื่อผู้บันทึก" : "ระบุ ชื่อผู้ตรวจสอบ";
             setTimeout(() => input.focus(), 200);
         }
         renderStaffListInModal();
     } else {
-        // Fallback for prompt if DOM element missing
-        const newName = prompt("กรอกชื่อ - นามสกุล พนักงานใหม่:");
+        const titleText = targetType === "recorder" ? "ผู้บันทึก" : "ผู้ตรวจสอบ";
+        const newName = prompt(`กรอกชื่อ - นามสกุล (${titleText}):`);
         if (newName && newName.trim()) {
-            if (!PAINTING_STAFF_LIST.includes(newName.trim())) {
-                PAINTING_STAFF_LIST.push(newName.trim());
+            const list = targetType === "recorder" ? PAINTING_RECORDERS_LIST : PAINTING_CHECKERS_LIST;
+            if (!list.includes(newName.trim())) {
+                list.push(newName.trim());
                 saveStaffList();
                 renderStaffDropdowns();
             }
@@ -240,16 +268,22 @@ function closeAddStaffModal() {
     }
 }
 
+function getActiveStaffList() {
+    return currentTargetStaffType === "recorder" ? PAINTING_RECORDERS_LIST : PAINTING_CHECKERS_LIST;
+}
+
 function renderStaffListInModal() {
     const container = document.getElementById('staffListContainer');
     if (!container) return;
 
-    if (PAINTING_STAFF_LIST.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">ยังไม่มีรายชื่อพนักงาน</div>`;
+    const list = getActiveStaffList();
+
+    if (list.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">ยังไม่มีรายชื่อ</div>`;
         return;
     }
 
-    container.innerHTML = PAINTING_STAFF_LIST.map((name, index) => `
+    container.innerHTML = list.map((name, index) => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;">
             <span style="font-weight: 600; color: #334155;">👤 ${name}</span>
             <button type="button" onclick="deleteStaffName(${index})" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🗑️ ลบ</button>
@@ -267,17 +301,18 @@ function saveNewStaff() {
         return;
     }
 
-    if (PAINTING_STAFF_LIST.includes(newName)) {
-        showToast("รายชื่อนี้มีอยู่ในระบบแล้ว", "warning");
+    const list = getActiveStaffList();
+
+    if (list.includes(newName)) {
+        showToast("รายชื่อนี้มีอยู่ในรายการแล้ว", "warning");
         return;
     }
 
-    PAINTING_STAFF_LIST.push(newName);
+    list.push(newName);
     saveStaffList();
     renderStaffDropdowns();
     renderStaffListInModal();
 
-    // Auto select newly added staff in the targeted dropdown
     if (currentTargetStaffType === "recorder") {
         const recorderSelect = document.getElementById('recorderName');
         if (recorderSelect) recorderSelect.value = newName;
@@ -291,9 +326,10 @@ function saveNewStaff() {
 }
 
 function deleteStaffName(index) {
-    if (index >= 0 && index < PAINTING_STAFF_LIST.length) {
-        const removedName = PAINTING_STAFF_LIST[index];
-        PAINTING_STAFF_LIST.splice(index, 1);
+    const list = getActiveStaffList();
+    if (index >= 0 && index < list.length) {
+        const removedName = list[index];
+        list.splice(index, 1);
         saveStaffList();
         renderStaffDropdowns();
         renderStaffListInModal();
