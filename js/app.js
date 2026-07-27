@@ -759,23 +759,91 @@ async function renderDailyReportCharts() {
     if (kpiProdTopModelQty) kpiProdTopModelQty.innerText = `${topModelQty.toLocaleString()} ชิ้น`;
     if (kpiProdReportCount) kpiProdReportCount.innerText = reportCount.toLocaleString();
 
-    // 2. Render Output Daily Chart (Bar: ProdQty, Line: TotalDefect grouped by Date)
-    const dateMap = {};
+    // 2. Render Output Daily Stacked Bar Chart (Grouped by Part Group/Model)
+    const groups = ["GLAND PLATE", "BOX & U-BOX", "DOOR PANEL", "COVER NMS", "COVER NLC", "รุ่นอื่นๆ (Other)"];
+    const groupColors = {
+        "GLAND PLATE": "#00b4d8",     // Cyan Blue
+        "BOX & U-BOX": "#10b981",     // Emerald Green
+        "DOOR PANEL": "#f59e0b",      // Amber Gold
+        "COVER NMS": "#8b5cf6",       // Purple
+        "COVER NLC": "#ec4899",       // Pink
+        "รุ่นอื่นๆ (Other)": "#64748b"   // Slate
+    };
+
+    function classifyGroup(modelName) {
+        const m = String(modelName || '').toUpperCase();
+        if (m.includes("GLAND")) return "GLAND PLATE";
+        if (m.includes("BOX")) return "BOX & U-BOX";
+        if (m.includes("DOOR") || m.includes("PANEL")) return "DOOR PANEL";
+        if (m.includes("COVER NMS") || m.includes("NMS")) return "COVER NMS";
+        if (m.includes("COVER NLC") || m.includes("NLC")) return "COVER NLC";
+        return "รุ่นอื่นๆ (Other)";
+    }
+
+    const dateGroupMap = {};
+    const dateDefectsMap = {};
+    const dateTotalProdMap = {};
+
     filteredData.forEach(r => {
         const dStr = String(r.date || r.Date || r.timestamp || '').substring(0, 10);
         if (!dStr) return;
-        if (!dateMap[dStr]) {
-            dateMap[dStr] = { prodQty: 0, defects: 0 };
+
+        if (!dateGroupMap[dStr]) {
+            dateGroupMap[dStr] = {
+                "GLAND PLATE": 0,
+                "BOX & U-BOX": 0,
+                "DOOR PANEL": 0,
+                "COVER NMS": 0,
+                "COVER NLC": 0,
+                "รุ่นอื่นๆ (Other)": 0
+            };
+            dateDefectsMap[dStr] = 0;
+            dateTotalProdMap[dStr] = 0;
         }
+
         const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
         const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
-        dateMap[dStr].prodQty += pQty;
-        dateMap[dStr].defects += dQty;
+        const grp = classifyGroup(r.model || r.Model);
+
+        dateGroupMap[dStr][grp] += pQty;
+        dateDefectsMap[dStr] += dQty;
+        dateTotalProdMap[dStr] += pQty;
     });
 
-    const datesList = Object.keys(dateMap).sort();
-    const prodQtyList = datesList.map(d => dateMap[d].prodQty);
-    const defectsList = datesList.map(d => dateMap[d].defects);
+    const datesList = Object.keys(dateGroupMap).sort();
+    const defectsList = datesList.map(d => dateDefectsMap[d]);
+
+    // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Product Groups
+    const stackedDatasets = [
+        {
+            type: 'line',
+            label: 'ของเสียรวม (ชิ้น)',
+            data: defectsList,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.25)',
+            borderWidth: 3,
+            pointRadius: 4,
+            fill: false,
+            tension: 0.3,
+            order: 0
+        }
+    ];
+
+    groups.forEach(grp => {
+        const qtyData = datesList.map(d => dateGroupMap[d][grp]);
+        const sum = qtyData.reduce((a, b) => a + b, 0);
+        if (sum > 0) {
+            stackedDatasets.push({
+                type: 'bar',
+                label: grp,
+                data: qtyData,
+                backgroundColor: groupColors[grp],
+                stack: 'prodStack',
+                borderRadius: 2,
+                order: 1
+            });
+        }
+    });
 
     const ctxDaily = document.getElementById("outputDailyChart");
     if (ctxDaily && typeof Chart !== 'undefined') {
@@ -787,42 +855,34 @@ async function renderDailyReportCharts() {
             type: 'bar',
             data: {
                 labels: datesList,
-                datasets: [
-                    {
-                        type: 'line',
-                        label: 'ของเสียรวม (ชิ้น)',
-                        data: defectsList,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.3
-                    },
-                    {
-                        type: 'bar',
-                        label: 'ยอดผลิตรวม (ชิ้น)',
-                        data: prodQtyList,
-                        backgroundColor: 'rgba(0, 180, 216, 0.85)',
-                        borderColor: '#00b4d8',
-                        borderRadius: 6,
-                        borderWidth: 1
-                    }
-                ]
+                datasets: stackedDatasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: { color: '#94a3b8', font: { family: 'Sarabun', size: 11 } }
+                        labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            footer: function(tooltipItems) {
+                                if (!tooltipItems || tooltipItems.length === 0) return '';
+                                const dateLabel = tooltipItems[0].label;
+                                const totalPcs = dateTotalProdMap[dateLabel] || 0;
+                                return `ยอดผลิตรวมทั้งวัน: ${totalPcs.toLocaleString()} ชิ้น`;
+                            }
+                        }
                     }
                 },
                 scales: {
                     x: {
+                        stacked: true,
                         ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
                         grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     },
                     y: {
+                        stacked: true,
                         ticks: { color: '#94a3b8' },
                         grid: { color: 'rgba(255, 255, 255, 0.08)' }
                     }
