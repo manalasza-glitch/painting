@@ -149,7 +149,8 @@ let PAINTING_RECORDERS_LIST = [
     "สมศักดิ์ ขยันงาน"
 ];
 
-function loadStaffList() {
+async function loadStaffList() {
+    // 1. Load from local cache for instant UI rendering
     const cachedRecorders = localStorage.getItem("PAINTING_RECORDERS_CACHE");
     if (cachedRecorders) {
         try {
@@ -159,14 +160,23 @@ function loadStaffList() {
             }
         } catch (e) {}
     }
+
+    // 2. Fetch fresh list from Cloud (Google Sheet Recorders tab)
+    if (typeof fetchRecordersFromAPI === 'function') {
+        const cloudRecorders = await fetchRecordersFromAPI();
+        if (cloudRecorders && cloudRecorders.length > 0) {
+            PAINTING_RECORDERS_LIST = cloudRecorders;
+            saveStaffList();
+            renderStaffDropdownsUI();
+        }
+    }
 }
 
 function saveStaffList() {
     localStorage.setItem("PAINTING_RECORDERS_CACHE", JSON.stringify(PAINTING_RECORDERS_LIST));
 }
 
-function renderStaffDropdowns() {
-    loadStaffList();
+function renderStaffDropdownsUI() {
     const recorderSelect = document.getElementById('recorderName');
     const currentRecorder = recorderSelect ? recorderSelect.value : "";
 
@@ -181,6 +191,13 @@ function renderStaffDropdowns() {
             recorderSelect.value = currentRecorder;
         }
     }
+}
+
+function renderStaffDropdowns() {
+    loadStaffList().then(() => {
+        renderStaffDropdownsUI();
+    });
+    renderStaffDropdownsUI();
 }
 
 function handleStaffSelectChange(selectEl, targetType = "recorder") {
@@ -215,7 +232,10 @@ function openAddStaffModal(targetType = "recorder") {
             if (!PAINTING_RECORDERS_LIST.includes(newName.trim())) {
                 PAINTING_RECORDERS_LIST.push(newName.trim());
                 saveStaffList();
-                renderStaffDropdowns();
+                renderStaffDropdownsUI();
+                if (typeof addRecorderToAPI === 'function') {
+                    addRecorderToAPI(newName.trim());
+                }
             }
             const sel = document.getElementById('recorderName');
             if (sel) sel.value = newName.trim();
@@ -264,8 +284,13 @@ function saveNewStaff() {
 
     PAINTING_RECORDERS_LIST.push(newName);
     saveStaffList();
-    renderStaffDropdowns();
+    renderStaffDropdownsUI();
     renderStaffListInModal();
+
+    // Sync new recorder to Cloud Google Sheet
+    if (typeof addRecorderToAPI === 'function') {
+        addRecorderToAPI(newName);
+    }
 
     const recorderSelect = document.getElementById('recorderName');
     if (recorderSelect) recorderSelect.value = newName;
@@ -279,8 +304,14 @@ function deleteStaffName(index) {
         const removedName = PAINTING_RECORDERS_LIST[index];
         PAINTING_RECORDERS_LIST.splice(index, 1);
         saveStaffList();
-        renderStaffDropdowns();
+        renderStaffDropdownsUI();
         renderStaffListInModal();
+
+        // Sync deletion to Cloud Google Sheet
+        if (typeof deleteRecorderFromAPI === 'function') {
+            deleteRecorderFromAPI(removedName);
+        }
+
         showToast(`ลบรายชื่อ "${removedName}" แล้ว`, "info");
     }
 }

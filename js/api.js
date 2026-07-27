@@ -255,3 +255,57 @@ function generateSampleData() {
     localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(sample));
     return sample;
 }
+
+// Fetch recorder names list from Cloud Google Sheet (Recorders tab)
+async function fetchRecordersFromAPI() {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return null;
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getRecorders';
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.recorders && Array.isArray(data.recorders)) {
+            return data.recorders;
+        }
+    } catch (e) {
+        console.warn("Failed to fetch cloud recorders, using local cache:", e);
+    }
+    return null;
+}
+
+// Add a new recorder name to Cloud Google Sheet
+async function addRecorderToAPI(name) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return;
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=addRecorder';
+
+    try {
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "addRecorder", name: name })
+        });
+    } catch (e) {
+        console.warn("Failed to sync new recorder to cloud:", e);
+    }
+}
+
+// Delete a recorder name from Cloud Google Sheet
+async function deleteRecorderFromAPI(name) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return;
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=deleteRecorder';
+
+    try {
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "deleteRecorder", name: name })
+        });
+    } catch (e) {
+        console.warn("Failed to delete recorder from cloud:", e);
+    }
+}

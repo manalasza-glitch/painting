@@ -189,6 +189,50 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport" })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Handle addRecorder action
+    if (action === "addRecorder") {
+      let recSheet = ss.getSheetByName("Recorders");
+      if (!recSheet) {
+        recSheet = ss.insertSheet("Recorders");
+        recSheet.appendRow(["Name"]);
+      }
+      const newName = String(data.name || (e && e.parameter && e.parameter.name) || "").trim();
+      if (newName) {
+        const values = recSheet.getDataRange().getValues();
+        let exists = false;
+        for (let i = 1; i < values.length; i++) {
+          if (String(values[i][0]).trim() === newName) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          recSheet.appendRow([newName]);
+          SpreadsheetApp.flush();
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", name: newName })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle deleteRecorder action
+    if (action === "deleteRecorder") {
+      let recSheet = ss.getSheetByName("Recorders");
+      if (recSheet) {
+        const targetName = String(data.name || (e && e.parameter && e.parameter.name) || "").trim();
+        if (targetName) {
+          const values = recSheet.getDataRange().getValues();
+          for (let i = 1; i < values.length; i++) {
+            if (String(values[i][0]).trim() === targetName) {
+              recSheet.deleteRow(i + 1);
+              SpreadsheetApp.flush();
+              break;
+            }
+          }
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle CREATE action ONLY
     if (action === "create") {
       const dateVal = data.date || (e && e.parameter && e.parameter.date) || formatDateStr(new Date(), true);
@@ -234,9 +278,32 @@ function doPost(e) {
   }
 }
 
-function doGet() {
+function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const action = (e && e.parameter && e.parameter.action) || "";
+
+    // Handle getRecorders action
+    if (action === "getRecorders") {
+      let recSheet = ss.getSheetByName("Recorders");
+      if (!recSheet) {
+        recSheet = ss.insertSheet("Recorders");
+        recSheet.appendRow(["Name"]);
+        const defaults = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน"];
+        defaults.forEach(n => recSheet.appendRow([n]));
+      }
+
+      const values = recSheet.getDataRange().getValues();
+      const list = [];
+      for (let i = 1; i < values.length; i++) {
+        if (values[i][0]) {
+          list.push(String(values[i][0]).trim());
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", recorders: list })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     let sheet = ss.getSheetByName(SHEET_NAME);
     if (!sheet) {
       return ContentService
