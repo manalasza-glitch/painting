@@ -415,9 +415,13 @@
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                        <span>รายงานเปอร์เซ็นต์งานดี (% OK) VS งานเสีย (% NG)</span>
+                                        <span>วิเคราะห์เปอร์เซ็นต์ % Yield & % NG</span>
                                     </div>
-                                    <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">% OK vs % NG</span>
+                                    <select id="qualityViewMode" onchange="updateQualityChartMode()" style="background: rgba(15, 23, 42, 0.7); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); border-radius: 14px; padding: 0.2rem 0.55rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; outline: none;">
+                                        <option value="ng" selected>🔴 เจาะลึก % NG Rate (ย่อสเกล Zoom)</option>
+                                        <option value="yield">🟢 เจาะลึก % Yield Rate (ย่อสเกล Zoom)</option>
+                                        <option value="both">📊 แสดงทั้งสอง (% OK & % NG)</option>
+                                    </select>
                                 </div>
                                 <div class="chart-container-wrapper" style="height: 250px;">
                                     <canvas id="qualityYieldChart"></canvas>

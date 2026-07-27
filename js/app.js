@@ -872,7 +872,7 @@ async function renderDailyReportCharts() {
         });
     }
 
-    // 4. Render Quality % OK vs % NG Line Chart
+    // 4. Cache Quality Data & Render Quality Yield / NG Chart
     const pctOkList = datesList.map(d => {
         const total = dateMap[d].prodQty;
         const defects = dateMap[d].defects;
@@ -886,60 +886,135 @@ async function renderDailyReportCharts() {
         return total > 0 ? Number(((defects / total) * 100).toFixed(1)) : 0;
     });
 
-    const ctxQuality = document.getElementById("qualityYieldChart");
-    if (ctxQuality && typeof Chart !== 'undefined') {
-        if (qualityYieldChartInstance) {
-            qualityYieldChartInstance.destroy();
-        }
+    globalQualityChartCache = { datesList, pctOkList, pctNgList };
+    renderQualityYieldChart();
+}
 
-        qualityYieldChartInstance = new Chart(ctxQuality, {
-            type: 'line',
-            data: {
-                labels: datesList,
-                datasets: [
-                    {
-                        label: '% งานดี (% OK Rate)',
-                        data: pctOkList,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.3
-                    },
-                    {
-                        label: '% งานเสีย (% NG Rate)',
-                        data: pctNgList,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.3
-                    }
-                ]
+let currentQualityViewMode = 'ng';
+let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
+
+function updateQualityChartMode() {
+    const select = document.getElementById("qualityViewMode");
+    if (select) {
+        currentQualityViewMode = select.value;
+    }
+    renderQualityYieldChart();
+}
+
+function renderQualityYieldChart() {
+    const { datesList, pctOkList, pctNgList } = globalQualityChartCache;
+    const ctxQuality = document.getElementById("qualityYieldChart");
+    if (!ctxQuality || typeof Chart === 'undefined' || !datesList || datesList.length === 0) return;
+
+    if (qualityYieldChartInstance) {
+        qualityYieldChartInstance.destroy();
+    }
+
+    let datasets = [];
+    let yMin = 0;
+    let yMax = 100;
+
+    const maxNg = pctNgList.length > 0 ? Math.max(...pctNgList) : 0;
+    const minOk = pctOkList.length > 0 ? Math.min(...pctOkList) : 100;
+
+    if (currentQualityViewMode === 'ng') {
+        // Zoom mode for % NG Rate (e.g. 0% to 5% or 8%)
+        yMin = 0;
+        yMax = Math.min(100, Math.max(5, Math.ceil(maxNg + 2)));
+        datasets = [
+            {
+                label: '% งานเสีย (% NG Rate)',
+                data: pctNgList,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointBackgroundColor: '#ef4444',
+                fill: true,
+                tension: 0.3
+            }
+        ];
+    } else if (currentQualityViewMode === 'yield') {
+        // Zoom mode for % Yield Rate (e.g. 85% to 100%)
+        yMin = Math.max(0, Math.floor(minOk - 3));
+        yMax = 100;
+        datasets = [
+            {
+                label: '% งานดี (% OK Yield Rate)',
+                data: pctOkList,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.25)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointBackgroundColor: '#10b981',
+                fill: true,
+                tension: 0.3
+            }
+        ];
+    } else {
+        // Both % OK & % NG (0 - 100%)
+        yMin = 0;
+        yMax = 100;
+        datasets = [
+            {
+                label: '% งานดี (% OK Rate)',
+                data: pctOkList,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                borderWidth: 3,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
-                    }
+            {
+                label: '% งานเสีย (% NG Rate)',
+                data: pctNgList,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                borderWidth: 3,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3
+            }
+        ];
+    }
+
+    qualityYieldChartInstance = new Chart(ctxQuality, {
+        type: 'line',
+        data: {
+            labels: datesList,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                 },
-                scales: {
-                    x: {
-                        ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                    },
-                    y: {
-                        min: 0,
-                        max: 100,
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw}%`;
+                        }
                     }
                 }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                },
+                y: {
+                    min: yMin,
+                    max: yMax,
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value) { return value + '%'; }
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                }
             }
-        });
-    }
+        }
+    });
 }
