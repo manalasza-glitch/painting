@@ -315,3 +315,29 @@ async function deleteRecorderFromAPI(name) {
         console.warn("Failed to delete recorder from cloud:", e);
     }
 }
+
+// Fetch outputdiary daily production report data from Cloud Google Sheet
+async function fetchDailyReportDataFromAPI() {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return [];
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData';
+
+    try {
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json && json.data && Array.isArray(json.data)) {
+            localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json.data));
+            return json.data;
+        }
+    } catch (e) {
+        console.warn("Failed to fetch outputdiary from cloud, checking cache:", e);
+    }
+
+    const cached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+    if (cached) {
+        try {
+            return JSON.parse(cached);
+        } catch (e) {}
+    }
+    return [];
+}

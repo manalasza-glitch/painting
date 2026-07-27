@@ -283,6 +283,44 @@ function doGet(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
 
+    // Handle getDailyReportData action (outputdiary sheet)
+    if (action === "getDailyReportData") {
+      let prodSheet = ss.getSheetByName("outputdiary");
+      if (!prodSheet) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const values = prodSheet.getDataRange().getValues();
+      if (!values || values.length <= 1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      values.shift(); // remove header row
+      const data = values.map(r => ({
+        timestamp: formatDateStr(r[0], true),
+        date: formatDateStr(r[1], false),
+        shift: String(r[2] || ""),
+        recorder: String(r[3] || ""),
+        checker: String(r[4] || ""),
+        downtimeBurner: Number(r[5]) || 0,
+        downtimeWash: Number(r[6]) || 0,
+        downtimeOvenEtc: Number(r[7]) || 0,
+        downtimeNote: String(r[8] || ""),
+        model: String(r[9] || ""),
+        timeSlot: String(r[10] || ""),
+        prodQty: Number(r[11]) || 0,
+        dent: Number(r[12]) || 0,
+        colorDrop: Number(r[13]) || 0,
+        thinPaint: Number(r[14]) || 0,
+        thickPaint: Number(r[15]) || 0,
+        waterStain: Number(r[16]) || 0,
+        otherDefect: Number(r[17]) || 0,
+        totalDefect: Number(r[18]) || 0
+      }));
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: data })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle getRecorders action (Cloud Sync)
     if (action === "getRecorders") {
       let recSheet = ss.getSheetByName("Recorders");

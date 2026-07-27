@@ -1,6 +1,8 @@
 let inspectionRecords = [];
 let dailyChartInstance = null;
 let donutChartInstance = null;
+let outputDailyChartInstance = null;
+let topModelsChartInstance = null;
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
@@ -423,6 +425,9 @@ function renderDashboard() {
 
     // 5. Update Recent Table to reflect filtered date
     renderRecentTable(filterDate ? filteredRecords : inspectionRecords);
+
+    // 6. Render Output Diary Charts (from Google Sheets outputdiary)
+    renderDailyReportCharts();
 }
 
 function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
@@ -686,4 +691,178 @@ function showToast(message, type = "success") {
         toast.style.transform = 'translateX(30px)';
         setTimeout(() => toast.remove(), 300);
     }, 3500);
+}
+
+async function renderDailyReportCharts() {
+    if (typeof fetchDailyReportDataFromAPI !== 'function') return;
+
+    const data = await fetchDailyReportDataFromAPI();
+    if (!data || data.length === 0) return;
+
+    // Apply date filter if set
+    const filterInput = document.getElementById("dashboardDateFilter");
+    const filterDate = filterInput ? filterInput.value : "";
+
+    let filteredData = data;
+    if (filterDate) {
+        filteredData = data.filter(r => String(r.date).substring(0, 10) === filterDate);
+    }
+
+    // 1. Calculate KPIs
+    let totalProdQty = 0;
+    let totalDefects = 0;
+    const modelMap = {};
+
+    filteredData.forEach(r => {
+        const pQty = Number(r.prodQty) || 0;
+        const dQty = Number(r.totalDefect) || 0;
+        totalProdQty += pQty;
+        totalDefects += dQty;
+
+        if (r.model) {
+            modelMap[r.model] = (modelMap[r.model] || 0) + pQty;
+        }
+    });
+
+    const reportCount = filteredData.length;
+    const defectRate = totalProdQty > 0 ? ((totalDefects / totalProdQty) * 100).toFixed(1) : 0;
+
+    // Top Model
+    let topModelName = "-";
+    let topModelQty = 0;
+    Object.keys(modelMap).forEach(m => {
+        if (modelMap[m] > topModelQty) {
+            topModelQty = modelMap[m];
+            topModelName = m;
+        }
+    });
+
+    // Update KPI Elements
+    const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
+    const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
+    const kpiProdDefectRate = document.getElementById('kpiProdDefectRate');
+    const kpiProdTopModel = document.getElementById('kpiProdTopModel');
+    const kpiProdTopModelQty = document.getElementById('kpiProdTopModelQty');
+    const kpiProdReportCount = document.getElementById('kpiProdReportCount');
+
+    if (kpiProdTotalQty) kpiProdTotalQty.innerText = totalProdQty.toLocaleString();
+    if (kpiProdTotalDefects) kpiProdTotalDefects.innerText = totalDefects.toLocaleString();
+    if (kpiProdDefectRate) kpiProdDefectRate.innerText = `อัตราของเสีย ${defectRate}%`;
+    if (kpiProdTopModel) kpiProdTopModel.innerText = topModelName;
+    if (kpiProdTopModelQty) kpiProdTopModelQty.innerText = `${topModelQty.toLocaleString()} ชิ้น`;
+    if (kpiProdReportCount) kpiProdReportCount.innerText = reportCount.toLocaleString();
+
+    // 2. Render Output Daily Chart (Bar: ProdQty, Line: TotalDefect grouped by Date)
+    const dateMap = {};
+    filteredData.forEach(r => {
+        const dStr = String(r.date).substring(0, 10);
+        if (!dStr) return;
+        if (!dateMap[dStr]) {
+            dateMap[dStr] = { prodQty: 0, defects: 0 };
+        }
+        dateMap[dStr].prodQty += Number(r.prodQty) || 0;
+        dateMap[dStr].defects += Number(r.totalDefect) || 0;
+    });
+
+    const datesList = Object.keys(dateMap).sort();
+    const prodQtyList = datesList.map(d => dateMap[d].prodQty);
+    const defectsList = datesList.map(d => dateMap[d].defects);
+
+    const ctxDaily = document.getElementById("outputDailyChart");
+    if (ctxDaily && typeof Chart !== 'undefined') {
+        if (outputDailyChartInstance) {
+            outputDailyChartInstance.destroy();
+        }
+
+        outputDailyChartInstance = new Chart(ctxDaily, {
+            type: 'bar',
+            data: {
+                labels: datesList,
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'ของเสียรวม (ชิ้น)',
+                        data: defectsList,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        type: 'bar',
+                        label: 'ยอดผลิตรวม (ชิ้น)',
+                        data: prodQtyList,
+                        backgroundColor: 'rgba(0, 180, 216, 0.85)',
+                        borderColor: '#00b4d8',
+                        borderRadius: 6,
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#94a3b8', font: { family: 'Sarabun', size: 11 } }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Render Top 5 Models Chart
+    const sortedModels = Object.keys(modelMap).sort((a, b) => modelMap[b] - modelMap[a]).slice(0, 5);
+    const topModelQtyList = sortedModels.map(m => modelMap[m]);
+
+    const ctxModels = document.getElementById("topModelsChart");
+    if (ctxModels && typeof Chart !== 'undefined') {
+        if (topModelsChartInstance) {
+            topModelsChartInstance.destroy();
+        }
+
+        topModelsChartInstance = new Chart(ctxModels, {
+            type: 'bar',
+            data: {
+                labels: sortedModels,
+                datasets: [{
+                    label: 'ยอดผลิต (ชิ้น)',
+                    data: topModelQtyList,
+                    backgroundColor: [
+                        '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
+                    ],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#64748b' },
+                        grid: { color: '#f1f5f9' }
+                    },
+                    y: {
+                        ticks: { color: '#334155', font: { family: 'Sarabun', size: 11 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
 }
