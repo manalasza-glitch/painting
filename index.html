@@ -394,8 +394,8 @@
                             </div>
                         </div>
 
-                        <!-- Production Charts Grid -->
-                        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                        <!-- Production Charts Grid 1: Daily Output & Quality Yield -->
+                        <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
                             <!-- Output & Defect Daily Trend Chart -->
                             <div class="chart-card navy-theme">
                                 <div class="chart-header">
@@ -410,8 +410,24 @@
                                 </div>
                             </div>
 
-                            <!-- Top Models Chart -->
-                            <div class="chart-card">
+                            <!-- Quality OK vs NG & % Pass Rate Chart -->
+                            <div class="chart-card navy-theme">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        <span>สัดส่วนงานดี (OK) VS งานเสีย (NG) & % งานที่ใช้ได้</span>
+                                    </div>
+                                    <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">% Yield Rate</span>
+                                </div>
+                                <div class="chart-container-wrapper" style="height: 250px;">
+                                    <canvas id="qualityYieldChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Production Charts Grid 2: Top Models -->
+                        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                            <div class="chart-card" style="grid-column: 1 / -1;">
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M5 92h3v12H5zM10 52h3v15h-3zM15 22h3v18h-3z"/></svg>
