@@ -892,12 +892,16 @@ async function renderDailyReportCharts() {
     renderQualityYieldChart();
 }
 
-function updateQualityChartMode() {
+async function updateQualityChartMode() {
     const select = document.getElementById("qualityViewMode");
     if (select) {
         currentQualityViewMode = select.value;
     }
-    renderQualityYieldChart();
+    if (!globalQualityChartCache.datesList || globalQualityChartCache.datesList.length === 0) {
+        await renderDailyReportCharts();
+    } else {
+        renderQualityYieldChart();
+    }
 }
 
 function renderQualityYieldChart() {
@@ -912,6 +916,7 @@ function renderQualityYieldChart() {
 
     if (qualityYieldChartInstance) {
         qualityYieldChartInstance.destroy();
+        qualityYieldChartInstance = null;
     }
 
     let datasets = [];
@@ -921,8 +926,10 @@ function renderQualityYieldChart() {
     const maxNg = pctNgList.length > 0 ? Math.max(...pctNgList) : 0;
     const minOk = pctOkList.length > 0 ? Math.min(...pctOkList) : 100;
 
-    if (currentQualityViewMode === 'ng') {
-        // Zoom mode for % NG Rate (e.g. 0% to 5% or 8%)
+    const mode = String(currentQualityViewMode || 'ng').toLowerCase();
+
+    if (mode === 'ng') {
+        // STRICT % NG MODE: ONLY 1 dataset (% NG Rate) with zoomed Y-axis
         yMin = 0;
         yMax = Math.min(100, Math.max(5, Math.ceil(maxNg + 2)));
         datasets = [
