@@ -149,14 +149,7 @@ let PAINTING_RECORDERS_LIST = [
     "สมศักดิ์ ขยันงาน"
 ];
 
-let PAINTING_CHECKERS_LIST = [
-    "อนันต์ ราบรื่น",
-    "ชูศักดิ์ ตรวจงาน",
-    "ประเสริฐ ดีเยี่ยม"
-];
-
 function loadStaffList() {
-    // Load Recorders
     const cachedRecorders = localStorage.getItem("PAINTING_RECORDERS_CACHE");
     if (cachedRecorders) {
         try {
@@ -166,60 +159,31 @@ function loadStaffList() {
             }
         } catch (e) {}
     }
-
-    // Load Checkers
-    const cachedCheckers = localStorage.getItem("PAINTING_CHECKERS_CACHE");
-    if (cachedCheckers) {
-        try {
-            const list = JSON.parse(cachedCheckers);
-            if (Array.isArray(list) && list.length > 0) {
-                PAINTING_CHECKERS_LIST = list;
-            }
-        } catch (e) {}
-    }
 }
 
 function saveStaffList() {
     localStorage.setItem("PAINTING_RECORDERS_CACHE", JSON.stringify(PAINTING_RECORDERS_LIST));
-    localStorage.setItem("PAINTING_CHECKERS_CACHE", JSON.stringify(PAINTING_CHECKERS_LIST));
 }
 
 function renderStaffDropdowns() {
     loadStaffList();
     const recorderSelect = document.getElementById('recorderName');
-    const checkerSelect = document.getElementById('checkerName');
-
     const currentRecorder = recorderSelect ? recorderSelect.value : "";
-    const currentChecker = checkerSelect ? checkerSelect.value : "";
 
-    // Render Recorders Dropdown
     if (recorderSelect) {
         let recorderHtml = '<option value="">-- เลือกผู้บันทึก --</option>';
         PAINTING_RECORDERS_LIST.forEach(name => {
             recorderHtml += `<option value="${name}">${name}</option>`;
         });
-        recorderHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อ "ผู้บันทึก" ใหม่...</option>`;
+        recorderHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อผู้บันทึกใหม่...</option>`;
         recorderSelect.innerHTML = recorderHtml;
         if (currentRecorder && PAINTING_RECORDERS_LIST.includes(currentRecorder)) {
             recorderSelect.value = currentRecorder;
         }
     }
-
-    // Render Checkers Dropdown
-    if (checkerSelect) {
-        let checkerHtml = '<option value="">-- เลือกผู้ตรวจสอบ (ถ้ามี) --</option>';
-        PAINTING_CHECKERS_LIST.forEach(name => {
-            checkerHtml += `<option value="${name}">${name}</option>`;
-        });
-        checkerHtml += `<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อ "ผู้ตรวจสอบ" ใหม่...</option>`;
-        checkerSelect.innerHTML = checkerHtml;
-        if (currentChecker && PAINTING_CHECKERS_LIST.includes(currentChecker)) {
-            checkerSelect.value = currentChecker;
-        }
-    }
 }
 
-function handleStaffSelectChange(selectEl, targetType) {
+function handleStaffSelectChange(selectEl, targetType = "recorder") {
     if (selectEl && selectEl.value === "__ADD_NEW__") {
         selectEl.value = "";
         openAddStaffModal(targetType);
@@ -227,12 +191,12 @@ function handleStaffSelectChange(selectEl, targetType) {
 }
 
 function openAddStaffModal(targetType = "recorder") {
-    currentTargetStaffType = targetType;
+    currentTargetStaffType = "recorder";
     const modal = document.getElementById('addStaffModal');
     const modalTitle = document.getElementById('addStaffModalTitle');
 
     if (modalTitle) {
-        modalTitle.innerText = targetType === "recorder" ? "👥 จัดการรายชื่อ \"ผู้บันทึก\"" : "👥 จัดการรายชื่อ \"ผู้ตรวจสอบ\"";
+        modalTitle.innerText = "👥 จัดการรายชื่อ \"ผู้บันทึก\"";
     }
 
     if (modal) {
@@ -241,21 +205,19 @@ function openAddStaffModal(targetType = "recorder") {
         const input = document.getElementById('newStaffInput');
         if (input) {
             input.value = "";
-            input.placeholder = targetType === "recorder" ? "ระบุ ชื่อผู้บันทึก" : "ระบุ ชื่อผู้ตรวจสอบ";
+            input.placeholder = "ระบุ ชื่อผู้บันทึก";
             setTimeout(() => input.focus(), 200);
         }
         renderStaffListInModal();
     } else {
-        const titleText = targetType === "recorder" ? "ผู้บันทึก" : "ผู้ตรวจสอบ";
-        const newName = prompt(`กรอกชื่อ - นามสกุล (${titleText}):`);
+        const newName = prompt("กรอกชื่อ - นามสกุล (ผู้บันทึก):");
         if (newName && newName.trim()) {
-            const list = targetType === "recorder" ? PAINTING_RECORDERS_LIST : PAINTING_CHECKERS_LIST;
-            if (!list.includes(newName.trim())) {
-                list.push(newName.trim());
+            if (!PAINTING_RECORDERS_LIST.includes(newName.trim())) {
+                PAINTING_RECORDERS_LIST.push(newName.trim());
                 saveStaffList();
                 renderStaffDropdowns();
             }
-            const sel = document.getElementById(targetType === "recorder" ? 'recorderName' : 'checkerName');
+            const sel = document.getElementById('recorderName');
             if (sel) sel.value = newName.trim();
         }
     }
@@ -268,22 +230,16 @@ function closeAddStaffModal() {
     }
 }
 
-function getActiveStaffList() {
-    return currentTargetStaffType === "recorder" ? PAINTING_RECORDERS_LIST : PAINTING_CHECKERS_LIST;
-}
-
 function renderStaffListInModal() {
     const container = document.getElementById('staffListContainer');
     if (!container) return;
 
-    const list = getActiveStaffList();
-
-    if (list.length === 0) {
+    if (PAINTING_RECORDERS_LIST.length === 0) {
         container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">ยังไม่มีรายชื่อ</div>`;
         return;
     }
 
-    container.innerHTML = list.map((name, index) => `
+    container.innerHTML = PAINTING_RECORDERS_LIST.map((name, index) => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;">
             <span style="font-weight: 600; color: #334155;">👤 ${name}</span>
             <button type="button" onclick="deleteStaffName(${index})" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🗑️ ลบ</button>
@@ -297,39 +253,31 @@ function saveNewStaff() {
 
     const newName = input.value.trim();
     if (!newName) {
-        showToast("กรุณาระบุชื่อพนักงาน", "error");
+        showToast("กรุณาระบุชื่อผู้บันทึก", "error");
         return;
     }
 
-    const list = getActiveStaffList();
-
-    if (list.includes(newName)) {
+    if (PAINTING_RECORDERS_LIST.includes(newName)) {
         showToast("รายชื่อนี้มีอยู่ในรายการแล้ว", "warning");
         return;
     }
 
-    list.push(newName);
+    PAINTING_RECORDERS_LIST.push(newName);
     saveStaffList();
     renderStaffDropdowns();
     renderStaffListInModal();
 
-    if (currentTargetStaffType === "recorder") {
-        const recorderSelect = document.getElementById('recorderName');
-        if (recorderSelect) recorderSelect.value = newName;
-    } else if (currentTargetStaffType === "checker") {
-        const checkerSelect = document.getElementById('checkerName');
-        if (checkerSelect) checkerSelect.value = newName;
-    }
+    const recorderSelect = document.getElementById('recorderName');
+    if (recorderSelect) recorderSelect.value = newName;
 
     input.value = "";
     showToast(`เพิ่มรายชื่อ "${newName}" เรียบร้อยแล้ว`, "success");
 }
 
 function deleteStaffName(index) {
-    const list = getActiveStaffList();
-    if (index >= 0 && index < list.length) {
-        const removedName = list[index];
-        list.splice(index, 1);
+    if (index >= 0 && index < PAINTING_RECORDERS_LIST.length) {
+        const removedName = PAINTING_RECORDERS_LIST[index];
+        PAINTING_RECORDERS_LIST.splice(index, 1);
         saveStaffList();
         renderStaffDropdowns();
         renderStaffListInModal();
@@ -480,8 +428,8 @@ async function submitDailyReport() {
     const date = document.getElementById('reportDate').value;
     const shiftEl = document.querySelector('input[name="shift"]:checked');
     const shift = shiftEl ? shiftEl.value : "Day";
-    const recorder = document.getElementById('recorderName').value;
-    const checker = document.getElementById('checkerName').value;
+    const recorder = document.getElementById('recorderName') ? document.getElementById('recorderName').value : "";
+    const checker = "";
 
     if (!date || !recorder) {
         showToast("กรุณากรอกวันที่และชื่อผู้บันทึกให้ครบถ้วน", "error");
