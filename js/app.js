@@ -89,6 +89,9 @@ window.onload = async () => {
     }
 
     await loadDataFromAPI();
+    if (typeof loadEventsData === 'function') {
+        loadEventsData();
+    }
 
     // Poll data every 15 seconds only if there are no pending sync requests
     setInterval(() => {
@@ -96,6 +99,9 @@ window.onload = async () => {
             loadDataFromAPI(true); // silent reload
             if (typeof renderStaffDropdowns === 'function') {
                 renderStaffDropdowns();
+            }
+            if (typeof loadEventsData === 'function') {
+                loadEventsData();
             }
         }
     }, 15000);
