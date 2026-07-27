@@ -4,6 +4,8 @@ let donutChartInstance = null;
 let outputDailyChartInstance = null;
 let topModelsChartInstance = null;
 let qualityYieldChartInstance = null;
+let currentQualityViewMode = 'ng';
+let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
@@ -890,9 +892,6 @@ async function renderDailyReportCharts() {
     renderQualityYieldChart();
 }
 
-let currentQualityViewMode = 'ng';
-let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
-
 function updateQualityChartMode() {
     const select = document.getElementById("qualityViewMode");
     if (select) {
@@ -902,6 +901,11 @@ function updateQualityChartMode() {
 }
 
 function renderQualityYieldChart() {
+    const select = document.getElementById("qualityViewMode");
+    if (select) {
+        currentQualityViewMode = select.value;
+    }
+
     const { datesList, pctOkList, pctNgList } = globalQualityChartCache;
     const ctxQuality = document.getElementById("qualityYieldChart");
     if (!ctxQuality || typeof Chart === 'undefined' || !datesList || datesList.length === 0) return;
