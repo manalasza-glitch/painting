@@ -126,6 +126,17 @@ function initDailyReportForm() {
             sel.value = currentSlot;
         }
     });
+
+    // Load any draft records from localStorage if present
+    const draft = localStorage.getItem("PAINTING_DAILY_REPORT_DRAFT");
+    if (draft) {
+        try {
+            dailyReportRecords = JSON.parse(draft) || [];
+            renderDailyReportList();
+        } catch (e) {
+            dailyReportRecords = [];
+        }
+    }
 }
 
 function addDailyReportRecord() {
@@ -167,6 +178,9 @@ function addDailyReportRecord() {
         totalDefect
     });
 
+    // Save draft to localStorage so refresh doesn't lose items
+    localStorage.setItem("PAINTING_DAILY_REPORT_DRAFT", JSON.stringify(dailyReportRecords));
+
     renderDailyReportList();
     
     // Clear inputs for next entry, but keep current time slot auto-selected
@@ -185,6 +199,7 @@ function addDailyReportRecord() {
 
 function removeDailyReportRecord(index) {
     dailyReportRecords.splice(index, 1);
+    localStorage.setItem("PAINTING_DAILY_REPORT_DRAFT", JSON.stringify(dailyReportRecords));
     renderDailyReportList();
 }
 
@@ -193,7 +208,7 @@ function renderDailyReportList() {
     if (!tbody) return;
 
     if (dailyReportRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีรายการที่เพิ่ม</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีรายการที่เพิ่ม</td></tr>`;
         return;
     }
 
@@ -217,7 +232,8 @@ async function submitDailyReport() {
     }
 
     const date = document.getElementById('reportDate').value;
-    const shift = document.querySelector('input[name="shift"]:checked').value;
+    const shiftEl = document.querySelector('input[name="shift"]:checked');
+    const shift = shiftEl ? shiftEl.value : "Day";
     const recorder = document.getElementById('recorderName').value;
     const checker = document.getElementById('checkerName').value;
 
@@ -255,8 +271,9 @@ async function submitDailyReport() {
         await sendDailyReportToAPI(payload);
         showToast("บันทึกข้อมูลแบบฟอร์มประจำวันเรียบร้อยแล้ว!", "success");
         
-        // Reset Form
+        // Reset Form & Clear Draft
         dailyReportRecords = [];
+        localStorage.removeItem("PAINTING_DAILY_REPORT_DRAFT");
         renderDailyReportList();
         document.getElementById('dtBurner').value = "";
         document.getElementById('dtWash').value = "";
