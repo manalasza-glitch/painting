@@ -716,13 +716,15 @@ async function renderDailyReportCharts() {
     const modelMap = {};
 
     filteredData.forEach(r => {
-        const pQty = Number(r.prodQty) || 0;
-        const dQty = Number(r.totalDefect) || 0;
+        const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
+        const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
+        const mName = String(r.model || r.Model || '').trim();
+
         totalProdQty += pQty;
         totalDefects += dQty;
 
-        if (r.model) {
-            modelMap[r.model] = (modelMap[r.model] || 0) + pQty;
+        if (mName) {
+            modelMap[mName] = (modelMap[mName] || 0) + pQty;
         }
     });
 
@@ -757,13 +759,15 @@ async function renderDailyReportCharts() {
     // 2. Render Output Daily Chart (Bar: ProdQty, Line: TotalDefect grouped by Date)
     const dateMap = {};
     filteredData.forEach(r => {
-        const dStr = String(r.date).substring(0, 10);
+        const dStr = String(r.date || r.Date || r.timestamp || '').substring(0, 10);
         if (!dStr) return;
         if (!dateMap[dStr]) {
             dateMap[dStr] = { prodQty: 0, defects: 0 };
         }
-        dateMap[dStr].prodQty += Number(r.prodQty) || 0;
-        dateMap[dStr].defects += Number(r.totalDefect) || 0;
+        const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
+        const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
+        dateMap[dStr].prodQty += pQty;
+        dateMap[dStr].defects += dQty;
     });
 
     const datesList = Object.keys(dateMap).sort();

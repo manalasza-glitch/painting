@@ -332,7 +332,8 @@ async function fetchDailyReportDataFromAPI() {
                 list = json;
             }
 
-            if (list) {
+            // Verify that fetched list actually contains outputdiary production data (model or prodQty)
+            if (list && list.length > 0 && (list[0].model !== undefined || list[0].prodQty !== undefined)) {
                 localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(list));
                 return list;
             }
@@ -345,7 +346,9 @@ async function fetchDailyReportDataFromAPI() {
     if (cached) {
         try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].model !== undefined || parsed[0].prodQty !== undefined)) {
+                return parsed;
+            }
         } catch (e) {}
     }
 
