@@ -23,7 +23,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=25.0.0">
+    <link rel="stylesheet" href="css/style.css?v=26.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -672,10 +672,19 @@
                     <!-- Step 1: ข้อมูลทั่วไป -->
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
-                        <div class="dr-grid-3">
-                            <div class="form-group">
-                                <label>วันที่ (Date)</label>
-                                <input type="date" id="reportDate" class="form-control" required>
+                        <div class="dr-form-stack">
+                            <div class="dr-grid-2">
+                                <div class="form-group">
+                                    <label>วันที่ (Date)</label>
+                                    <input type="date" id="reportDate" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                        <label style="margin-bottom: 0;">บันทึกโดย</label>
+                                        <button type="button" class="btn-add-staff" onclick="openAddStaffModal('recorder')">➕ เพิ่มชื่อ</button>
+                                    </div>
+                                    <select id="recorderName" class="form-control" onchange="handleStaffSelectChange(this, 'recorder')" required></select>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>กะทำงาน (Shift)</label>
@@ -683,13 +692,6 @@
                                     <label><input type="radio" name="shift" value="Day" checked> ☀️ Day</label>
                                     <label><input type="radio" name="shift" value="Night"> 🌙 Night</label>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                                    <label style="margin-bottom: 0;">บันทึกโดย</label>
-                                    <button type="button" class="btn-add-staff" onclick="openAddStaffModal('recorder')">➕ เพิ่มชื่อ</button>
-                                </div>
-                                <select id="recorderName" class="form-control" onchange="handleStaffSelectChange(this, 'recorder')" required></select>
                             </div>
                         </div>
                     </div>
@@ -1073,10 +1075,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=25.0.0"></script>
-    <script src="js/app.js?v=25.0.0"></script>
-    <script src="js/daily-report.js?v=25.0.0"></script>
-    <script src="js/events.js?v=25.0.0"></script>
+    <script src="js/api.js?v=26.0.0"></script>
+    <script src="js/app.js?v=26.0.0"></script>
+    <script src="js/daily-report.js?v=26.0.0"></script>
+    <script src="js/events.js?v=26.0.0"></script>
 </body>
 
 </html>
