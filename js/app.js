@@ -1268,23 +1268,28 @@ function openChartFullscreen(chartId, title) {
         datasets: sourceChart.config.data.datasets || []
     }));
 
+    const sourceOptions = sourceChart.config.options || {};
+    const isHorizontal = sourceOptions.indexAxis === 'y';
+
     const options = {
         responsive: true,
         maintainAspectRatio: false,
+        indexAxis: sourceOptions.indexAxis || 'x',
         plugins: {
-            legend: {
+            legend: sourceOptions.plugins && sourceOptions.plugins.legend !== undefined ? sourceOptions.plugins.legend : {
                 labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
             },
             zoom: {
-                pan: { enabled: true, mode: 'x' },
+                pan: { enabled: true, mode: isHorizontal ? 'y' : 'x' },
                 zoom: {
                     wheel: { enabled: true, speed: 0.1 },
                     pinch: { enabled: true },
-                    mode: 'x'
+                    mode: isHorizontal ? 'y' : 'x'
                 }
-            }
+            },
+            tooltip: sourceOptions.plugins && sourceOptions.plugins.tooltip ? sourceOptions.plugins.tooltip : {}
         },
-        scales: sourceChart.config.options ? sourceChart.config.options.scales : {}
+        scales: sourceOptions.scales ? JSON.parse(JSON.stringify(sourceOptions.scales)) : {}
     };
 
     fullscreenChartInstance = new Chart(fullscreenCanvas, {
