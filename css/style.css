@@ -828,25 +828,23 @@ button, input, textarea, select {
   flex-direction: column;
   gap: 0.4rem;
 .btn-chart-expand {
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent !important;
   color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  width: 32px;
-  height: 32px;
+  border: none !important;
   padding: 0;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  outline: none;
 }
 
 .btn-chart-expand:hover {
-  background: rgba(56, 189, 248, 0.25);
   color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.5);
-  transform: scale(1.08);
+  transform: scale(1.25);
 }
   grid-column: span 2;
 }
