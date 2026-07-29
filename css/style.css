@@ -109,10 +109,10 @@ button, input, textarea, select {
 }
 
 .brand-logo-img {
-  width: 42px !important;
-  height: 42px !important;
-  max-width: 42px !important;
-  max-height: 42px !important;
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
   border-radius: 0 !important;
   object-fit: contain !important;
   flex-shrink: 0 !important;
