@@ -248,10 +248,50 @@ function getCachedOrSampleData() {
 }
 
 function generateSampleData() {
-    const sample = [
-        { rowIndex: 2, date: "2026-07-24 14:00", rust: 5, dent: 2, weld: 8, chemical: 1, oil: 3, note: "การตรวจช่วงเช้า พบคราบสนิมและรอยเชื่อมบางจุด" },
-        { rowIndex: 3, date: "2026-07-23 11:30", rust: 2, dent: 4, weld: 3, chemical: 0, oil: 1, note: "ผ่านเกณฑ์มาตรฐาน" }
+    const sample = [];
+    const notes = [
+        "สุ่มตรวจประจำวัน ผลการตรวจสอบอยู่ในเกณฑ์มาตรฐาน",
+        "พบคราบสนิมบางชิ้นงาน ดำเนินการล้างน้ำยาทำความสะอาดเพิ่มเติม",
+        "มีรอยบุบและสะเก็ดเชื่อม ดำเนินการแจ้งแผนกเชื่อมเจียรแต่งขอบ",
+        "พบคราบน้ำมันบนพื้นผิว ส่งคืนแผนกเตรียมชิ้นงานรีล้างใหม่",
+        "ทดสอบความหนาชั้นสีผ่านเกณฑ์ปกติ 60-80 ไมครอน",
+        "การตรวจเช็ครอบกะดึก ผลปกติ",
+        "ปรับพารามิเตอร์เครื่องพ่นสีเนื่องจากพบรอยละอองสีบางจุด"
     ];
+
+    // Generate 1 full month of sample inspection data (July 1 - July 31, 2026)
+    for (let day = 1; day <= 31; day++) {
+        const dd = ('0' + day).slice(-2);
+        const dateStr = `2026-07-${dd}`;
+        
+        // 1 - 2 inspection records per day
+        const recordsPerDay = 1 + (day % 2);
+        for (let r = 0; r < recordsPerDay; r++) {
+            const hour = r === 0 ? "09:30" : "14:15";
+            const fullDate = `${dateStr} ${hour}`;
+            
+            const rust = (day % 3 === 0) ? (2 + (day % 4)) : (day % 5 === 0 ? 1 : 0);
+            const dent = (day % 4 === 0) ? (1 + (day % 3)) : 0;
+            const weld = (day % 2 === 0) ? (2 + (day % 5)) : 1;
+            const chemical = (day % 7 === 0) ? 2 : 0;
+            const oil = (day % 6 === 0) ? 1 : 0;
+            
+            const noteText = notes[(day + r) % notes.length];
+
+            sample.push({
+                rowIndex: sample.length + 2,
+                date: fullDate,
+                timestamp: fullDate,
+                rust: rust,
+                dent: dent,
+                weld: weld,
+                chemical: chemical,
+                oil: oil,
+                note: noteText
+            });
+        }
+    }
+
     localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(sample));
     return sample;
 }
@@ -484,73 +524,58 @@ async function fetchEventsFromAPI() {
 }
 
 function generateSampleEventsData() {
-    const sample = [
-        {
-            id: "evt_101",
-            date: "2026-07-27",
-            time: "08:30",
-            shift: "กะเช้า",
-            category: "Machine",
-            process: "เตาอบสี (Baking Oven)",
-            title: "ปรับเพิ่มอุณหภูมิตู้อบสี",
-            detail: "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่",
-            action: "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%",
-            recorder: "สมชาย ใจดี",
-            timestamp: "2026-07-27 08:30"
-        },
-        {
-            id: "evt_102",
-            date: "2026-07-26",
-            time: "10:15",
-            shift: "กะเช้า",
-            category: "Material",
-            process: "ห้องผสมสี (Color Mix Room)",
-            title: "เปลี่ยนล็อตสีพ่นผงชั่วคราว",
-            detail: "เปิดใช้สีผงล็อตใหม่ Batch #20260726-A เนื่องจากสีล็อตเดิมหมดสต็อก",
-            action: "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน",
-            recorder: "วิชัย มีสุข",
-            timestamp: "2026-07-26 10:15"
-        },
-        {
-            id: "evt_103",
-            date: "2026-07-25",
-            time: "13:40",
-            shift: "กะเช้า",
-            category: "Man",
-            process: "ไลน์พ่นสีชิ้นงาน",
-            title: "เปลี่ยนตัวพนักงานพ่นสีหลัก",
-            detail: "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน",
-            action: "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ",
-            recorder: "สมศักดิ์ ขยันงาน",
-            timestamp: "2026-07-25 13:40"
-        },
-        {
-            id: "evt_104",
-            date: "2026-07-24",
-            time: "15:00",
-            shift: "กะเช้า",
-            category: "Environment",
-            process: "ห้องพ่นสี (Spray Booth)",
-            title: "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี",
-            detail: "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม",
-            action: "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ",
-            recorder: "สมชาย ใจดี",
-            timestamp: "2026-07-24 15:00"
-        },
-        {
-            id: "evt_105",
-            date: "2026-07-23",
-            time: "09:20",
-            shift: "กะเช้า",
-            category: "Measurement",
-            process: "ห้อง QC ตรวจสอบ",
-            title: "สอบเทียบเครื่องวัดความหนาสี (Elcometer)",
-            detail: "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี",
-            action: "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง",
-            recorder: "วิชัย มีสุข",
-            timestamp: "2026-07-23 09:20"
-        }
+    const sample = [];
+    const categories = ["Machine", "Material", "Man", "Environment", "Measurement", "Method"];
+    const processes = ["เตาอบสี (Baking Oven)", "ห้องผสมสี (Color Mix Room)", "ไลน์พ่นสีชิ้นงาน", "ห้องพ่นสี (Spray Booth)", "ห้อง QC ตรวจสอบ", "ไลน์ล้างทำความสะอาด"];
+    const titles = [
+        "ปรับเพิ่มอุณหภูมิตู้อบสี",
+        "เปลี่ยนล็อตสีพ่นผงชั่วคราว",
+        "เปลี่ยนตัวพนักงานพ่นสีหลัก",
+        "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี",
+        "สอบเทียบเครื่องวัดความหนาสี (Elcometer)",
+        "ล้างทำความสะอาดหัวพ่นสีและท่อส่งสี"
     ];
+    const details = [
+        "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่",
+        "เปิดใช้สีผงล็อตใหม่ Batch #202607-A เนื่องจากสีล็อตเดิมหมดสต็อก",
+        "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน",
+        "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม",
+        "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี",
+        "ล้างคราบสีเกาะแน่นในหัวพ่นเพื่อป้องกันการอุดตันระหว่างกะ"
+    ];
+    const actions = [
+        "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%",
+        "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน",
+        "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ",
+        "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ",
+        "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง",
+        "ทดสอบแรงดันฉีดพ่นสีปกติ พร้อมลุยงานต่อ"
+    ];
+    const recorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
+
+    // Generate 12 events across July 1 - July 31, 2026
+    const sampleDays = [3, 6, 9, 12, 15, 18, 21, 23, 24, 25, 26, 27];
+    sampleDays.forEach((day, idx) => {
+        const dd = ('0' + day).slice(-2);
+        const dateStr = `2026-07-${dd}`;
+        const timeStr = idx % 2 === 0 ? "08:30" : "13:45";
+        const catIdx = idx % categories.length;
+
+        sample.push({
+            id: `evt_10${idx + 1}`,
+            date: dateStr,
+            time: timeStr,
+            shift: idx % 2 === 0 ? "กะเช้า" : "กะดึก",
+            category: categories[catIdx],
+            process: processes[catIdx],
+            title: titles[catIdx],
+            detail: details[catIdx],
+            action: actions[catIdx],
+            recorder: recorders[idx % recorders.length],
+            timestamp: `${dateStr} ${timeStr}`
+        });
+    });
+
     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(sample));
     localStorage.setItem("PAINTING_EVENTS_INIT", "true");
     return sample;
