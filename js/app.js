@@ -534,6 +534,10 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
             plugins: {
                 legend: {
                     labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
+                },
+                zoom: {
+                    pan: { enabled: true, mode: 'x' },
+                    zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
                 }
             },
             scales: {
@@ -918,6 +922,10 @@ async function renderDailyReportCharts() {
                     legend: {
                         labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                     },
+                    zoom: {
+                        pan: { enabled: true, mode: 'x' },
+                        zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
+                    },
                     tooltip: {
                         callbacks: {
                             footer: function(tooltipItems) {
@@ -1117,6 +1125,10 @@ function renderQualityYieldChart() {
                 legend: {
                     labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                 },
+                zoom: {
+                    pan: { enabled: true, mode: 'x' },
+                    zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -1142,4 +1154,80 @@ function renderQualityYieldChart() {
             }
         }
     });
+}
+
+// --- FULLSCREEN CHART & WHEEL ZOOM MANAGEMENT ---
+let fullscreenChartInstance = null;
+
+function openChartFullscreen(chartId, title) {
+    const sourceCanvas = document.getElementById(chartId);
+    if (!sourceCanvas) return;
+
+    const sourceChart = Chart.getChart(sourceCanvas);
+    if (!sourceChart) return;
+
+    const modal = document.getElementById("chartFullscreenModal");
+    const modalTitle = document.getElementById("fullscreenChartTitle");
+    const fullscreenCanvas = document.getElementById("fullscreenCanvas");
+
+    if (!modal || !fullscreenCanvas) return;
+
+    if (modalTitle) {
+        modalTitle.innerHTML = `📊 ${title || 'ขยายกราฟแสดงผลเต็มหน้าจอ'}`;
+    }
+
+    modal.classList.add("active");
+
+    if (fullscreenChartInstance) {
+        fullscreenChartInstance.destroy();
+        fullscreenChartInstance = null;
+    }
+
+    // Clone datasets and config
+    const rawData = JSON.parse(JSON.stringify({
+        labels: sourceChart.config.data.labels || [],
+        datasets: sourceChart.config.data.datasets || []
+    }));
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
+            },
+            zoom: {
+                pan: { enabled: true, mode: 'x' },
+                zoom: {
+                    wheel: { enabled: true, speed: 0.1 },
+                    pinch: { enabled: true },
+                    mode: 'x'
+                }
+            }
+        },
+        scales: sourceChart.config.options ? sourceChart.config.options.scales : {}
+    };
+
+    fullscreenChartInstance = new Chart(fullscreenCanvas, {
+        type: sourceChart.config.type || 'bar',
+        data: rawData,
+        options: options
+    });
+}
+
+function closeChartFullscreen() {
+    const modal = document.getElementById("chartFullscreenModal");
+    if (modal) {
+        modal.classList.remove("active");
+    }
+    if (fullscreenChartInstance) {
+        fullscreenChartInstance.destroy();
+        fullscreenChartInstance = null;
+    }
+}
+
+function resetChartZoomInFullscreen() {
+    if (fullscreenChartInstance && typeof fullscreenChartInstance.resetZoom === 'function') {
+        fullscreenChartInstance.resetZoom();
+    }
 }
