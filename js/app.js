@@ -787,26 +787,50 @@ async function renderDailyReportCharts() {
     if (kpiProdTopModelQty) kpiProdTopModelQty.innerText = `${topModelQty.toLocaleString()} ชิ้น`;
     if (kpiProdReportCount) kpiProdReportCount.innerText = reportCount.toLocaleString();
 
-    // 2. Render Output Daily Stacked Bar Chart (Grouped by Part Group/Model)
-    const groups = ["GLAND PLATE", "BOX & U-BOX", "DOOR PANEL", "COVER NMS", "COVER NLC", "รุ่นอื่นๆ (Other)"];
-    const groupColors = {
-        "GLAND PLATE": "#00b4d8",     // Cyan Blue
-        "BOX & U-BOX": "#10b981",     // Emerald Green
-        "DOOR PANEL": "#f59e0b",      // Amber Gold
-        "COVER NMS": "#8b5cf6",       // Purple
-        "COVER NLC": "#ec4899",       // Pink
-        "รุ่นอื่นๆ (Other)": "#64748b"   // Slate
-    };
+    // 2. Render Output Daily Stacked Bar Chart (Grouped by Model Names - ชื่อรุ่นของงาน)
+    // Extract unique model names and calculate total production per model
+    const modelTotalsMap = {};
+    filteredData.forEach(r => {
+        let mName = String(r.model || r.Model || '').trim();
+        // Clean bracketed codes for elegant chart legends e.g. "[BRU30887] Box NMS 4/6 W. 240 mm." -> "Box NMS 4/6 W. 240 mm."
+        if (mName.includes(']')) {
+            const parts = mName.split(']');
+            if (parts.length > 1) mName = parts[1].trim();
+        }
+        if (!mName) mName = 'รุ่นอื่นๆ (Other)';
+        const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
+        if (pQty > 0) {
+            modelTotalsMap[mName] = (modelTotalsMap[mName] || 0) + pQty;
+        }
+    });
 
-    function classifyGroup(modelName) {
-        const m = String(modelName || '').toUpperCase();
-        if (m.includes("GLAND")) return "GLAND PLATE";
-        if (m.includes("BOX")) return "BOX & U-BOX";
-        if (m.includes("DOOR") || m.includes("PANEL")) return "DOOR PANEL";
-        if (m.includes("COVER NMS") || m.includes("NMS")) return "COVER NMS";
-        if (m.includes("COVER NLC") || m.includes("NLC")) return "COVER NLC";
-        return "รุ่นอื่นๆ (Other)";
+    // Sort models by volume descending and select top models for clean legend display
+    const sortedModelNames = Object.keys(modelTotalsMap).sort((a, b) => modelTotalsMap[b] - modelTotalsMap[a]);
+    const topModelNames = sortedModelNames.slice(0, 8);
+    const hasMoreModels = sortedModelNames.length > 8;
+
+    const activeModels = [...topModelNames];
+    if (hasMoreModels && !activeModels.includes('รุ่นอื่นๆ (Other)')) {
+        activeModels.push('รุ่นอื่นๆ (Other)');
     }
+
+    const paletteColors = [
+        "#00b4d8", // Cyan Blue
+        "#10b981", // Emerald Green
+        "#f59e0b", // Amber Gold
+        "#8b5cf6", // Purple
+        "#ec4899", // Pink
+        "#3b82f6", // Royal Blue
+        "#14b8a6", // Teal
+        "#f97316", // Bright Orange
+        "#a855f7", // Deep Violet
+        "#64748b"  // Slate Gray
+    ];
+
+    const modelColorMap = {};
+    activeModels.forEach((m, idx) => {
+        modelColorMap[m] = paletteColors[idx % paletteColors.length];
+    });
 
     const dateGroupMap = {};
     const dateDefectsMap = {};
@@ -816,24 +840,26 @@ async function renderDailyReportCharts() {
         const dStr = String(r.date || r.Date || r.timestamp || '').substring(0, 10);
         if (!dStr) return;
 
+        let mName = String(r.model || r.Model || '').trim();
+        if (mName.includes(']')) {
+            const parts = mName.split(']');
+            if (parts.length > 1) mName = parts[1].trim();
+        }
+        if (!mName || !topModelNames.includes(mName)) {
+            mName = 'รุ่นอื่นๆ (Other)';
+        }
+
         if (!dateGroupMap[dStr]) {
-            dateGroupMap[dStr] = {
-                "GLAND PLATE": 0,
-                "BOX & U-BOX": 0,
-                "DOOR PANEL": 0,
-                "COVER NMS": 0,
-                "COVER NLC": 0,
-                "รุ่นอื่นๆ (Other)": 0
-            };
+            dateGroupMap[dStr] = {};
+            activeModels.forEach(m => dateGroupMap[dStr][m] = 0);
             dateDefectsMap[dStr] = 0;
             dateTotalProdMap[dStr] = 0;
         }
 
         const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
         const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
-        const grp = classifyGroup(r.model || r.Model);
 
-        dateGroupMap[dStr][grp] += pQty;
+        dateGroupMap[dStr][mName] = (dateGroupMap[dStr][mName] || 0) + pQty;
         dateDefectsMap[dStr] += dQty;
         dateTotalProdMap[dStr] += pQty;
     });
@@ -841,7 +867,7 @@ async function renderDailyReportCharts() {
     const datesList = Object.keys(dateGroupMap).sort();
     const defectsList = datesList.map(d => dateDefectsMap[d]);
 
-    // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Product Groups
+    // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Specific Model Names
     const stackedDatasets = [
         {
             type: 'line',
@@ -857,15 +883,15 @@ async function renderDailyReportCharts() {
         }
     ];
 
-    groups.forEach(grp => {
-        const qtyData = datesList.map(d => dateGroupMap[d][grp]);
+    activeModels.forEach(mName => {
+        const qtyData = datesList.map(d => dateGroupMap[d][mName] || 0);
         const sum = qtyData.reduce((a, b) => a + b, 0);
         if (sum > 0) {
             stackedDatasets.push({
                 type: 'bar',
-                label: grp,
+                label: mName,
                 data: qtyData,
-                backgroundColor: groupColors[grp],
+                backgroundColor: modelColorMap[mName],
                 stack: 'prodStack',
                 borderRadius: 2,
                 order: 1
