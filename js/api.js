@@ -36,7 +36,15 @@ function getApiUrl() {
 async function requestApi(url, options = {}) {
     const response = await fetch(url, { credentials: "same-origin", ...options });
     if (response.status === 401) {
-        window.location.reload();
+        // A guest request must not start a reload loop. Reload only when a
+        // previously authenticated session has actually expired.
+        const wasAuthenticated = document.body.classList.contains("authenticated")
+            || Boolean(window.PaintingAuth && window.PaintingAuth.user);
+        if (wasAuthenticated && !window.__PAINTING_REAUTH_IN_PROGRESS) {
+            window.__PAINTING_REAUTH_IN_PROGRESS = true;
+            document.body.className = "auth-loading";
+            setTimeout(() => window.location.reload(), 50);
+        }
         throw new Error("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
     }
     if (!response.ok) {
