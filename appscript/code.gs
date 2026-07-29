@@ -283,11 +283,43 @@ function doGet(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
 
-    // Handle getDailyReportData action (outputdiary sheet)
+    // Handle getDailyReportData action (outputdiary sheet tab gid=236266615)
     if (action === "getDailyReportData") {
       let prodSheet = ss.getSheetByName("outputdiary");
       if (!prodSheet) {
-        return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
+        prodSheet = ss.insertSheet("outputdiary");
+        prodSheet.appendRow(["Timestamp", "Date", "Shift", "Recorder", "Checker", "DT Burner", "DT Wash", "DT Oven", "DT Note", "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"]);
+        
+        // Seed full month of July 2026 records
+        const sampleModels = [
+          "Box NMS 4/6 W. 240 mm.",
+          "Door NLC 450 mm.",
+          "BOX 300x400x200",
+          "GLAND PLATE (MEDIUM)",
+          "DOOR PANEL NLC-01",
+          "U-BOX STANDARD",
+          "DOOR PANEL NMS-01",
+          "BOX 400x500x200",
+          "Cover NMS 6 w. 245 mm.",
+          "Cover NLC EZ100 600 mm.",
+          "Flat Door LC 600"
+        ];
+        const sampleRecorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน"];
+
+        for (let day = 1; day <= 31; day++) {
+          const dd = ('0' + day).slice(-2);
+          const dateStr = `2026-07-${dd}`;
+          const runs = 2 + (day % 3);
+          for (let r = 0; r < runs; r++) {
+            const m = sampleModels[(day + r * 3) % sampleModels.length];
+            const rec = sampleRecorders[(day + r) % sampleRecorders.length];
+            let q = 45 + ((day * 7 + r * 15) % 110);
+            if (day === 27) q = 450 + (r * 120);
+            const def = (day % 4 === 0) ? (1 + (day % 3)) : (day % 2 === 0 ? 1 : 0);
+            prodSheet.appendRow([dateStr + " 08:30", dateStr, (r % 2 === 0 ? "กะเช้า" : "กะดึก"), rec, "", 0, 0, 0, "", m, "08:00 - 09:00", q, (def > 0 ? 1 : 0), 0, (def > 1 ? 1 : 0), 0, 0, 0, def]);
+          }
+        }
+        SpreadsheetApp.flush();
       }
 
       const values = prodSheet.getDataRange().getValues();

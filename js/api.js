@@ -357,35 +357,59 @@ async function fetchDailyReportDataFromAPI() {
 
 function generateSampleOutputDiaryData() {
     const sample = [];
-    const models = ["GLAND PLATE (SMALL)", "BOX 200x300x150", "U-BOX STANDARD", "DOOR PANEL NLC-01", "COVER NMS-100", "COVER NLC-200"];
-    const dates = ["2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-25", "2026-07-26", "2026-07-27"];
+    const models = [
+        "Box NMS 4/6 W. 240 mm.",
+        "Door NLC 450 mm.",
+        "BOX 300x400x200",
+        "GLAND PLATE (MEDIUM)",
+        "DOOR PANEL NLC-01",
+        "U-BOX STANDARD",
+        "DOOR PANEL NMS-01",
+        "BOX 400x500x200",
+        "Cover NMS 6 w. 245 mm.",
+        "Cover NLC EZ100 600 mm.",
+        "Flat Door LC 600"
+    ];
     const recorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
 
-    for (let i = 0; i < 15; i++) {
-        const date = dates[i % dates.length];
-        const recorder = recorders[i % recorders.length];
-        const model = models[i % models.length];
-        const prodQty = 25 + (i * 3);
-        const totalDefect = (i % 3 === 0) ? 2 : (i % 2 === 0 ? 1 : 0);
+    // Seed full month of July 2026 (2026-07-01 to 2026-07-31) matching sheet tab gid=236266615
+    for (let day = 1; day <= 31; day++) {
+        const dd = ('0' + day).slice(-2);
+        const dateStr = `2026-07-${dd}`;
+        
+        // 2 - 4 production runs per day
+        const runsCount = 2 + (day % 3);
+        for (let r = 0; r < runsCount; r++) {
+            const mIdx = (day + r * 3) % models.length;
+            const model = models[mIdx];
+            const recorder = recorders[(day + r) % recorders.length];
+            
+            // Peak day volume spikes (e.g. July 27)
+            let baseQty = 45 + ((day * 7 + r * 15) % 110);
+            if (day === 27) baseQty = 450 + (r * 120);
 
-        sample.push({
-            timestamp: `${date} 09:00`,
-            date: date,
-            shift: i % 2 === 0 ? "Day" : "Night",
-            recorder: recorder,
-            checker: "",
-            model: model,
-            timeSlot: "08:00 - 09:00",
-            prodQty: prodQty,
-            dent: totalDefect > 0 ? 1 : 0,
-            colorDrop: 0,
-            thinPaint: totalDefect > 1 ? 1 : 0,
-            thickPaint: 0,
-            waterStain: 0,
-            otherDefect: 0,
-            totalDefect: totalDefect
-        });
+            const totalDefect = (day % 4 === 0) ? (1 + (day % 3)) : (day % 2 === 0 ? 1 : 0);
+
+            sample.push({
+                timestamp: `${dateStr} 08:30`,
+                date: dateStr,
+                shift: r % 2 === 0 ? "กะเช้า" : "กะดึก",
+                recorder: recorder,
+                checker: "",
+                model: model,
+                timeSlot: `${8 + r * 2}:00 - ${10 + r * 2}:00`,
+                prodQty: baseQty,
+                dent: totalDefect > 0 ? 1 : 0,
+                colorDrop: 0,
+                thinPaint: totalDefect > 1 ? 1 : 0,
+                thickPaint: 0,
+                waterStain: 0,
+                otherDefect: 0,
+                totalDefect: totalDefect
+            });
+        }
     }
+
     localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(sample));
     return sample;
 }
