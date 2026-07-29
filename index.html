@@ -23,7 +23,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=27.0.0">
+    <link rel="stylesheet" href="css/style.css?v=28.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -672,29 +672,29 @@
                     <!-- Step 1: ข้อมูลทั่วไป -->
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
-                        <div class="dr-grid-2">
+                        <div class="dr-grid-2" style="grid-template-columns: auto 1fr; gap: 1.5rem; align-items: end;">
                             <!-- Column 1: วันที่ & กะทำงาน -->
-                            <div style="display: flex; gap: 0.85rem; align-items: end;">
-                                <div class="form-group" style="flex: 1.1;">
+                            <div style="display: flex; gap: 0.85rem; align-items: end; flex-wrap: wrap;">
+                                <div class="form-group" style="width: 170px;">
                                     <label>วันที่ (Date)</label>
-                                    <input type="date" id="reportDate" class="form-control" required>
+                                    <input type="date" id="reportDate" class="form-control" required style="width: 170px;">
                                 </div>
-                                <div class="form-group" style="flex: 1;">
+                                <div class="form-group" style="width: 180px;">
                                     <label>กะทำงาน (Shift)</label>
-                                    <div class="dr-radio-pills">
+                                    <div class="dr-radio-pills" style="width: 180px;">
                                         <label><input type="radio" name="shift" value="Day" checked> ☀️ Day</label>
                                         <label><input type="radio" name="shift" value="Night"> 🌙 Night</label>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Column 2: บันทึกโดย -->
-                            <div class="form-group">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <!-- Column 2: บันทึกโดย (กระชับพอดีคำ ไม่ยาวเกินไป) -->
+                            <div class="form-group" style="max-width: 240px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; width: 100%;">
                                     <label style="margin-bottom: 0;">บันทึกโดย</label>
                                     <button type="button" class="btn-add-staff" onclick="openAddStaffModal('recorder')">➕ เพิ่มชื่อ</button>
                                 </div>
-                                <select id="recorderName" class="form-control" onchange="handleStaffSelectChange(this, 'recorder')" required></select>
+                                <select id="recorderName" class="form-control" onchange="handleStaffSelectChange(this, 'recorder')" required style="max-width: 240px;"></select>
                             </div>
                         </div>
                     </div>
@@ -1078,10 +1078,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=27.0.0"></script>
-    <script src="js/app.js?v=27.0.0"></script>
-    <script src="js/daily-report.js?v=27.0.0"></script>
-    <script src="js/events.js?v=27.0.0"></script>
+    <script src="js/api.js?v=28.0.0"></script>
+    <script src="js/app.js?v=28.0.0"></script>
+    <script src="js/daily-report.js?v=28.0.0"></script>
+    <script src="js/events.js?v=28.0.0"></script>
 </body>
 
 </html>
