@@ -372,13 +372,11 @@ async function fetchDailyReportDataFromAPI() {
             const res = await fetch(url);
             const json = await res.json();
             
-            if (json && json.status === "success" && Array.isArray(json.data) && json.data.length > 0) {
+            if (json && json.status === "success" && Array.isArray(json.data)) {
                 localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json.data));
-                localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
                 return json.data;
-            } else if (Array.isArray(json) && json.length > 0) {
+            } else if (Array.isArray(json)) {
                 localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json));
-                localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
                 return json;
             }
         } catch (e) {
@@ -390,11 +388,11 @@ async function fetchDailyReportDataFromAPI() {
     if (cached !== null) {
         try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed)) return parsed;
         } catch (e) {}
     }
 
-    return generateSampleOutputDiaryData();
+    return [];
 }
 
 function generateSampleOutputDiaryData() {
