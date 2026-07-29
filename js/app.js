@@ -734,11 +734,30 @@ async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
     const data = await fetchDailyReportDataFromAPI();
-    if (!data || data.length === 0) return;
+    
+    if (!data || data.length === 0) {
+        // Reset KPI Elements to 0
+        const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
+        const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
+        const kpiProdDefectRate = document.getElementById('kpiProdDefectRate');
+        const kpiProdTopModel = document.getElementById('kpiProdTopModel');
+        const kpiProdTopModelQty = document.getElementById('kpiProdTopModelQty');
+        const kpiProdReportCount = document.getElementById('kpiProdReportCount');
 
-    // Apply date filter if set
-    const filterInput = document.getElementById("dashboardDateFilter");
-    const filterDate = filterInput ? filterInput.value : "";
+        if (kpiProdTotalQty) kpiProdTotalQty.innerText = "0";
+        if (kpiProdTotalDefects) kpiProdTotalDefects.innerText = "0";
+        if (kpiProdDefectRate) kpiProdDefectRate.innerText = "อัตราของเสีย 0%";
+        if (kpiProdTopModel) kpiProdTopModel.innerText = "-";
+        if (kpiProdTopModelQty) kpiProdTopModelQty.innerText = "0 ชิ้น";
+        if (kpiProdReportCount) kpiProdReportCount.innerText = "0";
+
+        // Destroy Chart.js instances if empty
+        if (outputDailyChartInstance) { outputDailyChartInstance.destroy(); outputDailyChartInstance = null; }
+        if (topModelsChartInstance) { topModelsChartInstance.destroy(); topModelsChartInstance = null; }
+        if (qualityYieldChartInstance) { qualityYieldChartInstance.destroy(); qualityYieldChartInstance = null; }
+        globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
+        return;
+    }
 
     let filteredData = data;
     if (filterDate) {
