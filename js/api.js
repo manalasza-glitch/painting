@@ -216,6 +216,7 @@ async function sendDailyReportToAPI(payload) {
         activeSyncRequests++;
         updateSyncUI();
 
+        // 1. Try POST method
         await fetch(url, {
             method: "POST",
             mode: "no-cors",
@@ -225,6 +226,11 @@ async function sendDailyReportToAPI(payload) {
             },
             body: JSON.stringify(payload)
         });
+
+        // 2. Dual-send GET fallback for guaranteed delivery across mobile WebViews & browsers
+        const getUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitDailyReport&payload=' + encodeURIComponent(JSON.stringify(payload));
+        fetch(getUrl, { method: "GET", mode: "no-cors" }).catch(() => {});
+
         return { status: "success" };
     } catch (err) {
         console.error("Daily Report Submit Error:", err);

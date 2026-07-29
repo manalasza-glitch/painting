@@ -283,6 +283,71 @@ function doGet(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
 
+    // Handle submitDailyReport via GET (fallback)
+    if (action === "submitDailyReport") {
+      const TARGET_SHEET_NAME = "outputdiary";
+      let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
+      if (!prodSheet) {
+        prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
+      }
+      if (prodSheet.getLastRow() === 0) {
+        prodSheet.appendRow([
+          "Timestamp", "Date", "Shift", "Recorder", "Checker", 
+          "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"
+        ]);
+      }
+
+      let payloadData = {};
+      if (e && e.parameter && e.parameter.payload) {
+        try { payloadData = JSON.parse(e.parameter.payload); } catch(pErr){}
+      } else {
+        payloadData = e.parameter || {};
+      }
+
+      const now = new Date();
+      const dateVal = payloadData.date || formatDateStr(now, false);
+      const shiftVal = payloadData.shift || "";
+      const recorderVal = payloadData.recorder || "";
+      const checkerVal = payloadData.checker || "";
+
+      const dt = payloadData.downtime || {};
+      const burner = dt.burner || 0;
+      const wash = dt.wash || 0;
+      const ovenEtc = (dt.oven||0) + (dt.gun||0) + (dt.power||0) + (dt.motor||0) + (dt.other||0);
+      const dtNote = dt.note || "";
+
+      let recs = payloadData.records;
+      if (!recs && e.parameter.model) {
+        recs = [{
+          model: e.parameter.model,
+          timeSlot: e.parameter.timeSlot || "08:00 - 09:00",
+          prodQty: Number(e.parameter.prodQty) || 0,
+          dent: Number(e.parameter.dent) || 0,
+          colorDrop: Number(e.parameter.colorDrop) || 0,
+          thinPaint: Number(e.parameter.thinPaint) || 0,
+          thickPaint: Number(e.parameter.thickPaint) || 0,
+          waterStain: Number(e.parameter.waterStain) || 0,
+          otherDefect: Number(e.parameter.otherDefect) || 0,
+          totalDefect: Number(e.parameter.totalDefect) || 0
+        }];
+      }
+
+      if (recs && Array.isArray(recs)) {
+        recs.forEach(r => {
+          prodSheet.appendRow([
+            now, dateVal, shiftVal, recorderVal, checkerVal,
+            burner, wash, ovenEtc, dtNote,
+            r.model, r.timeSlot, r.prodQty,
+            r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect
+          ]);
+        });
+      }
+
+      SpreadsheetApp.flush();
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle getDailyReportData action (outputdiary sheet tab)
     if (action === "getDailyReportData") {
       let prodSheet = ss.getSheetByName("outputdiary");
