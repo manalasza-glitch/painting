@@ -22,7 +22,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=5.2.0">
+    <link rel="stylesheet" href="css/style.css?v=6.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -176,6 +176,41 @@
             .dashboard-grid {
                 grid-template-columns: 1fr !important;
             }
+        }
+
+        .btn-chart-expand {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background: none !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-width: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 24px !important;
+            height: 24px !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #38bdf8 !important;
+            transition: transform 0.2s ease, opacity 0.2s ease !important;
+        }
+
+        .btn-chart-expand svg {
+            width: 18px !important;
+            height: 18px !important;
+            stroke: #38bdf8 !important;
+            fill: none !important;
+        }
+
+        .btn-chart-expand:hover {
+            background: transparent !important;
+            border: none !important;
+            transform: scale(1.3) !important;
+            opacity: 1 !important;
         }
     </style>
 
@@ -1048,10 +1083,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=5.2.0"></script>
-    <script src="js/app.js?v=5.2.0"></script>
-    <script src="js/daily-report.js?v=5.2.0"></script>
-    <script src="js/events.js?v=5.2.0"></script>
+    <script src="js/api.js?v=6.0.0"></script>
+    <script src="js/app.js?v=6.0.0"></script>
+    <script src="js/daily-report.js?v=6.0.0"></script>
+    <script src="js/events.js?v=6.0.0"></script>
 </body>
 
 </html>
