@@ -523,3 +523,74 @@ async function submitDailyReport() {
         submitBtn.innerHTML = `💾 บันทึกแบบฟอร์มประจำวัน`;
     }
 }
+
+async function generate1MonthMockData() {
+    if (!confirm("คุณต้องการสร้างและจำลองกรอกข้อมูลการผลิตรายวันย้อนหลัง 1 เดือน (1-31 กรกฎาคม 2026) ใช่หรือไม่?")) {
+        return;
+    }
+
+    const sample = [];
+    const allModels = Object.values(PAINTING_MODEL_GROUPS).flat();
+    const modelsList = allModels.length > 0 ? allModels : [
+        "Box NMS 4/6 W. 240 mm.",
+        "Door NLC 450 mm.",
+        "BOX 300x400x200",
+        "GLAND PLATE (MEDIUM)",
+        "DOOR PANEL NLC-01",
+        "U-BOX STANDARD",
+        "DOOR PANEL NMS-01",
+        "BOX 400x500x200",
+        "Cover NMS 6 w. 245 mm.",
+        "Cover NLC EZ100 600 mm.",
+        "Flat Door LC 600"
+    ];
+    const recorders = (typeof PAINTING_RECORDERS_LIST !== 'undefined' && PAINTING_RECORDERS_LIST.length > 0) 
+        ? PAINTING_RECORDERS_LIST 
+        : ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน"];
+
+    for (let day = 1; day <= 31; day++) {
+        const dd = ('0' + day).slice(-2);
+        const dateStr = `2026-07-${dd}`;
+        const runsCount = 2 + (day % 3);
+        
+        for (let r = 0; r < runsCount; r++) {
+            const mIdx = (day + r * 3) % modelsList.length;
+            const model = modelsList[mIdx];
+            const recorder = recorders[(day + r) % recorders.length];
+            
+            let baseQty = 45 + ((day * 7 + r * 15) % 110);
+            if (day === 27) baseQty = 450 + (r * 120);
+
+            const totalDefect = (day % 4 === 0) ? (1 + (day % 3)) : (day % 2 === 0 ? 1 : 0);
+
+            sample.push({
+                timestamp: `${dateStr} 08:30`,
+                date: dateStr,
+                shift: r % 2 === 0 ? "Day" : "Night",
+                recorder: recorder,
+                checker: "",
+                model: model,
+                timeSlot: `${8 + r * 2}:00 - ${10 + r * 2}:00`,
+                prodQty: baseQty,
+                dent: totalDefect > 0 ? 1 : 0,
+                colorDrop: 0,
+                thinPaint: totalDefect > 1 ? 1 : 0,
+                thickPaint: 0,
+                waterStain: 0,
+                otherDefect: 0,
+                totalDefect: totalDefect
+            });
+        }
+    }
+
+    localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(sample));
+    localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
+
+    showToast("สร้างข้อมูลจำลองการผลิตรายวัน 1 เดือนสำเร็จ!", "success");
+    
+    // Switch to Dashboard and re-render charts immediately!
+    switchTab('dashboard-tab');
+    if (typeof renderDailyReportCharts === 'function') {
+        renderDailyReportCharts();
+    }
+}
