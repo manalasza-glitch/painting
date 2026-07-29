@@ -831,22 +831,22 @@ button, input, textarea, select {
   background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
 .btn-chart-expand:hover {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.25);
   color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.4);
-  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: scale(1.08);
 }
   grid-column: span 2;
 }
