@@ -12,9 +12,14 @@ const EVENT_CATEGORY_CONFIG = {
     "Environment": { label: "Environment (สภาพแวดล้อม)", color: "#06b6d4", bg: "rgba(6, 182, 212, 0.15)", icon: "🌍" }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Initial fetch if event tab is rendered
-    loadEventsData();
+document.addEventListener("DOMContentLoaded", async () => {
+    // Never call the protected API while the login screen is active. app.js
+    // performs the authenticated initial load; this guard also keeps this
+    // module safe when it is loaded on its own.
+    const user = window.PaintingAuth ? await window.PaintingAuth.ready() : null;
+    if (user && window.PaintingAuth.can('events.read')) {
+        loadEventsData();
+    }
 });
 
 async function loadEventsData() {
