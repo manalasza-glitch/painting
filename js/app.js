@@ -70,6 +70,9 @@ function setCurrentDateTimeDefaults() {
 }
 
 window.onload = async () => {
+    const signedInUser = window.PaintingAuth ? await window.PaintingAuth.ready() : null;
+    if (!signedInUser) return;
+
     setCurrentDateTimeDefaults();
 
     // Auto-clear stale test cache from old v1.0.4 version
@@ -79,28 +82,27 @@ window.onload = async () => {
         localStorage.setItem("PAINTING_INSPECTION_CACHE_VER", "1.5.0");
     }
 
-    if (typeof initDailyReportForm === 'function') {
+    if (PaintingAuth.can('daily_report.read') && typeof initDailyReportForm === 'function') {
         initDailyReportForm();
     }
 
-    const settingInput = document.getElementById("settingApiUrl");
-    if (settingInput) {
-        settingInput.value = getApiUrl();
+    if (PaintingAuth.can('dashboard.read') || PaintingAuth.can('inspection.read') || PaintingAuth.can('history.read')) {
+        await loadDataFromAPI();
     }
-
-    await loadDataFromAPI();
-    if (typeof loadEventsData === 'function') {
+    if (PaintingAuth.can('events.read') && typeof loadEventsData === 'function') {
         loadEventsData();
     }
 
     // Poll data every 15 seconds only if there are no pending sync requests
     setInterval(() => {
         if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests === 0) {
-            loadDataFromAPI(true); // silent reload
-            if (typeof renderStaffDropdowns === 'function') {
+            if (PaintingAuth.can('dashboard.read') || PaintingAuth.can('inspection.read') || PaintingAuth.can('history.read')) {
+                loadDataFromAPI(true); // silent reload
+            }
+            if (PaintingAuth.can('daily_report.read') && typeof renderStaffDropdowns === 'function') {
                 renderStaffDropdowns();
             }
-            if (typeof loadEventsData === 'function') {
+            if (PaintingAuth.can('events.read') && typeof loadEventsData === 'function') {
                 loadEventsData();
             }
         }
@@ -127,6 +129,17 @@ async function loadDataFromAPI(silent = false) {
 }
 
 function switchTab(tabId, element) {
+    const tabPermissions = {
+        "dashboard-tab": "dashboard.read",
+        "daily-report-tab": "daily_report.read",
+        "event-tab": "events.read",
+        "history-tab": "history.read",
+        "settings-tab": "users.manage"
+    };
+    if (window.PaintingAuth && tabPermissions[tabId] && !PaintingAuth.can(tabPermissions[tabId])) {
+        showToast("บัญชีนี้ไม่มีสิทธิ์เปิดหน้านี้", "error");
+        return;
+    }
     // Hide all tab pages & remove active class
     document.querySelectorAll(".tab-page").forEach(page => {
         page.classList.remove("active");
@@ -168,6 +181,10 @@ function switchTab(tabId, element) {
 }
 
 function openInspectionModal() {
+    if (window.PaintingAuth && !PaintingAuth.can('inspection.create')) {
+        showToast("บัญชีนี้ไม่มีสิทธิ์บันทึกข้อมูลการตรวจ", "error");
+        return;
+    }
     const modal = document.getElementById("inspectionModal");
     if (modal) {
         // Clear Edit Mode Flags

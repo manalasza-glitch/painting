@@ -1,6 +1,6 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCGi9XE6U0RYliOgyyQZaWOazVOn5xXAo8RVF_AilQi6gy1mWr-sl5_L0Mhv4QjLRj/exec";
+const DEFAULT_API_URL = "/api/data";
 
-let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
+let API_URL = DEFAULT_API_URL;
 
 let activeSyncRequests = 0;
 
@@ -24,21 +24,30 @@ function updateSyncUI() {
     }
 }
 
-// Force reset to active Anyone deployment URL
-if (!API_URL.includes("AKfycbwCGi9XE6U0RYliOgyyQZaWOazVOn5xXAo8RVF_AilQi6gy1mWr-sl5_L0Mhv4QjLRj")) {
-    API_URL = DEFAULT_API_URL;
-    localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
-}
-
 function setApiUrl(url) {
-    if (url) {
-        API_URL = url;
-        localStorage.setItem("PAINTING_API_URL", url);
-    }
+    // The API is deliberately same-origin so employees cannot bypass access control.
+    API_URL = DEFAULT_API_URL;
 }
 
 function getApiUrl() {
     return API_URL;
+}
+
+async function requestApi(url, options = {}) {
+    const response = await fetch(url, { credentials: "same-origin", ...options });
+    if (response.status === 401) {
+        window.location.reload();
+        throw new Error("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
+    }
+    if (!response.ok) {
+        let message = "ไม่สามารถดำเนินการได้";
+        try {
+            const data = await response.clone().json();
+            if (data && data.error) message = data.error;
+        } catch (e) {}
+        throw new Error(message);
+    }
+    return response;
 }
 
 // Fetch historical inspection records from Google Sheet API
@@ -47,7 +56,7 @@ async function fetchInspectionDataFromAPI() {
     if (!url) return getCachedOrSampleData();
 
     try {
-        const response = await fetch(url, {
+        const response = await requestApi(url, {
             method: "GET",
             headers: { "Accept": "application/json" }
         });
@@ -80,10 +89,10 @@ async function sendDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({
                 action: "create",
                 ...data
@@ -138,10 +147,10 @@ async function updateDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({
                 action: "update",
                 ...data
@@ -188,10 +197,10 @@ async function deleteDataFromAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({
                 action: "delete",
                 ...data
@@ -217,19 +226,14 @@ async function sendDailyReportToAPI(payload) {
         updateSyncUI();
 
         // 1. Try POST method
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             cache: "no-cache",
             headers: {
                 "Content-Type": "text/plain;charset=utf-8"
             },
             body: JSON.stringify(payload)
         });
-
-        // 2. Dual-send GET fallback for guaranteed delivery across mobile WebViews & browsers
-        const getUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitDailyReport&payload=' + encodeURIComponent(JSON.stringify(payload));
-        fetch(getUrl, { method: "GET", mode: "no-cors" }).catch(() => {});
 
         return { status: "success" };
     } catch (err) {
@@ -309,7 +313,7 @@ async function fetchRecordersFromAPI() {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getRecorders';
 
     try {
-        const res = await fetch(url);
+        const res = await requestApi(url);
         const data = await res.json();
         if (data && data.recorders && Array.isArray(data.recorders)) {
             return data.recorders;
@@ -330,9 +334,8 @@ async function addRecorderToAPI(name) {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=addRecorder&name=' + encodeURIComponent(cleanName);
 
     try {
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "addRecorder", name: cleanName })
         });
@@ -351,9 +354,8 @@ async function deleteRecorderFromAPI(name) {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=deleteRecorder&name=' + encodeURIComponent(cleanName);
 
     try {
-        await fetch(url, {
+        await requestApi(url, {
             method: "POST",
-            mode: "no-cors",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "deleteRecorder", name: cleanName })
         });
@@ -369,7 +371,7 @@ async function fetchDailyReportDataFromAPI() {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData';
 
         try {
-            const res = await fetch(url);
+            const res = await requestApi(url);
             const json = await res.json();
             
             if (json && json.status === "success" && Array.isArray(json.data)) {
@@ -460,7 +462,7 @@ async function fetchPartModelsFromAPI() {
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getPartModels';
         try {
-            const res = await fetch(url);
+            const res = await requestApi(url);
             const json = await res.json();
             if (json && json.groups && typeof json.groups === 'object' && Object.keys(json.groups).length > 0) {
                 localStorage.setItem("PAINTING_PART_MODELS_CACHE", JSON.stringify(json.groups));
@@ -493,7 +495,7 @@ async function fetchEventsFromAPI() {
     if (baseUrl) {
         try {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getEvents';
-            const response = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+            const response = await requestApi(url, { method: "GET", headers: { "Accept": "application/json" } });
             if (response.ok) {
                 const res = await response.json();
                 if (res.status === "success" && Array.isArray(res.data)) {
@@ -599,9 +601,9 @@ async function sendEventToAPI(eventData) {
         try {
             activeSyncRequests++;
             updateSyncUI();
-            const queryParams = new URLSearchParams({ action: "createEvent", ...newEvt }).toString();
+            const queryParams = new URLSearchParams({ ...newEvt, actionTaken: newEvt.action || "", action: "createEvent" }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-            await fetch(url, { method: "GET", mode: "no-cors" });
+            await requestApi(url, { method: "GET" });
         } catch (e) {
             console.warn("Failed to push 5M1E event to cloud API:", e);
         } finally {
@@ -630,7 +632,7 @@ async function deleteEventFromAPI(id, rowIndex, title) {
             updateSyncUI();
             const queryParams = new URLSearchParams({ action: "deleteEvent", id: id || "", rowIndex: rowIndex || 0, title: title || "" }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-            await fetch(url, { method: "GET", mode: "no-cors" });
+            await requestApi(url, { method: "GET" });
         } catch (e) {
             console.warn("Failed to delete 5M1E event from cloud API:", e);
         } finally {
