@@ -759,6 +759,9 @@ async function renderDailyReportCharts() {
         return;
     }
 
+    const filterInput = document.getElementById("dashboardDateFilter");
+    const filterDate = filterInput ? filterInput.value : "";
+
     let filteredData = data;
     if (filterDate) {
         filteredData = data.filter(r => String(r.date).substring(0, 10) === filterDate);
