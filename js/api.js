@@ -365,31 +365,32 @@ async function fetchDailyReportDataFromAPI() {
         try {
             const res = await fetch(url);
             const json = await res.json();
-            let list = null;
-            if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-                list = json.data;
-            } else if (Array.isArray(json) && json.length > 0) {
-                list = json;
-            }
-
-            // Verify that fetched list actually contains outputdiary production data (model or prodQty)
-            if (list && list.length > 0 && (list[0].model !== undefined || list[0].prodQty !== undefined)) {
-                localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(list));
-                return list;
+            
+            if (json && json.status === "success" && Array.isArray(json.data)) {
+                localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json.data));
+                localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
+                return json.data;
+            } else if (Array.isArray(json)) {
+                localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json));
+                localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
+                return json;
             }
         } catch (e) {
             console.warn("Failed to fetch outputdiary from cloud, checking cache:", e);
         }
     }
 
+    const isInit = localStorage.getItem("PAINTING_OUTPUTDIARY_INIT");
     const cached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
-    if (cached) {
+    if (cached !== null) {
         try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].model !== undefined || parsed[0].prodQty !== undefined)) {
-                return parsed;
-            }
+            if (Array.isArray(parsed)) return parsed;
         } catch (e) {}
+    }
+
+    if (isInit === "true") {
+        return [];
     }
 
     return generateSampleOutputDiaryData();
