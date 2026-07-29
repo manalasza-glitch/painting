@@ -1,5 +1,9 @@
 const encoder = new TextEncoder();
-export const PASSWORD_ITERATIONS = 600000;
+// Pages Functions on the Workers Free plan has a tight per-request CPU budget.
+// 600k PBKDF2 rounds can fail before the user row is written. The per-user
+// salt, server-only pepper, login throttling and constant-time comparison are
+// retained; the stored iteration count keeps future upgrades possible.
+export const PASSWORD_ITERATIONS = 100000;
 
 function bytesToBase64(bytes) {
   let binary = '';
