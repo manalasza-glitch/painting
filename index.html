@@ -22,7 +22,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=11.0.0">
+    <link rel="stylesheet" href="css/style.css?v=12.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -663,14 +663,9 @@
                 <section id="daily-report-tab" class="tab-page" style="display: none;">
                     <div class="section-title-bar" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
                         <h1 class="page-title" style="font-size: 1.15rem;">📝 ฟอร์มผลิตรายวัน</h1>
-                        <div style="display: flex; gap: 0.5rem; width: 100%; flex-wrap: wrap;">
-                            <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="flex: 1; min-width: 200px;">
-                                💾 บันทึกแบบฟอร์มประจำวัน
-                            </button>
-                            <button type="button" class="btn-secondary-custom" onclick="generate1MonthMockData()" style="background: rgba(14, 116, 144, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; padding: 0.6rem 0.85rem; border-radius: 12px; cursor: pointer; white-space: nowrap;">
-                                🎲 กรอกข้อมูลจำลอง 1 เดือน
-                            </button>
-                        </div>
+                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="width: 100%;">
+                            💾 บันทึกแบบฟอร์มประจำวัน
+                        </button>
                     </div>
 
                     <!-- Step 1: ข้อมูลทั่วไป -->
@@ -1088,10 +1083,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=11.0.0"></script>
-    <script src="js/app.js?v=11.0.0"></script>
-    <script src="js/daily-report.js?v=11.0.0"></script>
-    <script src="js/events.js?v=11.0.0"></script>
+    <script src="js/api.js?v=12.0.0"></script>
+    <script src="js/app.js?v=12.0.0"></script>
+    <script src="js/daily-report.js?v=12.0.0"></script>
+    <script src="js/events.js?v=12.0.0"></script>
 </body>
 
 </html>
