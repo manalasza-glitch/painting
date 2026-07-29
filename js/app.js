@@ -730,6 +730,41 @@ function showToast(message, type = "success") {
     }, 3500);
 }
 
+function getModelWithGroupLabel(rawModel) {
+    if (!rawModel) return 'รุ่นอื่นๆ (Other)';
+    let raw = String(rawModel).trim();
+    if (!raw) return 'รุ่นอื่นๆ (Other)';
+
+    // Avoid duplicating if already wrapped in parentheses
+    if (raw.includes('(') && raw.includes(')')) {
+        return raw;
+    }
+
+    const groups = (typeof PAINTING_MODEL_GROUPS !== 'undefined') ? PAINTING_MODEL_GROUPS : {};
+    let foundGroup = "";
+
+    for (const grpName in groups) {
+        const arr = groups[grpName];
+        if (Array.isArray(arr)) {
+            const hasMatch = arr.some(item => {
+                const cleanItem = String(item).trim();
+                return cleanItem.toLowerCase() === raw.toLowerCase() ||
+                       raw.toLowerCase().includes(cleanItem.toLowerCase()) ||
+                       cleanItem.toLowerCase().includes(raw.toLowerCase());
+            });
+            if (hasMatch) {
+                foundGroup = grpName;
+                break;
+            }
+        }
+    }
+
+    if (foundGroup) {
+        return `${raw} (${foundGroup})`;
+    }
+    return raw;
+}
+
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
@@ -775,7 +810,7 @@ async function renderDailyReportCharts() {
     filteredData.forEach(r => {
         const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
         const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
-        const mName = String(r.model || r.Model || '').trim();
+        let mName = String(r.model || r.Model || '').trim();
 
         totalProdQty += pQty;
         totalDefects += dQty;
@@ -809,21 +844,19 @@ async function renderDailyReportCharts() {
     if (kpiProdTotalQty) kpiProdTotalQty.innerText = totalProdQty.toLocaleString();
     if (kpiProdTotalDefects) kpiProdTotalDefects.innerText = totalDefects.toLocaleString();
     if (kpiProdDefectRate) kpiProdDefectRate.innerText = `อัตราของเสีย ${defectRate}%`;
-    if (kpiProdTopModel) kpiProdTopModel.innerText = topModelName;
+    if (kpiProdTopModel) kpiProdTopModel.innerText = getModelWithGroupLabel(topModelName);
     if (kpiProdTopModelQty) kpiProdTopModelQty.innerText = `${topModelQty.toLocaleString()} ชิ้น`;
     if (kpiProdReportCount) kpiProdReportCount.innerText = reportCount.toLocaleString();
 
-    // 2. Render Output Daily Stacked Bar Chart (Grouped by Model Names - ชื่อรุ่นของงาน)
-    // Extract unique model names and calculate total production per model
+    // 2. Render Output Daily Stacked Bar Chart (Grouped by Model Names - ชื่อรุ่นของงาน + กลุ่มงาน)
     const modelTotalsMap = {};
     filteredData.forEach(r => {
         let mName = String(r.model || r.Model || '').trim();
-        // Clean bracketed codes for elegant chart legends e.g. "[BRU30887] Box NMS 4/6 W. 240 mm." -> "Box NMS 4/6 W. 240 mm."
-        if (mName.includes(']')) {
-            const parts = mName.split(']');
-            if (parts.length > 1) mName = parts[1].trim();
+        if (mName) {
+            mName = getModelWithGroupLabel(mName);
+        } else {
+            mName = 'รุ่นอื่นๆ (Other)';
         }
-        if (!mName) mName = 'รุ่นอื่นๆ (Other)';
         const pQty = Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0;
         if (pQty > 0) {
             modelTotalsMap[mName] = (modelTotalsMap[mName] || 0) + pQty;
@@ -867,9 +900,8 @@ async function renderDailyReportCharts() {
         if (!dStr) return;
 
         let mName = String(r.model || r.Model || '').trim();
-        if (mName.includes(']')) {
-            const parts = mName.split(']');
-            if (parts.length > 1) mName = parts[1].trim();
+        if (mName) {
+            mName = getModelWithGroupLabel(mName);
         }
         if (!mName || !topModelNames.includes(mName)) {
             mName = 'รุ่นอื่นๆ (Other)';
@@ -988,7 +1020,7 @@ async function renderDailyReportCharts() {
         topModelsChartInstance = new Chart(ctxModels, {
             type: 'bar',
             data: {
-                labels: sortedModels,
+                labels: sortedModels.map(m => getModelWithGroupLabel(m)),
                 datasets: [{
                     label: 'ยอดผลิต (ชิ้น)',
                     data: topModelQtyList,

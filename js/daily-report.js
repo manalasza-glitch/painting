@@ -80,13 +80,13 @@ function renderModelDropdownOptions(groupFilter = "") {
 
     if (groupFilter && PAINTING_MODEL_GROUPS[groupFilter]) {
         PAINTING_MODEL_GROUPS[groupFilter].forEach(m => {
-            html += `<option value="${m}">${m}</option>`;
+            html += `<option value="${m}">${m} (${groupFilter})</option>`;
         });
     } else {
         for (const [groupName, models] of Object.entries(PAINTING_MODEL_GROUPS)) {
             html += `<optgroup label="📦 ${groupName}">`;
             models.forEach(m => {
-                html += `<option value="${m}">${m}</option>`;
+                html += `<option value="${m}">${m} (${groupName})</option>`;
             });
             html += `</optgroup>`;
         }
