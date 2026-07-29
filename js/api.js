@@ -414,6 +414,36 @@ function generateSampleOutputDiaryData() {
     return sample;
 }
 
+// Fetch PartModel mapping from Cloud Google Sheet (PartModel sheet tab)
+async function fetchPartModelsFromAPI() {
+    const baseUrl = getApiUrl();
+    if (baseUrl) {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getPartModels';
+        try {
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json && json.groups && typeof json.groups === 'object' && Object.keys(json.groups).length > 0) {
+                localStorage.setItem("PAINTING_PART_MODELS_CACHE", JSON.stringify(json.groups));
+                return json.groups;
+            }
+        } catch (e) {
+            console.warn("Failed to fetch PartModel from cloud, checking cache:", e);
+        }
+    }
+
+    const cached = localStorage.getItem("PAINTING_PART_MODELS_CACHE");
+    if (cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                return parsed;
+            }
+        } catch (e) {}
+    }
+
+    return null;
+}
+
 // ==========================================
 // 5M1E Event Management API Functions
 // ==========================================

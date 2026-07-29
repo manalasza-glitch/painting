@@ -1,63 +1,78 @@
-const PAINTING_MODEL_GROUPS = {
+let PAINTING_MODEL_GROUPS = {
     "Gland Plate": [
         "[75170148] Gland Plate LC600",
         "[BRU53717] Gland Plate NLC600"
     ],
     "Box & U-Box": [
-        "[BRU30887] Box NMS 4/6 W. 240 mm.",
-        "[BRU30888] Box NMS 8/10W. 320 mm.",
-        "[BRU30889] Box NMS 14 W. 400 mm.",
+        "Box NMS 4/6 W. 240 mm.",
+        "BOX 300x400x200",
+        "BOX 400x500x200",
+        "U-BOX STANDARD",
         "[BRU53714] U Box 450 mm.",
         "[75170145] U Box LC600 mm.",
-        "[BRU53715] U Box NLC600 mm.",
-        "[BRU53716] U Box NLC750 mm.",
-        "[BRU53771] U Box NLC900 mm."
+        "[BRU53715] U Box NLC600 mm."
     ],
     "Door (บานประตู)": [
-        "[75170162] Flat Door LC 600",
-        "[BRU53714] Door NLC 450 mm.",
-        "[BRU53715] Door NLC 600 mm.",
-        "[BRU53716] Door NLC 750 mm.",
-        "[BRU53717] Door NLC 900 mm."
+        "Door NLC 450 mm.",
+        "DOOR PANEL NLC-01",
+        "DOOR PANEL NMS-01",
+        "Flat Door LC 600",
+        "[BRU53715] Door NLC 600 mm."
     ],
     "Cover NMS": [
+        "Cover NMS 6 w. 245 mm.",
         "[BRU30890] Cover NMS 4 w. 245 mm.",
-        "[BRU30891] Cover NMS 6 w. 245 mm.",
-        "[BRU30892] Cover NMS 8 w. 325 mm.",
-        "[BRU30893] Cover NMS 10 w. 325 mm.",
-        "[BRU30894] Cover NMS 14 w. 400 mm."
+        "[BRU30892] Cover NMS 8 w. 325 mm."
     ],
     "Cover NLC (EZ / LUG)": [
+        "Cover NLC EZ100 600 mm.",
         "[BRU53718] Cover NLC EZ100 450 mm. 12 w.",
-        "[BRU53738] Cover NLC LUG250 450 mm. 12 w.",
-        "[BRU53724] Cover NLC EZ100 450 mm. 12 w.",
-        "[BRU53725] Cover NLC EZ100 450 mm. 18 w.",
-        "[BRU53719] Cover NLC EZ100 600 mm. 18 w.",
-        "[BRU53739] Cover NLC LUG250 600 mm. 18 w.",
-        "[BRU53727] Cover NLC LUG100 600 mm. 30 w.",
-        "[BRU53740] Cover NLC LUG250 600 mm. 24 w.",
-        "[BRU53741] Cover NLC LUG250 600 mm. 30 w.",
-        "[BRU53726] Cover NLC LUG100 600 mm. 24 w.",
-        "[BRU53728] Cover NLC LUG100 600 mm. 36 w.",
-        "[BRU53720] Cover NLC EZ100 600 mm. 24 w.",
-        "[BRU53721] Cover NLC EZ100 600 mm. 30 w.",
-        "[BRU53730] Cover NLC EZ250 600 mm. 12 w.",
-        "[BRU53731] Cover NLC EZ250 600 mm. 18 w.",
-        "[BRU53722] Cover NLC EZ100 750 mm. 36 w.",
-        "[BRU53723] Cover NLC EZ100 750 mm. 42 w.",
-        "[BRU53729] Cover NLC LUG100 750 mm. 42 w.",
-        "[BRU53742] Cover NLC LUG250 750 mm. 36 w.",
-        "[BRU53732] Cover NLC EZ250 750 mm. 24 w.",
-        "[BRU53734] Cover NLC EZ250 750 mm. 30 w.",
-        "[BRU53735] Cover NLC EZ250 900 mm. 36 w.",
-        "[BRU53736] Cover NLC EZ250 900 mm. 42 w.",
-        "[BRU53737] Cover NLC EZ250 900 mm. 48 w.",
-        "[BRU53746] Cover NLC LUG250 900 mm. 48 w."
+        "[BRU53738] Cover NLC LUG250 450 mm. 12 w."
     ]
 };
 
-// Flattened list for backwards compatibility
-const PAINTING_MODELS = Object.values(PAINTING_MODEL_GROUPS).flat();
+async function loadPartModelsList() {
+    // 1. Load from local cache
+    const cached = localStorage.getItem("PAINTING_PART_MODELS_CACHE");
+    if (cached) {
+        try {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                PAINTING_MODEL_GROUPS = parsed;
+            }
+        } catch (e) {}
+    }
+
+    renderPartGroupDropdownUI();
+    renderModelDropdownOptions();
+
+    // 2. Fetch fresh mapping from Cloud Google Sheet (PartModel sheet tab)
+    if (typeof fetchPartModelsFromAPI === 'function') {
+        const cloudGroups = await fetchPartModelsFromAPI();
+        if (cloudGroups && typeof cloudGroups === 'object' && Object.keys(cloudGroups).length > 0) {
+            PAINTING_MODEL_GROUPS = cloudGroups;
+            renderPartGroupDropdownUI();
+            renderModelDropdownOptions();
+        }
+    }
+}
+
+function renderPartGroupDropdownUI() {
+    const groupSelect = document.getElementById('drPartGroup');
+    if (!groupSelect) return;
+
+    const currentVal = groupSelect.value;
+    let html = '<option value="">-- ทุกกลุ่มงาน (All Parts) --</option>';
+
+    Object.keys(PAINTING_MODEL_GROUPS).forEach(gName => {
+        html += `<option value="${gName}">${gName}</option>`;
+    });
+
+    groupSelect.innerHTML = html;
+    if (currentVal && PAINTING_MODEL_GROUPS[currentVal]) {
+        groupSelect.value = currentVal;
+    }
+}
 
 function renderModelDropdownOptions(groupFilter = "") {
     const modelSelects = document.querySelectorAll('.model-select');
@@ -325,18 +340,8 @@ function initDailyReportForm() {
     // Populate Recorder & Checker Staff Dropdowns
     renderStaffDropdowns();
 
-    // Populate Part Category Dropdown
-    const groupSelect = document.getElementById('drPartGroup');
-    if (groupSelect) {
-        let groupHtml = '<option value="">-- ทุกกลุ่มงาน (All Parts) --</option>';
-        Object.keys(PAINTING_MODEL_GROUPS).forEach(g => {
-            groupHtml += `<option value="${g}">${g}</option>`;
-        });
-        groupSelect.innerHTML = groupHtml;
-    }
-
-    // Populate Model Dropdown with optgroups
-    renderModelDropdownOptions();
+    // Populate Part Category & Model Dropdowns from Cloud (PartModel sheet tab)
+    loadPartModelsList();
 
     // Populate Time Dropdowns
     const timeSelects = document.querySelectorAll('.time-select');

@@ -353,6 +353,43 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", data: data })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Handle getPartModels action (PartModel sheet tab)
+    if (action === "getPartModels") {
+      let pmSheet = ss.getSheetByName("PartModel");
+      if (!pmSheet) {
+        pmSheet = ss.insertSheet("PartModel");
+        pmSheet.appendRow(["PartGroup", "ModelName"]);
+        const defaultGroups = {
+          "Gland Plate": ["[75170148] Gland Plate LC600", "[BRU53717] Gland Plate NLC600"],
+          "Box & U-Box": ["Box NMS 4/6 W. 240 mm.", "BOX 300x400x200", "BOX 400x500x200", "U-BOX STANDARD", "[BRU53714] U Box 450 mm.", "[75170145] U Box LC600 mm.", "[BRU53715] U Box NLC600 mm."],
+          "Door (บานประตู)": ["Door NLC 450 mm.", "DOOR PANEL NLC-01", "DOOR PANEL NMS-01", "Flat Door LC 600", "[BRU53715] Door NLC 600 mm."],
+          "Cover NMS": ["Cover NMS 6 w. 245 mm.", "[BRU30890] Cover NMS 4 w. 245 mm.", "[BRU30892] Cover NMS 8 w. 325 mm."],
+          "Cover NLC (EZ / LUG)": ["Cover NLC EZ100 600 mm.", "[BRU53718] Cover NLC EZ100 450 mm. 12 w.", "[BRU53738] Cover NLC LUG250 450 mm. 12 w."]
+        };
+        for (const grp in defaultGroups) {
+          defaultGroups[grp].forEach(m => pmSheet.appendRow([grp, m]));
+        }
+        SpreadsheetApp.flush();
+      }
+
+      const values = pmSheet.getDataRange().getValues();
+      const groupsMap = {};
+      if (values && values.length > 1) {
+        for (let i = 1; i < values.length; i++) {
+          const group = String(values[i][0] || "").trim();
+          const model = String(values[i][1] || "").trim();
+          if (group && model) {
+            if (!groupsMap[group]) groupsMap[group] = [];
+            if (!groupsMap[group].includes(model)) {
+              groupsMap[group].push(model);
+            }
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", groups: groupsMap })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle getRecorders action (Cloud Sync)
     if (action === "getRecorders") {
       let recSheet = ss.getSheetByName("Recorders");
