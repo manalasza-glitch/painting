@@ -23,7 +23,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=22.0.0">
+    <link rel="stylesheet" href="css/style.css?v=23.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -662,9 +662,9 @@
 
                 <!-- TAB: DAILY REPORT (แบบฟอร์มผลิตรายวัน) -->
                 <section id="daily-report-tab" class="tab-page" style="display: none;">
-                    <div class="section-title-bar" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
-                        <h1 class="page-title" style="font-size: 1.15rem;">📝 ฟอร์มผลิตรายวัน</h1>
-                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="width: 100%;">
+                    <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
+                        <h1 class="page-title" style="font-size: 1.15rem; margin: 0;">📝 ฟอร์มผลิตรายวัน</h1>
+                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.55rem 1.25rem;">
                             💾 บันทึกแบบฟอร์มประจำวัน
                         </button>
                     </div>
@@ -672,18 +672,16 @@
                     <!-- Step 1: ข้อมูลทั่วไป -->
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 1: ข้อมูลกะทำงาน</h3>
-                        <div class="dr-form-stack">
-                            <div class="dr-row">
-                                <div class="form-group">
-                                    <label>วันที่ (Date)</label>
-                                    <input type="date" id="reportDate" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>กะทำงาน (Shift)</label>
-                                    <div class="dr-radio-group">
-                                        <label><input type="radio" name="shift" value="Day" checked> Day</label>
-                                        <label><input type="radio" name="shift" value="Night"> Night</label>
-                                    </div>
+                        <div class="dr-grid-3">
+                            <div class="form-group">
+                                <label>วันที่ (Date)</label>
+                                <input type="date" id="reportDate" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>กะทำงาน (Shift)</label>
+                                <div class="dr-radio-pills">
+                                    <label><input type="radio" name="shift" value="Day" checked> ☀️ Day</label>
+                                    <label><input type="radio" name="shift" value="Night"> 🌙 Night</label>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -693,7 +691,6 @@
                                 </div>
                                 <select id="recorderName" class="form-control" onchange="handleStaffSelectChange(this, 'recorder')" required></select>
                             </div>
-
                         </div>
                     </div>
 
@@ -701,15 +698,17 @@
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 2: ยอดผลิตและของเสีย</h3>
                         <div class="dr-form-stack">
-                            <div class="form-group">
-                                <label>กลุ่มงาน (Part Category)</label>
-                                <select id="drPartGroup" class="form-control" onchange="filterModelDropdown()"></select>
+                            <div class="dr-grid-2">
+                                <div class="form-group">
+                                    <label>กลุ่มงาน (Part Category)</label>
+                                    <select id="drPartGroup" class="form-control" onchange="filterModelDropdown()"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>รุ่นงาน (Model)</label>
+                                    <select id="drModel" class="form-control model-select"></select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>รุ่นงาน (Model)</label>
-                                <select id="drModel" class="form-control model-select"></select>
-                            </div>
-                            <div class="dr-row">
+                            <div class="dr-grid-2">
                                 <div class="form-group">
                                     <label>ช่วงเวลา</label>
                                     <select id="drTime" class="form-control time-select"></select>
@@ -719,23 +718,21 @@
                                     <input type="number" id="drProdQty" class="form-control" min="0" placeholder="0">
                                 </div>
                             </div>
-                            <div class="dr-defect-label">ของเสีย</div>
-                            <div class="dr-row">
+                            <div class="dr-defect-label">ของเสีย (Defects)</div>
+                            <div class="dr-grid-6">
                                 <div class="form-group"><label>บุบ/เสียรูป</label><input type="number" id="drDent" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>เม็ดสี</label><input type="number" id="drColorDrop" class="form-control" min="0" placeholder="0"></div>
-                            </div>
-                            <div class="dr-row">
                                 <div class="form-group"><label>สีบาง</label><input type="number" id="drThinPaint" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>สีหนา/สีปูด</label><input type="number" id="drThickPaint" class="form-control" min="0" placeholder="0"></div>
-                            </div>
-                            <div class="dr-row">
                                 <div class="form-group"><label>คราบน้ำ/จาระบี</label><input type="number" id="drWaterStain" class="form-control" min="0" placeholder="0"></div>
                                 <div class="form-group"><label>อื่นๆ</label><input type="number" id="drOtherDefect" class="form-control" min="0" placeholder="0"></div>
                             </div>
                         </div>
-                        <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="margin-top: 1rem; width: 100%;">
-                            ➕ เพิ่มลงในตาราง
-                        </button>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                            <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="padding: 0.6rem 1.5rem;">
+                                ➕ เพิ่มลงในตาราง
+                            </button>
+                        </div>
 
                         <!-- Table showing added records -->
                         <div class="table-responsive" style="margin-top: 1rem;">
@@ -758,27 +755,19 @@
 
                     <!-- Step 3: เวลาสูญเสีย -->
                     <div class="dr-card">
-                        <h3 class="dr-section-title">ส่วนที่ 3: เวลาสูญเสีย (Downtime)</h3>
-                        <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;">ระบุเป็น "นาที" (ปล่อยว่างได้)</p>
+                        <h3 class="dr-section-title">ส่วนที่ 3: เวลาสูญเสีย (Downtime) <span style="color: #64748b; font-size: 0.85rem; font-weight: 500;">(ระบุเป็น "นาที")</span></h3>
                         <div class="dr-form-stack">
-                            <div class="dr-row">
+                            <div class="dr-grid-4">
                                 <div class="form-group"><label>เบอร์เนอร์</label><input type="number" id="dtBurner" class="form-control" min="0" placeholder="นาที"></div>
                                 <div class="form-group"><label>ไลน์ล้าง</label><input type="number" id="dtWash" class="form-control" min="0" placeholder="นาที"></div>
-                            </div>
-                            <div class="dr-row">
                                 <div class="form-group"><label>เตาอบ</label><input type="number" id="dtOven" class="form-control" min="0" placeholder="นาที"></div>
                                 <div class="form-group"><label>ระบบปืน</label><input type="number" id="dtGun" class="form-control" min="0" placeholder="นาที"></div>
                             </div>
-                            <div class="dr-row">
+                            <div class="dr-grid-4">
                                 <div class="form-group"><label>ไฟฟ้าดับ</label><input type="number" id="dtPower" class="form-control" min="0" placeholder="นาที"></div>
                                 <div class="form-group"><label>มอร์เตอร์</label><input type="number" id="dtMotor" class="form-control" min="0" placeholder="นาที"></div>
-                            </div>
-                            <div class="dr-row">
                                 <div class="form-group"><label>อื่นๆ</label><input type="number" id="dtOther" class="form-control" min="0" placeholder="นาที"></div>
-                            </div>
-                            <div class="form-group">
-                                <label>หมายเหตุ</label>
-                                <input type="text" id="dtNote" class="form-control" placeholder="ระบุสาเหตุอื่นๆ">
+                                <div class="form-group"><label>หมายเหตุ</label><input type="text" id="dtNote" class="form-control" placeholder="ระบุสาเหตุเพิ่มเติม"></div>
                             </div>
                         </div>
                     </div>
@@ -1084,10 +1073,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=22.0.0"></script>
-    <script src="js/app.js?v=22.0.0"></script>
-    <script src="js/daily-report.js?v=22.0.0"></script>
-    <script src="js/events.js?v=22.0.0"></script>
+    <script src="js/api.js?v=23.0.0"></script>
+    <script src="js/app.js?v=23.0.0"></script>
+    <script src="js/daily-report.js?v=23.0.0"></script>
+    <script src="js/events.js?v=23.0.0"></script>
 </body>
 
 </html>
