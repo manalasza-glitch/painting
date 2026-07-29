@@ -509,7 +509,7 @@ button, input, textarea, select {
     display: grid;
     grid-template-columns: 0.95fr 1.05fr;
     gap: 1.25rem;
-    align-items: start;
+    align-items: stretch;
     width: 100%;
 }
 

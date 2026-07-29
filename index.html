@@ -23,7 +23,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=31.0.0">
+    <link rel="stylesheet" href="css/style.css?v=32.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -766,26 +766,29 @@
                                     ➕ เพิ่มลงในตาราง
                                 </button>
                             </div>
-
-                            <!-- Table showing added records -->
-                            <div class="table-responsive" style="margin-top: 0.85rem;">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>รุ่นงาน</th>
-                                            <th>เวลา</th>
-                                            <th>ผลิต</th>
-                                            <th>เสีย</th>
-                                            <th>ลบ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="dailyReportListBody">
-                                        <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีรายการ</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
 
+                    </div>
+
+                    <!-- Table showing added records (outside the grid, full width) -->
+                    <div class="dr-card" style="margin-top: 0;">
+                        <h3 class="dr-section-title">รายการที่เพิ่ม</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>รุ่นงาน</th>
+                                        <th>เวลา</th>
+                                        <th>ผลิต</th>
+                                        <th>เสีย</th>
+                                        <th>ลบ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dailyReportListBody">
+                                    <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีรายการ</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -1089,10 +1092,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=31.0.0"></script>
-    <script src="js/app.js?v=31.0.0"></script>
-    <script src="js/daily-report.js?v=31.0.0"></script>
-    <script src="js/events.js?v=31.0.0"></script>
+    <script src="js/api.js?v=32.0.0"></script>
+    <script src="js/app.js?v=32.0.0"></script>
+    <script src="js/daily-report.js?v=32.0.0"></script>
+    <script src="js/events.js?v=32.0.0"></script>
 </body>
 
 </html>
