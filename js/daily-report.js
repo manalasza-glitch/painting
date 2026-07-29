@@ -456,8 +456,25 @@ function renderDailyReportList() {
 }
 
 async function submitDailyReport() {
+    // If table is empty, check if form fields are filled and auto-add to table first
     if (dailyReportRecords.length === 0) {
-        showToast("กรุณาเพิ่มรายการผลิตอย่างน้อย 1 รายการก่อนบันทึก", "error");
+        const model = document.getElementById('drModel') ? document.getElementById('drModel').value : "";
+        const prodQty = Number(document.getElementById('drProdQty').value) || 0;
+        const dent = Number(document.getElementById('drDent').value) || 0;
+        const colorDrop = Number(document.getElementById('drColorDrop').value) || 0;
+        const thinPaint = Number(document.getElementById('drThinPaint').value) || 0;
+        const thickPaint = Number(document.getElementById('drThickPaint').value) || 0;
+        const waterStain = Number(document.getElementById('drWaterStain').value) || 0;
+        const otherDefect = Number(document.getElementById('drOtherDefect').value) || 0;
+        const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + otherDefect;
+
+        if (model && (prodQty > 0 || totalDefect > 0)) {
+            addDailyReportRecord();
+        }
+    }
+
+    if (dailyReportRecords.length === 0) {
+        showToast("กรุณากรอกรุ่นงาน ยอดผลิต และกดเพิ่มรายการลงในตารางก่อนบันทึก", "error");
         return;
     }
 
@@ -468,7 +485,7 @@ async function submitDailyReport() {
     const checker = "";
 
     if (!date || !recorder) {
-        showToast("กรุณากรอกวันที่และชื่อผู้บันทึกให้ครบถ้วน", "error");
+        showToast("กรุณากรอกวันที่และเลือกชื่อผู้บันทึกในส่วนที่ 1 ให้ครบถ้วน", "error");
         return;
     }
 
@@ -495,11 +512,42 @@ async function submitDailyReport() {
 
     const submitBtn = document.getElementById('submitDailyBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `กำลังส่งข้อมูล...`;
+    submitBtn.innerHTML = `กำลังส่งข้อมูลไปยัง Google Sheets...`;
 
     try {
+        // Send to Cloud API
         await sendDailyReportToAPI(payload);
-        showToast("บันทึกข้อมูลแบบฟอร์มประจำวันเรียบร้อยแล้ว!", "success");
+        
+        // Update local cache so Dashboard updates immediately
+        const cached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+        let list = [];
+        if (cached) {
+            try { list = JSON.parse(cached) || []; } catch(e){}
+        }
+        
+        dailyReportRecords.forEach(r => {
+            list.push({
+                timestamp: `${date} 09:00`,
+                date: date,
+                shift: shift,
+                recorder: recorder,
+                checker: checker,
+                model: r.model,
+                timeSlot: r.timeSlot,
+                prodQty: r.prodQty,
+                dent: r.dent,
+                colorDrop: r.colorDrop,
+                thinPaint: r.thinPaint,
+                thickPaint: r.thickPaint,
+                waterStain: r.waterStain,
+                otherDefect: r.otherDefect,
+                totalDefect: r.totalDefect
+            });
+        });
+        localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(list));
+        localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
+
+        showToast("บันทึกข้อมูลแบบฟอร์มประจำวันลง Google Sheets เรียบร้อยแล้ว!", "success");
         
         // Reset Form & Clear Draft
         dailyReportRecords = [];
@@ -513,9 +561,12 @@ async function submitDailyReport() {
         document.getElementById('dtMotor').value = "";
         document.getElementById('dtOther').value = "";
         document.getElementById('dtNote').value = "";
-        document.getElementById('recorderName').value = "";
+        document.getElementById('drProdQty').value = "";
         
         switchTab('dashboard-tab');
+        if (typeof renderDailyReportCharts === 'function') {
+            renderDailyReportCharts();
+        }
     } catch(err) {
         showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
     } finally {
