@@ -23,7 +23,7 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=21.0.0">
+    <link rel="stylesheet" href="css/style.css?v=22.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -374,7 +374,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="chart-container-wrapper">
+                            <div class="chart-container-wrapper" style="flex-grow: 1; height: 100%; min-height: 280px;">
                                 <canvas id="dailyChart"></canvas>
                             </div>
                         </div>
@@ -462,7 +462,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="chart-container-wrapper" style="height: 250px;">
+                                <div class="chart-container-wrapper" style="flex-grow: 1; height: 100%; min-height: 280px;">
                                     <canvas id="outputDailyChart"></canvas>
                                 </div>
                             </div>
@@ -478,7 +478,7 @@
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                                     </button>
                                 </div>
-                                <div class="chart-container-wrapper" style="height: 250px;">
+                                <div class="chart-container-wrapper" style="flex-grow: 1; height: 100%; min-height: 280px;">
                                     <canvas id="topModelsChart"></canvas>
                                 </div>
                             </div>
@@ -1084,10 +1084,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=21.0.0"></script>
-    <script src="js/app.js?v=21.0.0"></script>
-    <script src="js/daily-report.js?v=21.0.0"></script>
-    <script src="js/events.js?v=21.0.0"></script>
+    <script src="js/api.js?v=22.0.0"></script>
+    <script src="js/app.js?v=22.0.0"></script>
+    <script src="js/daily-report.js?v=22.0.0"></script>
+    <script src="js/events.js?v=22.0.0"></script>
 </body>
 
 </html>
