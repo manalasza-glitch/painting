@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "painting-quality-inspection",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-07-29",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "painting-auth",
+      "database_id": "PUT_D1_DATABASE_ID_HERE"
+    }
+  ]
+}

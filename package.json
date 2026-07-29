@@ -1,0 +1,9 @@
+{
+  "name": "painting-quality-inspection",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check js/auth.js && node --check functions/api/auth/register.js && node --check functions/api/auth/login.js && node --check functions/api/data.js"
+  }
+}
