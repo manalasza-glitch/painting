@@ -1,5 +1,21 @@
 const SHEET_NAME = "Inspection";
 
+function unauthorizedResponse() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "error", message: "Unauthorized" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function isAuthorizedRequest(e, data) {
+  const expected = PropertiesService.getScriptProperties().getProperty("API_SHARED_SECRET");
+  const provided = String(
+    (e && e.parameter && e.parameter.serverToken) ||
+    (data && data.serverToken) ||
+    ""
+  );
+  return Boolean(expected) && provided === expected;
+}
+
 function formatDateStr(d, includeTime) {
   if (!d) return "";
   if (d instanceof Date) {
@@ -33,13 +49,6 @@ function formatDateStr(d, includeTime) {
 
 function doPost(e) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName(SHEET_NAME);
-    if (!sheet) {
-      sheet = ss.insertSheet(SHEET_NAME);
-      sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp"]);
-    }
-
     let data = {};
     if (e && e.postData && e.postData.contents) {
       try {
@@ -49,6 +58,15 @@ function doPost(e) {
       }
     } else if (e && e.parameter) {
       data = e.parameter;
+    }
+
+    if (!isAuthorizedRequest(e, data)) return unauthorizedResponse();
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp"]);
     }
 
     // Explicitly check URL parameter first, then JSON body
@@ -280,6 +298,7 @@ function doPost(e) {
 
 function doGet(e) {
   try {
+    if (!isAuthorizedRequest(e, null)) return unauthorizedResponse();
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
 
