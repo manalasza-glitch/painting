@@ -1007,7 +1007,7 @@ async function renderDailyReportCharts() {
         });
     }
 
-    // 3. Render Top 5 Models Chart
+    // 3. Render Top 5 Models Chart (Horizontal Bar Layout for Perfect Space Fitting)
     const sortedModels = Object.keys(modelMap).sort((a, b) => modelMap[b] - modelMap[a]).slice(0, 5);
     const topModelQtyList = sortedModels.map(m => modelMap[m]);
 
@@ -1017,33 +1017,58 @@ async function renderDailyReportCharts() {
             topModelsChartInstance.destroy();
         }
 
+        // Format labels into multi-line arrays if long to fit space cleanly
+        const formattedLabels = sortedModels.map(m => {
+            const fullStr = getModelWithGroupLabel(m);
+            if (fullStr.includes(' (')) {
+                const parts = fullStr.split(' (');
+                return [parts[0].trim(), '(' + parts.slice(1).join(' (').trim()];
+            }
+            return fullStr;
+        });
+
         topModelsChartInstance = new Chart(ctxModels, {
             type: 'bar',
             data: {
-                labels: sortedModels.map(m => getModelWithGroupLabel(m)),
+                labels: formattedLabels,
                 datasets: [{
                     label: 'ยอดผลิต (ชิ้น)',
                     data: topModelQtyList,
                     backgroundColor: [
                         '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
                     ],
-                    borderRadius: 8
+                    borderRadius: { topRight: 8, bottomRight: 8 }
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                indexAxis: 'y', // Horizontal Bar for perfect space fitting
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    zoom: {
+                        pan: { enabled: true, mode: 'y' },
+                        zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'y' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `ยอดผลิต: ${context.raw.toLocaleString()} ชิ้น`;
+                            }
+                        }
+                    }
                 },
                 scales: {
                     x: {
                         ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
-                        grid: { display: false }
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     },
                     y: {
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Sarabun', size: 10, weight: '500' }
+                        },
+                        grid: { display: false }
                     }
                 }
             }
