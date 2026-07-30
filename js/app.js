@@ -7,14 +7,16 @@ let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 const CHART_PINCH_SENSITIVITY = 0.25;
-const DAILY_CHART_PINCH_SENSITIVITY = 0.02;
+const DAILY_CHART_PINCH_SENSITIVITY = 0.005;
 const CHART_PINCH_MAX_STEP = 0.03;
-const DAILY_CHART_PINCH_MAX_STEP = 0.003;
+const DAILY_CHART_PINCH_MAX_STEP = 0.001;
 let activeChartPinch = null;
+let activeChartPan = null;
+const CHART_PAN_DIRECTION_THRESHOLD = 8;
 
-// Keep normal one-finger page scrolling on touch devices. Chart panning starts
-// only when two or more fingers are touching the canvas; mouse panning remains
-// unchanged on desktop. Pinch zoom already requires two touch points.
+// Touch panning is handled below so horizontal one-finger drags move the chart
+// while vertical one-finger drags remain native page scrolling. Keep the plugin
+// pan gesture for mouse input only to avoid two handlers moving the chart.
 function allowChartPanGesture({ event }) {
     const sourceEvent = event && event.srcEvent ? event.srcEvent : event;
     const pointerType = (event && event.pointerType) || (sourceEvent && sourceEvent.pointerType) || '';
@@ -25,7 +27,7 @@ function allowChartPanGesture({ event }) {
         0;
 
     const isTouchGesture = pointerType === 'touch' || touchCount > 0;
-    return !isTouchGesture || touchCount >= 2;
+    return !isTouchGesture;
 }
 
 function createChartZoomOptions(mode) {
@@ -86,19 +88,63 @@ function getChartPinchProfile(canvas) {
 }
 
 function handleChartPinchStart(event) {
-    if (!event.touches || event.touches.length !== 2) return;
+    if (!event.touches || event.touches.length === 0) return;
     const canvas = getChartCanvasFromTouch(event);
     if (!canvas) return;
 
-    event.preventDefault();
-    activeChartPinch = {
-        canvas,
-        distance: getTouchDistance(event.touches)
-    };
+    if (event.touches.length === 2) {
+        event.preventDefault();
+        activeChartPan = null;
+        activeChartPinch = {
+            canvas,
+            distance: getTouchDistance(event.touches)
+        };
+        return;
+    }
+
+    if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        activeChartPinch = null;
+        activeChartPan = {
+            canvas,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            lastX: touch.clientX,
+            direction: null
+        };
+    }
 }
 
 function handleChartPinchMove(event) {
-    if (!activeChartPinch || !event.touches || event.touches.length !== 2) return;
+    if (!event.touches) return;
+
+    if (event.touches.length === 1 && activeChartPan) {
+        const touch = event.touches[0];
+        const totalX = touch.clientX - activeChartPan.startX;
+        const totalY = touch.clientY - activeChartPan.startY;
+
+        if (!activeChartPan.direction) {
+            if (Math.max(Math.abs(totalX), Math.abs(totalY)) < CHART_PAN_DIRECTION_THRESHOLD) return;
+            activeChartPan.direction = Math.abs(totalX) > Math.abs(totalY) ? 'horizontal' : 'vertical';
+        }
+
+        // Let the browser own vertical movement so the page keeps scrolling.
+        if (activeChartPan.direction === 'vertical') return;
+
+        event.preventDefault();
+        const deltaX = touch.clientX - activeChartPan.lastX;
+        activeChartPan.lastX = touch.clientX;
+
+        const chart = window.Chart && typeof Chart.getChart === 'function'
+            ? Chart.getChart(activeChartPan.canvas)
+            : null;
+        if (chart && typeof chart.pan === 'function' && deltaX !== 0) {
+            chart.pan({ x: deltaX }, undefined, 'none');
+        }
+        return;
+    }
+
+    if (!activeChartPinch || event.touches.length !== 2) return;
 
     event.preventDefault();
     const currentDistance = getTouchDistance(event.touches);
@@ -128,6 +174,9 @@ function handleChartPinchMove(event) {
 function handleChartPinchEnd(event) {
     if (!event.touches || event.touches.length < 2) {
         activeChartPinch = null;
+    }
+    if (!event.touches || event.touches.length === 0) {
+        activeChartPan = null;
     }
 }
 
