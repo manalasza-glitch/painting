@@ -713,9 +713,6 @@
                 <section id="daily-report-tab" class="tab-page" data-permission="daily_report.read" style="display: none;">
                     <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
                         <h1 class="page-title" style="font-size: 1.15rem; margin: 0;">📝 ฟอร์มผลิตรายวัน</h1>
-                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.55rem 1.25rem;">
-                            💾 บันทึกแบบฟอร์มประจำวัน
-                        </button>
                     </div>
 
                     <!-- Section 1: ข้อมูลกะทำงาน (1 แถว 3 ช่อง เต็มความกว้าง) -->
@@ -778,8 +775,8 @@
                             </div>
                         </div>
                         <div style="display: flex; justify-content: flex-end; margin-top: 0.85rem;">
-                            <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="padding: 0.6rem 1.5rem;">
-                                ➕ เพิ่มลงในตาราง
+                            <button type="button" class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.6rem 1.5rem;">
+                                💾 บันทึกข้อมูลทันที
                             </button>
                         </div>
                     </div>
@@ -1126,7 +1123,7 @@
     <script src="js/auth.js?v=1.0.0"></script>
     <script src="js/api.js?v=36.0.0"></script>
     <script src="js/app.js?v=36.0.5"></script>
-    <script src="js/daily-report.js?v=36.0.0"></script>
+    <script src="js/daily-report.js?v=36.0.1"></script>
     <script src="js/events.js?v=36.0.0"></script>
 </body>
 
