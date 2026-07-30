@@ -507,12 +507,13 @@ function renderDailyReportList() {
     // 1. If draft session items exist before submission, display them with delete action
     if (Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
         tbody.innerHTML = dailyReportRecords.map((r, i) => `
-            <tr>
-                <td style="font-size: 0.85rem; font-weight: 600;">${escapeDailyReportHtml(r.model || '-')}</td>
-                <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
-                <td style="font-weight: bold; color: #10b981;">${Number(r.prodQty) || 0}</td>
-                <td><span class="badge-defect ${r.totalDefect > 0 ? 'badge-has-defect' : 'badge-zero'}">${r.totalDefect}</span></td>
-                <td><button type="button" onclick="removeDailyReportRecord(${i})" style="background:none; border:none; color:#ef4444; font-weight:700; cursor:pointer;">🗑️ ลบ</button></td>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: #64748b; white-space: nowrap;">วันนี้ (ร่าง)</td>
+                <td style="padding: 0.85rem 1rem; font-size: 0.9rem; font-weight: 700; color: #0f172a;">${escapeDailyReportHtml(r.model || '-')}</td>
+                <td style="padding: 0.85rem 1rem;"><span class="badge" style="background:#e0f2fe; color:#0369a1; padding: 0.25rem 0.65rem; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
+                <td style="padding: 0.85rem 1rem; font-weight: 800; color: #10b981; text-align: center; font-size: 1rem;">${Number(r.prodQty) || 0}</td>
+                <td style="padding: 0.85rem 1rem; text-align: center;"><span class="badge-defect ${r.totalDefect > 0 ? 'badge-has-defect' : 'badge-zero'}">${r.totalDefect}</span></td>
+                <td style="padding: 0.85rem 1rem; text-align: center;"><button type="button" onclick="removeDailyReportRecord(${i})" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.3rem 0.75rem; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease;">🗑️ ลบ</button></td>
             </tr>
         `).join('');
         return;
@@ -521,17 +522,18 @@ function renderDailyReportList() {
     // 2. Otherwise display top 5 saved records from Google Sheets backend
     const savedRecords = getSavedDailyReportRecords().slice(0, 5);
     if (savedRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
         return;
     }
 
     tbody.innerHTML = savedRecords.map(r => `
-        <tr>
-            <td style="font-size: 0.85rem; font-weight: 600;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
-            <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
-            <td style="font-weight: bold; color: #10b981;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
-            <td><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
-            <td style="font-size: 0.8rem; font-weight: 600; color: #64748b;">${formatDailyReportDate(r.date, r.timestamp)}</td>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: #475569; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
+            <td style="padding: 0.85rem 1rem; font-size: 0.9rem; font-weight: 700; color: #0f172a;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
+            <td style="padding: 0.85rem 1rem;"><span class="badge" style="background:#e0f2fe; color:#0369a1; padding: 0.25rem 0.65rem; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
+            <td style="padding: 0.85rem 1rem; font-weight: 800; color: #10b981; text-align: center; font-size: 1rem;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
+            <td style="padding: 0.85rem 1rem; text-align: center;"><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
+            <td style="padding: 0.85rem 1rem; text-align: center; font-size: 0.75rem; color: #94a3b8; font-weight: 700;">บันทึกแล้ว</td>
         </tr>
     `).join('');
 }

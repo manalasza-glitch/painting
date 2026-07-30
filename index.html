@@ -745,39 +745,35 @@
                         </div>
                     </div>
 
-                    <!-- Table: รายการที่เพิ่ม (ประวัติ 5 รายการล่าสุดจากหลังบ้าน) -->
+                    <!-- Table: รายการที่เพิ่มและประวัติการบันทึกล่าสุด -->
                     <div class="dr-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
                             <div>
                                 <h3 class="dr-section-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                                    📋 รายการที่เพิ่ม
-                                    <span style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;">ล่าสุด 5 รายการ</span>
+                                    📋 รายการที่เพิ่มล่าสุด
+                                    <span style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 0.2rem 0.65rem; border-radius: 12px; font-weight: 700;">5 รายการล่าสุด</span>
                                 </h3>
                             </div>
                             <button type="button" onclick="openDailyReportHistory()" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; border: none; padding: 0.55rem 1.25rem; border-radius: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); display: inline-flex; align-items: center; gap: 0.4rem; transition: transform 0.15s ease;">
-                                🔍 ดูเพิ่มเติม (ดูประวัติทั้งหมด)
+                                🔍 ดูประวัติการบันทึกทั้งหมด
                             </button>
                         </div>
                         <div class="table-responsive">
-                            <table class="data-table">
+                            <table class="data-table" style="width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden;">
                                 <thead>
-                                    <tr>
-                                        <th>รุ่นงาน</th>
-                                        <th>เวลา</th>
-                                        <th>ผลิต</th>
-                                        <th>เสีย</th>
-                                        <th>ลบ / วันที่</th>
+                                    <tr style="background: #f8fafc; color: #1e293b;">
+                                        <th style="padding: 0.85rem 1rem; text-align: left; font-size: 0.85rem;">วันที่</th>
+                                        <th style="padding: 0.85rem 1rem; text-align: left; font-size: 0.85rem;">รุ่นงาน</th>
+                                        <th style="padding: 0.85rem 1rem; text-align: left; font-size: 0.85rem;">เวลา</th>
+                                        <th style="padding: 0.85rem 1rem; text-align: center; font-size: 0.85rem;">ยอดผลิต</th>
+                                        <th style="padding: 0.85rem 1rem; text-align: center; font-size: 0.85rem;">ยอดเสีย</th>
+                                        <th style="padding: 0.85rem 1rem; text-align: center; font-size: 0.85rem;">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dailyReportListBody">
-                                    <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">กำลังโหลดประวัติการบันทึกจากหลังบ้าน...</td></tr>
+                                    <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 1.75rem;">กำลังโหลดประวัติการบันทึกจากหลังบ้าน...</td></tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <div style="display: flex; justify-content: center; margin-top: 1.1rem; padding-top: 0.75rem; border-top: 1px dashed #e2e8f0;">
-                            <button type="button" onclick="openDailyReportHistory()" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 0.5rem 1.5rem; border-radius: 20px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
-                                📋 ดูประวัติการบันทึกทั้งหมดแบบเต็ม
-                            </button>
                         </div>
                     </div>
                 </section>
