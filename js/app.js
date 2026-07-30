@@ -7,9 +7,9 @@ let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 const CHART_PINCH_SENSITIVITY = 0.25;
-const DAILY_CHART_PINCH_SENSITIVITY = 0.1;
+const DAILY_CHART_PINCH_SENSITIVITY = 0.02;
 const CHART_PINCH_MAX_STEP = 0.03;
-const DAILY_CHART_PINCH_MAX_STEP = 0.015;
+const DAILY_CHART_PINCH_MAX_STEP = 0.003;
 let activeChartPinch = null;
 
 // Keep normal one-finger page scrolling on touch devices. Chart panning starts
