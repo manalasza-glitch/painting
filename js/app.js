@@ -6,6 +6,8 @@ let topModelsChartInstance = null;
 let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
+const CHART_PINCH_SENSITIVITY = 0.25;
+let activeChartPinch = null;
 
 // Keep normal one-finger page scrolling on touch devices. Chart panning starts
 // only when two or more fingers are touching the canvas; mouse panning remains
@@ -32,11 +34,79 @@ function createChartZoomOptions(mode) {
         },
         zoom: {
             wheel: { enabled: true, speed: 0.1 },
-            pinch: { enabled: true },
+            // Touch pinch is handled below so its speed can be damped and the
+            // browser page itself does not zoom at the same time.
+            pinch: { enabled: false },
             mode
         }
     };
 }
+
+function getTouchDistance(touches) {
+    if (!touches || touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+}
+
+function getPinchZoomFactor(previousDistance, currentDistance) {
+    if (previousDistance <= 0 || currentDistance <= 0) return 1;
+    const rawRatio = currentDistance / previousDistance;
+    const dampedRatio = Math.pow(rawRatio, CHART_PINCH_SENSITIVITY);
+    return Math.min(1.03, Math.max(0.97, dampedRatio));
+}
+
+function getChartCanvasFromTouch(event) {
+    const target = event.target;
+    if (!target || typeof target.closest !== 'function') return null;
+    const canvas = target.closest('.chart-container-wrapper canvas');
+    return canvas instanceof HTMLCanvasElement ? canvas : null;
+}
+
+function handleChartPinchStart(event) {
+    if (!event.touches || event.touches.length !== 2) return;
+    const canvas = getChartCanvasFromTouch(event);
+    if (!canvas) return;
+
+    event.preventDefault();
+    activeChartPinch = {
+        canvas,
+        distance: getTouchDistance(event.touches)
+    };
+}
+
+function handleChartPinchMove(event) {
+    if (!activeChartPinch || !event.touches || event.touches.length !== 2) return;
+
+    event.preventDefault();
+    const currentDistance = getTouchDistance(event.touches);
+    const zoomFactor = getPinchZoomFactor(activeChartPinch.distance, currentDistance);
+    activeChartPinch.distance = currentDistance;
+
+    const chart = window.Chart && typeof Chart.getChart === 'function'
+        ? Chart.getChart(activeChartPinch.canvas)
+        : null;
+    if (!chart || typeof chart.zoom !== 'function' || zoomFactor === 1) return;
+
+    const mode = chart.options.plugins.zoom.zoom.mode;
+    const zoomLevel = mode === 'x'
+        ? { x: zoomFactor, y: 1 }
+        : mode === 'y'
+            ? { x: 1, y: zoomFactor }
+            : zoomFactor;
+    chart.zoom(zoomLevel, 'none');
+}
+
+function handleChartPinchEnd(event) {
+    if (!event.touches || event.touches.length < 2) {
+        activeChartPinch = null;
+    }
+}
+
+document.addEventListener('touchstart', handleChartPinchStart, { passive: false });
+document.addEventListener('touchmove', handleChartPinchMove, { passive: false });
+document.addEventListener('touchend', handleChartPinchEnd, { passive: true });
+document.addEventListener('touchcancel', handleChartPinchEnd, { passive: true });
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
