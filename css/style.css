@@ -1177,6 +1177,7 @@ button, input, textarea, select {
   }
   .chart-container-wrapper,
   .chart-card,
+  #fullscreenCanvas,
   .chart-container-wrapper canvas {
     /* One finger scrolls the page; JS owns two-finger chart gestures. */
     touch-action: pan-y !important;
