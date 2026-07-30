@@ -330,6 +330,7 @@
 
 .user-action-primary { background: #0c6bcc; color: #fff; }
 .user-action-danger { background: #fee2e2; color: #991b1b; }
+.user-action-delete { background: #b91c1c; color: #fff; }
 .user-action-muted { background: #e2e8f0; color: #334155; }
 
 @media (max-width: 900px) {
