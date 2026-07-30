@@ -507,13 +507,13 @@ function renderDailyReportList() {
     // 1. If draft session items exist before submission, display them with delete action
     if (Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
         tbody.innerHTML = dailyReportRecords.map((r, i) => `
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: #64748b; white-space: nowrap;">วันนี้ (ร่าง)</td>
-                <td style="padding: 0.85rem 1rem; font-size: 0.9rem; font-weight: 700; color: #0f172a;">${escapeDailyReportHtml(r.model || '-')}</td>
-                <td style="padding: 0.85rem 1rem;"><span class="badge" style="background:#e0f2fe; color:#0369a1; padding: 0.25rem 0.65rem; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
-                <td style="padding: 0.85rem 1rem; font-weight: 800; color: #10b981; text-align: center; font-size: 1rem;">${Number(r.prodQty) || 0}</td>
-                <td style="padding: 0.85rem 1rem; text-align: center;"><span class="badge-defect ${r.totalDefect > 0 ? 'badge-has-defect' : 'badge-zero'}">${r.totalDefect}</span></td>
-                <td style="padding: 0.85rem 1rem; text-align: center;"><button type="button" onclick="removeDailyReportRecord(${i})" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.3rem 0.75rem; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease;">🗑️ ลบ</button></td>
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(30, 41, 59, 0.7)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 0.95rem 1.1rem; font-size: 0.85rem; font-weight: 700; color: #38bdf8; white-space: nowrap;">วันนี้ (ร่าง)</td>
+                <td style="padding: 0.95rem 1.1rem; font-size: 0.92rem; font-weight: 700; color: #f8fafc;">${escapeDailyReportHtml(r.model || '-')}</td>
+                <td style="padding: 0.95rem 1.1rem;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.82rem;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
+                <td style="padding: 0.95rem 1.1rem; font-weight: 800; color: #34d399; text-align: center; font-size: 1.05rem; text-shadow: 0 0 10px rgba(52, 211, 153, 0.25);">${Number(r.prodQty) || 0}</td>
+                <td style="padding: 0.95rem 1.1rem; text-align: center;"><span style="${r.totalDefect > 0 ? 'background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4);' : 'background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);'} padding: 0.2rem 0.65rem; border-radius: 12px; font-weight: 800; font-size: 0.85rem;">${r.totalDefect}</span></td>
+                <td style="padding: 0.95rem 1.1rem; text-align: center;"><button type="button" onclick="removeDailyReportRecord(${i})" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 0.35rem 0.85rem; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease; box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);">🗑️ ลบ</button></td>
             </tr>
         `).join('');
         return;
@@ -522,18 +522,18 @@ function renderDailyReportList() {
     // 2. Otherwise display top 5 saved records from Google Sheets backend
     const savedRecords = getSavedDailyReportRecords().slice(0, 5);
     if (savedRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
         return;
     }
 
     tbody.innerHTML = savedRecords.map(r => `
-        <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 0.85rem 1rem; font-size: 0.85rem; font-weight: 700; color: #475569; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
-            <td style="padding: 0.85rem 1rem; font-size: 0.9rem; font-weight: 700; color: #0f172a;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
-            <td style="padding: 0.85rem 1rem;"><span class="badge" style="background:#e0f2fe; color:#0369a1; padding: 0.25rem 0.65rem; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
-            <td style="padding: 0.85rem 1rem; font-weight: 800; color: #10b981; text-align: center; font-size: 1rem;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
-            <td style="padding: 0.85rem 1rem; text-align: center;"><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
-            <td style="padding: 0.85rem 1rem; text-align: center; font-size: 0.75rem; color: #94a3b8; font-weight: 700;">บันทึกแล้ว</td>
+        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(30, 41, 59, 0.7)'" onmouseout="this.style.background='transparent'">
+            <td style="padding: 0.95rem 1.1rem; font-size: 0.85rem; font-weight: 700; color: #94a3b8; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
+            <td style="padding: 0.95rem 1.1rem; font-size: 0.92rem; font-weight: 700; color: #f8fafc;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
+            <td style="padding: 0.95rem 1.1rem;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.82rem;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
+            <td style="padding: 0.95rem 1.1rem; font-weight: 800; color: #34d399; text-align: center; font-size: 1.05rem; text-shadow: 0 0 10px rgba(52, 211, 153, 0.25);">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
+            <td style="padding: 0.95rem 1.1rem; text-align: center;"><span style="${getDailyReportDefectTotal(r) > 0 ? 'background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4);' : 'background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);'} padding: 0.2rem 0.65rem; border-radius: 12px; font-weight: 800; font-size: 0.85rem;">${getDailyReportDefectTotal(r)}</span></td>
+            <td style="padding: 0.95rem 1.1rem; text-align: center; font-size: 0.78rem; color: #38bdf8; font-weight: 700;"><span style="background: rgba(56, 189, 248, 0.1); padding: 0.25rem 0.6rem; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">✓ บันทึกแล้ว</span></td>
         </tr>
     `).join('');
 }
