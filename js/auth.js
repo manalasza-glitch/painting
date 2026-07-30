@@ -202,6 +202,9 @@
             } else {
                 actions = '<span class="user-status active">สิทธิ์สูงสุด</span>';
             }
+            if (!isAdmin && state.user && user.id !== state.user.id) {
+                actions += '<button class="user-action-delete" data-user-action="delete">ลบบัญชี</button>';
+            }
             return `<article class="user-row" data-user-id="${escapeHtml(user.id)}">
                 <div class="user-row-head"><div><h3>${escapeHtml(user.displayName)} · ${escapeHtml(user.employeeId)}</h3><p>${escapeHtml(user.department || 'ไม่ระบุแผนก')} · สมัคร ${escapeHtml(new Date(user.createdAt).toLocaleString('th-TH'))}</p></div><span class="user-status ${escapeHtml(user.status)}">${statusLabel(user.status)}</span></div>
                 <div class="permission-grid">${permissionHtml}</div><div class="user-actions">${actions}</div>
@@ -228,6 +231,10 @@
         const userId = row.dataset.userId;
         const user = state.users.find((item) => item.id === userId);
         if (!user) return;
+        if (action === 'delete') {
+            await deleteUser(row, user);
+            return;
+        }
         const statusMap = { approve: 'active', reject: 'rejected', disable: 'disabled', save: user.status };
         const permissions = [...row.querySelectorAll('.permission-grid input:checked')].map((input) => input.value);
         row.querySelectorAll('button').forEach((button) => { button.disabled = true; });
@@ -237,6 +244,24 @@
                 body: JSON.stringify({ status: statusMap[action], permissions })
             });
             showMessage('userManagementMessage', 'บันทึกการเปลี่ยนแปลงแล้ว', 'success');
+            await loadUsers();
+        } catch (error) {
+            showMessage('userManagementMessage', error.message, 'error');
+            row.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+        }
+    }
+
+    async function deleteUser(row, user) {
+        const confirmed = window.confirm(`ยืนยันลบบัญชี ${user.displayName} (${user.employeeId}) หรือไม่?\n\nบัญชีนี้จะเข้าสู่ระบบไม่ได้ทันทีและไม่สามารถกู้คืนได้`);
+        if (!confirmed) return;
+
+        row.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+        try {
+            const result = await api(`/api/users/${encodeURIComponent(user.id)}`, {
+                method: 'DELETE',
+                body: '{}'
+            });
+            showMessage('userManagementMessage', result.message || 'ลบบัญชีเรียบร้อยแล้ว', 'success');
             await loadUsers();
         } catch (error) {
             showMessage('userManagementMessage', error.message, 'error');
