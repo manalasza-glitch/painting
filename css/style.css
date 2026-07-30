@@ -1175,6 +1175,11 @@ button, input, textarea, select {
   .chart-container-wrapper {
     height: 200px !important;
   }
+  .chart-container-wrapper,
+  .chart-container-wrapper canvas {
+    /* One finger scrolls the page; multi-touch remains available to Hammer.js. */
+    touch-action: pan-y !important;
+  }
   .table-card {
     padding: 1rem 0.65rem !important;
     border-radius: 14px !important;
