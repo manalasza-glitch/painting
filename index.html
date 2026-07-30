@@ -23,7 +23,6 @@
 
     <!-- Custom CSS File -->
     <link rel="stylesheet" href="css/style.css?v=35.0.4">
-    <link rel="stylesheet" href="css/auth.css?v=1.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -221,55 +220,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 </head>
 
-<body class="auth-loading">
-
-    <section class="auth-shell" id="authShell" aria-live="polite">
-        <div class="auth-card">
-            <div class="auth-brand">
-                <img src="assets/logo.png" alt="Painting Quality Inspection System">
-                <div>
-                    <h1>Painting Quality</h1>
-                    <p>Inspection System</p>
-                </div>
-            </div>
-
-            <div id="authMessage" class="auth-message" hidden></div>
-
-            <div class="auth-tabs" id="authTabs">
-                <button type="button" class="active" data-auth-mode="login">เข้าสู่ระบบ</button>
-                <button type="button" data-auth-mode="register">สมัครใช้งาน</button>
-            </div>
-
-            <form id="loginForm" class="auth-form">
-                <label for="loginEmployeeId">รหัสพนักงาน</label>
-                <input id="loginEmployeeId" name="employeeId" autocomplete="username" maxlength="30" required>
-                <label for="loginPassword">รหัสผ่าน</label>
-                <input id="loginPassword" name="password" type="password" autocomplete="current-password" maxlength="128" required>
-                <button type="submit" class="auth-submit">เข้าสู่ระบบ</button>
-            </form>
-
-            <form id="registerForm" class="auth-form" hidden>
-                <div id="bootstrapNotice" class="auth-setup-notice" hidden>
-                    ระบบยังไม่มีผู้ดูแล กรุณาสร้าง Super Admin คนแรก
-                </div>
-                <label for="registerEmployeeId">รหัสพนักงาน <span>(ใช้เป็นชื่อผู้ใช้)</span></label>
-                <input id="registerEmployeeId" name="employeeId" autocomplete="username" maxlength="30" required>
-                <label for="registerDisplayName">ชื่อ–นามสกุล</label>
-                <input id="registerDisplayName" name="displayName" autocomplete="name" maxlength="100" required>
-                <label for="registerDepartment">แผนก</label>
-                <input id="registerDepartment" name="department" maxlength="100">
-                <label for="registerPassword">ตั้งรหัสผ่าน <span>(อย่างน้อย 10 ตัว)</span></label>
-                <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
-                <label for="registerPasswordConfirm">ยืนยันรหัสผ่าน</label>
-                <input id="registerPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
-                <div id="bootstrapTokenWrap" hidden>
-                    <label for="bootstrapToken">รหัสติดตั้งครั้งแรก</label>
-                    <input id="bootstrapToken" name="bootstrapToken" type="password" autocomplete="off" maxlength="200">
-                </div>
-                <button type="submit" class="auth-submit">ส่งคำขอสมัคร</button>
-            </form>
-        </div>
-    </section>
+<body>
 
     <div class="app-container">
 
@@ -331,7 +282,7 @@
                         <span class="current-user-avatar" id="currentUserAvatar">U</span>
                         <span><strong id="currentUserName">-</strong><small id="currentUserId">-</small></span>
                     </div>
-                    <button type="button" class="logout-button" onclick="PaintingAuth.logout()">ออกจากระบบ</button>
+                    <button type="button" class="logout-button" onclick="location.reload()">รีเฟรชหน้าเว็บ</button>
                     <div class="status-badge" id="statusBadge">
                         <span class="status-dot"></span>
                         <span id="statusText">เชื่อมต่อระบบแล้ว</span>
@@ -1165,7 +1116,6 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/auth.js?v=1.0.0"></script>
     <script src="js/api.js?v=36.0.0"></script>
     <script src="js/app.js?v=36.0.6"></script>
     <script src="js/daily-report.js?v=36.1.1"></script>
