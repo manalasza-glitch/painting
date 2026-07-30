@@ -7,6 +7,9 @@ let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 const CHART_PINCH_SENSITIVITY = 0.25;
+const DAILY_CHART_PINCH_SENSITIVITY = 0.1;
+const CHART_PINCH_MAX_STEP = 0.03;
+const DAILY_CHART_PINCH_MAX_STEP = 0.015;
 let activeChartPinch = null;
 
 // Keep normal one-finger page scrolling on touch devices. Chart panning starts
@@ -49,18 +52,37 @@ function getTouchDistance(touches) {
     return Math.hypot(dx, dy);
 }
 
-function getPinchZoomFactor(previousDistance, currentDistance) {
+function getPinchZoomFactor(
+    previousDistance,
+    currentDistance,
+    sensitivity = CHART_PINCH_SENSITIVITY,
+    maxStep = CHART_PINCH_MAX_STEP
+) {
     if (previousDistance <= 0 || currentDistance <= 0) return 1;
     const rawRatio = currentDistance / previousDistance;
-    const dampedRatio = Math.pow(rawRatio, CHART_PINCH_SENSITIVITY);
-    return Math.min(1.03, Math.max(0.97, dampedRatio));
+    const dampedRatio = Math.pow(rawRatio, sensitivity);
+    return Math.min(1 + maxStep, Math.max(1 - maxStep, dampedRatio));
 }
 
 function getChartCanvasFromTouch(event) {
     const target = event.target;
     if (!target || typeof target.closest !== 'function') return null;
-    const canvas = target.closest('.chart-container-wrapper canvas');
+    const canvas = target.closest('.chart-container-wrapper canvas, #fullscreenCanvas');
     return canvas instanceof HTMLCanvasElement ? canvas : null;
+}
+
+function getChartPinchProfile(canvas) {
+    const sourceChartId = canvas.dataset.sourceChartId || canvas.id;
+    if (sourceChartId === 'dailyChart') {
+        return {
+            sensitivity: DAILY_CHART_PINCH_SENSITIVITY,
+            maxStep: DAILY_CHART_PINCH_MAX_STEP
+        };
+    }
+    return {
+        sensitivity: CHART_PINCH_SENSITIVITY,
+        maxStep: CHART_PINCH_MAX_STEP
+    };
 }
 
 function handleChartPinchStart(event) {
@@ -80,7 +102,13 @@ function handleChartPinchMove(event) {
 
     event.preventDefault();
     const currentDistance = getTouchDistance(event.touches);
-    const zoomFactor = getPinchZoomFactor(activeChartPinch.distance, currentDistance);
+    const pinchProfile = getChartPinchProfile(activeChartPinch.canvas);
+    const zoomFactor = getPinchZoomFactor(
+        activeChartPinch.distance,
+        currentDistance,
+        pinchProfile.sensitivity,
+        pinchProfile.maxStep
+    );
     activeChartPinch.distance = currentDistance;
 
     const chart = window.Chart && typeof Chart.getChart === 'function'
@@ -1356,6 +1384,10 @@ function openChartFullscreen(chartId, title) {
     const fullscreenCanvas = document.getElementById("fullscreenCanvas");
 
     if (!modal || !fullscreenCanvas) return;
+
+    // Preserve the source chart identity so fullscreen touch gestures use the
+    // same sensitivity profile as the original chart.
+    fullscreenCanvas.dataset.sourceChartId = chartId;
 
     if (modalTitle) {
         modalTitle.innerHTML = `📊 ${title || 'ขยายกราฟแสดงผลเต็มหน้าจอ'}`;
