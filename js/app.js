@@ -122,6 +122,11 @@ async function loadDataFromAPI(silent = false) {
 
     renderDashboard();
     renderTables();
+
+    // Pre-fetch Daily Report history from Google Sheets backend
+    if (typeof refreshDailyReportHistory === 'function') {
+        refreshDailyReportHistory();
+    }
     
     if (!silent) showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
 }

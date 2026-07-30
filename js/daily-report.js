@@ -556,9 +556,14 @@ function getDailyReportDefectTotal(record) {
 }
 
 function formatDailyReportDate(date, timestamp) {
-    const raw = String(date || timestamp || "").substring(0, 10);
-    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return match ? `${match[3]}/${match[2]}/${match[1]}` : (raw || "-");
+    const src = date || timestamp || "";
+    if (!src) return "-";
+    const str = String(src).trim();
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+        return `${match[3]}/${match[2]}/${match[1]}`;
+    }
+    return str;
 }
 
 function escapeDailyReportHtml(value) {
