@@ -7,6 +7,37 @@ let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 
+// Keep normal one-finger page scrolling on touch devices. Chart panning starts
+// only when two or more fingers are touching the canvas; mouse panning remains
+// unchanged on desktop. Pinch zoom already requires two touch points.
+function allowChartPanGesture({ event }) {
+    const sourceEvent = event && event.srcEvent ? event.srcEvent : event;
+    const pointerType = (event && event.pointerType) || (sourceEvent && sourceEvent.pointerType) || '';
+    const touchCount =
+        (event && event.pointers && event.pointers.length) ||
+        (sourceEvent && sourceEvent.touches && sourceEvent.touches.length) ||
+        (sourceEvent && sourceEvent.targetTouches && sourceEvent.targetTouches.length) ||
+        0;
+
+    const isTouchGesture = pointerType === 'touch' || touchCount > 0;
+    return !isTouchGesture || touchCount >= 2;
+}
+
+function createChartZoomOptions(mode) {
+    return {
+        pan: {
+            enabled: true,
+            mode,
+            onPanStart: allowChartPanGesture
+        },
+        zoom: {
+            wheel: { enabled: true, speed: 0.1 },
+            pinch: { enabled: true },
+            mode
+        }
+    };
+}
+
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
     if (!source) return '-';
@@ -552,10 +583,7 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
                 legend: {
                     labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
                 },
-                zoom: {
-                    pan: { enabled: true, mode: 'x' },
-                    zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
-                }
+                zoom: createChartZoomOptions('x')
             },
             scales: {
                 x: {
@@ -993,10 +1021,7 @@ async function renderDailyReportCharts() {
                     legend: {
                         labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                     },
-                    zoom: {
-                        pan: { enabled: true, mode: 'x' },
-                        zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
-                    },
+                    zoom: createChartZoomOptions('x'),
                     tooltip: {
                         callbacks: {
                             footer: function(tooltipItems) {
@@ -1063,10 +1088,7 @@ async function renderDailyReportCharts() {
                 indexAxis: 'y', // Horizontal Bar for perfect space fitting
                 plugins: {
                     legend: { display: false },
-                    zoom: {
-                        pan: { enabled: true, mode: 'y' },
-                        zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'y' }
-                    },
+                    zoom: createChartZoomOptions('y'),
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -1221,10 +1243,7 @@ function renderQualityYieldChart() {
                 legend: {
                     labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                 },
-                zoom: {
-                    pan: { enabled: true, mode: 'x' },
-                    zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
-                },
+                zoom: createChartZoomOptions('x'),
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -1296,14 +1315,7 @@ function openChartFullscreen(chartId, title) {
             legend: sourceOptions.plugins && sourceOptions.plugins.legend !== undefined ? sourceOptions.plugins.legend : {
                 labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
             },
-            zoom: {
-                pan: { enabled: true, mode: isHorizontal ? 'y' : 'x' },
-                zoom: {
-                    wheel: { enabled: true, speed: 0.1 },
-                    pinch: { enabled: true },
-                    mode: isHorizontal ? 'y' : 'x'
-                }
-            },
+            zoom: createChartZoomOptions(isHorizontal ? 'y' : 'x'),
             tooltip: sourceOptions.plugins && sourceOptions.plugins.tooltip ? sourceOptions.plugins.tooltip : {}
         },
         scales: sourceOptions.scales ? JSON.parse(JSON.stringify(sourceOptions.scales)) : {}
