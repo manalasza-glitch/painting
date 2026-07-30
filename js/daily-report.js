@@ -31,6 +31,69 @@ let PAINTING_MODEL_GROUPS = {
     ]
 };
 
+const PAINTING_PART_CATEGORY_ORDER = ["Door", "U Box", "Box", "Cover", "Gland Plate", "Other"];
+
+function getPartCategory(partName) {
+    const normalized = String(partName || "")
+        .toLowerCase()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (/\bu\s*box\b/.test(normalized)) return "U Box";
+    if (/\bdoor\b/.test(normalized)) return "Door";
+    if (/\bbox\b/.test(normalized)) return "Box";
+    if (/\bcover\b/.test(normalized)) return "Cover";
+    if (/\bgland\s*plate\b/.test(normalized)) return "Gland Plate";
+    return "Other";
+}
+
+function normalizePartModelGroups(sourceGroups) {
+    const normalizedGroups = {};
+    PAINTING_PART_CATEGORY_ORDER.forEach(category => {
+        normalizedGroups[category] = [];
+    });
+
+    for (const [sourceGroup, sourceModels] of Object.entries(sourceGroups || {})) {
+        if (!Array.isArray(sourceModels)) continue;
+
+        const sourceIsCategory = PAINTING_PART_CATEGORY_ORDER.includes(sourceGroup);
+
+        sourceModels.forEach(sourceModel => {
+            const value = String(sourceModel || "").trim();
+            if (!value) return;
+
+            const modelCategory = getPartCategory(value);
+            const category = modelCategory === "Other" ? getPartCategory(sourceGroup) : modelCategory;
+
+            const label = sourceIsCategory || value.toLowerCase().includes(String(sourceGroup).toLowerCase())
+                ? value
+                : `${value} (${sourceGroup})`;
+
+            if (!normalizedGroups[category].some(item => item.value === value && item.label === label)) {
+                normalizedGroups[category].push({ value, label });
+            }
+        });
+    }
+
+    Object.keys(normalizedGroups).forEach(category => {
+        if (normalizedGroups[category].length === 0) delete normalizedGroups[category];
+    });
+
+    return normalizedGroups;
+}
+
+function escapeDailyReportHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+PAINTING_MODEL_GROUPS = normalizePartModelGroups(PAINTING_MODEL_GROUPS);
+
 async function loadPartModelsList() {
     // 1. Load from local cache
     const cached = localStorage.getItem("PAINTING_PART_MODELS_CACHE");
@@ -38,7 +101,7 @@ async function loadPartModelsList() {
         try {
             const parsed = JSON.parse(cached);
             if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                PAINTING_MODEL_GROUPS = parsed;
+                PAINTING_MODEL_GROUPS = normalizePartModelGroups(parsed);
             }
         } catch (e) {}
     }
@@ -50,7 +113,7 @@ async function loadPartModelsList() {
     if (typeof fetchPartModelsFromAPI === 'function') {
         const cloudGroups = await fetchPartModelsFromAPI();
         if (cloudGroups && typeof cloudGroups === 'object' && Object.keys(cloudGroups).length > 0) {
-            PAINTING_MODEL_GROUPS = cloudGroups;
+            PAINTING_MODEL_GROUPS = normalizePartModelGroups(cloudGroups);
             renderPartGroupDropdownUI();
             renderModelDropdownOptions();
         }
@@ -62,10 +125,11 @@ function renderPartGroupDropdownUI() {
     if (!groupSelect) return;
 
     const currentVal = groupSelect.value;
-    let html = '<option value="">-- ทุกกลุ่มงาน (All Parts) --</option>';
+    let html = '<option value="">-- เลือกประเภทชิ้นงาน --</option>';
 
-    Object.keys(PAINTING_MODEL_GROUPS).forEach(gName => {
-        html += `<option value="${gName}">${gName}</option>`;
+    PAINTING_PART_CATEGORY_ORDER.forEach(gName => {
+        if (!PAINTING_MODEL_GROUPS[gName]) return;
+        html += `<option value="${escapeDailyReportHtml(gName)}">${escapeDailyReportHtml(gName)}</option>`;
     });
 
     groupSelect.innerHTML = html;
@@ -74,26 +138,23 @@ function renderPartGroupDropdownUI() {
     }
 }
 
-function renderModelDropdownOptions(groupFilter = "") {
+function renderModelDropdownOptions(groupFilter = null) {
     const modelSelects = document.querySelectorAll('.model-select');
-    let html = '<option value="">-- เลือกรุ่นงาน --</option>';
+    const groupSelect = document.getElementById('drPartGroup');
+    const selectedGroup = groupFilter === null ? (groupSelect ? groupSelect.value : "") : groupFilter;
+    let html = selectedGroup
+        ? '<option value="">-- เลือกรุ่นงาน --</option>'
+        : '<option value="">-- กรุณาเลือกประเภทชิ้นงานก่อน --</option>';
 
-    if (groupFilter && PAINTING_MODEL_GROUPS[groupFilter]) {
-        PAINTING_MODEL_GROUPS[groupFilter].forEach(m => {
-            html += `<option value="${m}">${m} (${groupFilter})</option>`;
+    if (selectedGroup && PAINTING_MODEL_GROUPS[selectedGroup]) {
+        PAINTING_MODEL_GROUPS[selectedGroup].forEach(model => {
+            html += `<option value="${escapeDailyReportHtml(model.value)}">${escapeDailyReportHtml(model.label)}</option>`;
         });
-    } else {
-        for (const [groupName, models] of Object.entries(PAINTING_MODEL_GROUPS)) {
-            html += `<optgroup label="📦 ${groupName}">`;
-            models.forEach(m => {
-                html += `<option value="${m}">${m} (${groupName})</option>`;
-            });
-            html += `</optgroup>`;
-        }
     }
 
     modelSelects.forEach(sel => {
         sel.innerHTML = html;
+        sel.disabled = !selectedGroup;
     });
 }
 
@@ -583,7 +644,7 @@ async function generate1MonthMockData() {
     }
 
     const sample = [];
-    const allModels = Object.values(PAINTING_MODEL_GROUPS).flat();
+    const allModels = Object.values(PAINTING_MODEL_GROUPS).flat().map(model => model.value);
     const modelsList = allModels.length > 0 ? allModels : [
         "Box NMS 4/6 W. 240 mm.",
         "Door NLC 450 mm.",
