@@ -1176,8 +1176,9 @@ button, input, textarea, select {
     height: 200px !important;
   }
   .chart-container-wrapper,
+  .chart-card,
   .chart-container-wrapper canvas {
-    /* One finger scrolls the page; multi-touch remains available to Hammer.js. */
+    /* One finger scrolls the page; JS owns two-finger chart gestures. */
     touch-action: pan-y !important;
   }
   .table-card {
