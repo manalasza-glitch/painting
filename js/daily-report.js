@@ -369,7 +369,7 @@ function initDailyReportForm() {
     }
 }
 
-function addDailyReportRecord() {
+function addDailyReportRecord({ silent = false } = {}) {
     const model = document.getElementById('drModel').value;
     const timeSlot = document.getElementById('drTime').value;
     const prodQty = Number(document.getElementById('drProdQty').value) || 0;
@@ -384,12 +384,12 @@ function addDailyReportRecord() {
 
     if (!model || !timeSlot) {
         showToast("กรุณาเลือกรุ่นงานและช่วงเวลา", "error");
-        return;
+        return false;
     }
 
     if (prodQty === 0 && (dent+colorDrop+thinPaint+thickPaint+waterStain+otherDefect) === 0) {
         showToast("กรุณากรอกยอดผลิตหรือยอดของเสียอย่างน้อย 1 ชิ้น", "error");
-        return;
+        return false;
     }
 
     const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + otherDefect;
@@ -424,7 +424,10 @@ function addDailyReportRecord() {
     document.getElementById('drWaterStain').value = "";
     document.getElementById('drOtherDefect').value = "";
     
-    showToast("เพิ่มรายการสำเร็จ", "success");
+    if (!silent) {
+        showToast("เพิ่มรายการสำเร็จ", "success");
+    }
+    return true;
 }
 
 function removeDailyReportRecord(index) {
@@ -469,12 +472,12 @@ async function submitDailyReport() {
         const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + otherDefect;
 
         if (model && (prodQty > 0 || totalDefect > 0)) {
-            addDailyReportRecord();
+            addDailyReportRecord({ silent: true });
         }
     }
 
     if (dailyReportRecords.length === 0) {
-        showToast("กรุณากรอกรุ่นงาน ยอดผลิต และกดเพิ่มรายการลงในตารางก่อนบันทึก", "error");
+        showToast("กรุณาเลือกรุ่นงาน ช่วงเวลา และกรอกยอดผลิตหรือของเสียก่อนบันทึก", "error");
         return;
     }
 
@@ -547,7 +550,7 @@ async function submitDailyReport() {
         localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(list));
         localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
 
-        showToast("บันทึกข้อมูลแบบฟอร์มประจำวันลง Google Sheets เรียบร้อยแล้ว!", "success");
+        showToast("บันทึกข้อมูลลง Google Sheets เรียบร้อยแล้ว!", "success");
         
         // Reset Form & Clear Draft
         dailyReportRecords = [];
@@ -563,7 +566,6 @@ async function submitDailyReport() {
         document.getElementById('dtNote').value = "";
         document.getElementById('drProdQty').value = "";
         
-        switchTab('dashboard-tab');
         if (typeof renderDailyReportCharts === 'function') {
             renderDailyReportCharts();
         }
@@ -571,7 +573,7 @@ async function submitDailyReport() {
         showToast("เกิดข้อผิดพลาดในการบันทึก: " + err.message, "error");
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `💾 บันทึกแบบฟอร์มประจำวัน`;
+        submitBtn.innerHTML = `💾 บันทึกข้อมูลทันที`;
     }
 }
 
