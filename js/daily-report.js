@@ -504,6 +504,21 @@ function renderDailyReportList() {
     const tbody = document.getElementById('dailyReportListBody');
     if (!tbody) return;
 
+    // 1. If draft session items exist before submission, display them with delete action
+    if (Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
+        tbody.innerHTML = dailyReportRecords.map((r, i) => `
+            <tr>
+                <td style="font-size: 0.85rem; font-weight: 600;">${escapeDailyReportHtml(r.model || '-')}</td>
+                <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
+                <td style="font-weight: bold; color: #10b981;">${Number(r.prodQty) || 0}</td>
+                <td><span class="badge-defect ${r.totalDefect > 0 ? 'badge-has-defect' : 'badge-zero'}">${r.totalDefect}</span></td>
+                <td><button type="button" onclick="removeDailyReportRecord(${i})" style="background:none; border:none; color:#ef4444; font-weight:700; cursor:pointer;">🗑️ ลบ</button></td>
+            </tr>
+        `).join('');
+        return;
+    }
+
+    // 2. Otherwise display top 5 saved records from Google Sheets backend
     const savedRecords = getSavedDailyReportRecords().slice(0, 5);
     if (savedRecords.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
@@ -512,11 +527,11 @@ function renderDailyReportList() {
 
     tbody.innerHTML = savedRecords.map(r => `
         <tr>
-            <td style="font-size: 0.85rem; font-weight: 700; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
             <td style="font-size: 0.85rem; font-weight: 600;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
             <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
             <td style="font-weight: bold; color: #10b981;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
             <td><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
+            <td style="font-size: 0.8rem; font-weight: 600; color: #64748b;">${formatDailyReportDate(r.date, r.timestamp)}</td>
         </tr>
     `).join('');
 }

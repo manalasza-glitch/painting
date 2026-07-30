@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Mobile Viewport & iOS Safe Area Support -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     
     <!-- iOS Web App & Android PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -301,7 +301,7 @@
                     Event (บันทึก 5M1E)
                 </a>
                 <a href="#" class="nav-link" data-permission="history.read" onclick="switchTab('history-tab', this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3" y2="6"></line><line x1="3" y1="12" x2="3" y2="12"></line><line x1="3" y1="18" x2="3" y2="18"></line></svg>
                     ประวัติย้อนหลัง
                 </a>
                 <a href="#" class="nav-link" data-permission="users.manage" onclick="switchTab('settings-tab', this)">
@@ -311,7 +311,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div>Copfiaind Management v2.0</div>
+                <div>Painting App Management v2.0</div>
                 <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">© 2026 Painting App</div>
             </div>
         </aside>
@@ -347,7 +347,7 @@
                 <section id="dashboard-tab" class="tab-page active" data-permission="dashboard.read">
                     
                     <div class="section-title-bar">
-                        <h1 class="page-title">Culoute Dashboard</h1>
+                        <h1 class="page-title">Painting Inspection Dashboard</h1>
                         <div class="date-filter-wrap" style="display: flex; gap: 0.5rem; align-items: center;">
                             <div style="position: relative; flex-grow: 1;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#2563eb" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
@@ -433,7 +433,7 @@
                             <div class="chart-header">
                                 <div class="chart-title">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
-                                    <span>สัดส่วนของเสีย (Sertufy Troes)</span>
+                                    <span>สัดส่วนของเสีย (Defect Breakdown)</span>
                                 </div>
                                 <button class="btn-chart-expand" onclick="openChartFullscreen('donutChart', 'สัดส่วนของเสียแยกตามประเภท')" title="ขยายเต็มหน้าจอ">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
@@ -800,12 +800,12 @@
                         </div>
                     </div>
 
-                    <!-- Table: ประวัติการบันทึกล่าสุด (5 รายการล่าสุดจากหลังบ้าน) -->
+                    <!-- Table: รายการที่เพิ่ม (ประวัติ 5 รายการล่าสุดจากหลังบ้าน) -->
                     <div class="dr-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
                             <div>
                                 <h3 class="dr-section-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                                    📋 ประวัติการบันทึกล่าสุด
+                                    📋 รายการที่เพิ่ม
                                     <span style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;">ล่าสุด 5 รายการ</span>
                                 </h3>
                             </div>
@@ -817,11 +817,11 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>วันที่</th>
                                         <th>รุ่นงาน</th>
                                         <th>เวลา</th>
                                         <th>ผลิต</th>
                                         <th>เสีย</th>
+                                        <th>ลบ / วันที่</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dailyReportListBody">
@@ -864,7 +864,7 @@
                                 </thead>
                                 <tbody id="fullHistoryTableBody">
                                     <tr>
-                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
