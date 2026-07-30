@@ -591,7 +591,17 @@ async function openDailyReportHistory() {
     modal.classList.add("active");
     tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td></tr>`;
 
-    await refreshDailyReportHistory();
+    // Use the records already loaded for the five-row preview immediately.
+    // A fresh Apps Script request can occasionally take several seconds, so it
+    // should not block the history modal when cached/current records exist.
+    const hasLoadedHistory = getSavedDailyReportRecords().length > 0;
+    const refreshPromise = refreshDailyReportHistory();
+    if (!hasLoadedHistory) {
+        await Promise.race([
+            refreshPromise,
+            new Promise(resolve => setTimeout(resolve, 8000))
+        ]);
+    }
     const records = getSavedDailyReportRecords();
 
     if (records.length === 0) {
