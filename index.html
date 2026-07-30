@@ -12,18 +12,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Painting App">
     <meta name="theme-color" content="#0c2340">
-    <link rel="icon" type="image/jpeg" href="assets/logo.jpg?v=4.0.0">
-    <link rel="icon" type="image/png" href="assets/logo.png?v=4.0.0">
-    <link rel="shortcut icon" type="image/jpeg" href="assets/logo.jpg?v=4.0.0">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/logo.jpg?v=4.0.0">
+    <link rel="icon" type="image/png" href="assets/icon-192.png?v=5.0.0">
+    <link rel="shortcut icon" type="image/png" href="assets/icon-192.png?v=5.0.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png?v=5.0.0">
 
     <!-- PWA Web App Manifest -->
-    <link rel="manifest" href="manifest.json?v=4.0.0">
+    <link rel="manifest" href="manifest.json?v=5.0.0">
 
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=35.0.0">
+    <link rel="stylesheet" href="css/style.css?v=35.0.4">
+    <link rel="stylesheet" href="css/auth.css?v=1.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -221,7 +221,55 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 </head>
 
-<body>
+<body class="auth-loading">
+
+    <section class="auth-shell" id="authShell" aria-live="polite">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <img src="assets/logo.png" alt="Painting Quality Inspection System">
+                <div>
+                    <h1>Painting Quality</h1>
+                    <p>Inspection System</p>
+                </div>
+            </div>
+
+            <div id="authMessage" class="auth-message" hidden></div>
+
+            <div class="auth-tabs" id="authTabs">
+                <button type="button" class="active" data-auth-mode="login">เข้าสู่ระบบ</button>
+                <button type="button" data-auth-mode="register">สมัครใช้งาน</button>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <label for="loginEmployeeId">รหัสพนักงาน</label>
+                <input id="loginEmployeeId" name="employeeId" autocomplete="username" maxlength="30" required>
+                <label for="loginPassword">รหัสผ่าน</label>
+                <input id="loginPassword" name="password" type="password" autocomplete="current-password" maxlength="128" required>
+                <button type="submit" class="auth-submit">เข้าสู่ระบบ</button>
+            </form>
+
+            <form id="registerForm" class="auth-form" hidden>
+                <div id="bootstrapNotice" class="auth-setup-notice" hidden>
+                    ระบบยังไม่มีผู้ดูแล กรุณาสร้าง Super Admin คนแรก
+                </div>
+                <label for="registerEmployeeId">รหัสพนักงาน <span>(ใช้เป็นชื่อผู้ใช้)</span></label>
+                <input id="registerEmployeeId" name="employeeId" autocomplete="username" maxlength="30" required>
+                <label for="registerDisplayName">ชื่อ–นามสกุล</label>
+                <input id="registerDisplayName" name="displayName" autocomplete="name" maxlength="100" required>
+                <label for="registerDepartment">แผนก</label>
+                <input id="registerDepartment" name="department" maxlength="100">
+                <label for="registerPassword">ตั้งรหัสผ่าน <span>(อย่างน้อย 10 ตัว)</span></label>
+                <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
+                <label for="registerPasswordConfirm">ยืนยันรหัสผ่าน</label>
+                <input id="registerPasswordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" required>
+                <div id="bootstrapTokenWrap" hidden>
+                    <label for="bootstrapToken">รหัสติดตั้งครั้งแรก</label>
+                    <input id="bootstrapToken" name="bootstrapToken" type="password" autocomplete="off" maxlength="200">
+                </div>
+                <button type="submit" class="auth-submit">ส่งคำขอสมัคร</button>
+            </form>
+        </div>
+    </section>
 
     <div class="app-container">
 
@@ -236,29 +284,29 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a href="#" class="nav-link active" onclick="switchTab('dashboard-tab', this)">
+                <a href="#" class="nav-link active" data-permission="dashboard.read" onclick="switchTab('dashboard-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     Dashboard
                 </a>
-                <a href="#" class="nav-link" onclick="openInspectionModal()">
+                <a href="#" class="nav-link" data-permission="inspection.create" onclick="openInspectionModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
                     บันทึกงานตรวจ
                 </a>
-                <a href="#" class="nav-link" onclick="switchTab('daily-report-tab', this)">
+                <a href="#" class="nav-link" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     แบบฟอร์มผลิตรายวัน
                 </a>
-                <a href="#" class="nav-link" onclick="switchTab('event-tab', this)">
+                <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
                     Event (บันทึก 5M1E)
                 </a>
-                <a href="#" class="nav-link" onclick="switchTab('history-tab', this)">
+                <a href="#" class="nav-link" data-permission="history.read" onclick="switchTab('history-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                     ประวัติย้อนหลัง
                 </a>
-                <a href="#" class="nav-link" onclick="switchTab('settings-tab', this)">
+                <a href="#" class="nav-link" data-permission="users.manage" onclick="switchTab('settings-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    ตั้งค่า API
+                    จัดการผู้ใช้งาน
                 </a>
             </nav>
 
@@ -279,15 +327,16 @@
                 </div>
 
                 <div class="header-actions">
+                    <div class="current-user-chip" id="currentUserChip">
+                        <span class="current-user-avatar" id="currentUserAvatar">U</span>
+                        <span><strong id="currentUserName">-</strong><small id="currentUserId">-</small></span>
+                    </div>
+                    <button type="button" class="logout-button" onclick="PaintingAuth.logout()">ออกจากระบบ</button>
                     <div class="status-badge" id="statusBadge">
                         <span class="status-dot"></span>
                         <span id="statusText">เชื่อมต่อระบบแล้ว</span>
                     </div>
 
-                    <button class="btn-primary-custom" onclick="openInspectionModal()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                        <span>บันทึกข้อมูล</span>
-                    </button>
                 </div>
             </header>
 
@@ -295,7 +344,7 @@
             <main class="content-body">
 
                 <!-- TAB 1: DASHBOARD OVERVIEW -->
-                <section id="dashboard-tab" class="tab-page active">
+                <section id="dashboard-tab" class="tab-page active" data-permission="dashboard.read">
                     
                     <div class="section-title-bar">
                         <h1 class="page-title">Culoute Dashboard</h1>
@@ -541,7 +590,7 @@
                 </section>
 
                 <!-- TAB: EVENT 5M1E (บันทึกการเปลี่ยนแปลง 5M1E) -->
-                <section id="event-tab" class="tab-page" style="display: none;">
+                <section id="event-tab" class="tab-page" data-permission="events.read" style="display: none;">
                     <div class="section-title-bar" style="flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <h1 class="page-title" style="display: flex; align-items: center; gap: 0.5rem;">
@@ -661,12 +710,9 @@
                 </section>
 
                 <!-- TAB: DAILY REPORT (แบบฟอร์มผลิตรายวัน) -->
-                <section id="daily-report-tab" class="tab-page" style="display: none;">
+                <section id="daily-report-tab" class="tab-page" data-permission="daily_report.read" style="display: none;">
                     <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
                         <h1 class="page-title" style="font-size: 1.15rem; margin: 0;">📝 ฟอร์มผลิตรายวัน</h1>
-                        <button class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.55rem 1.25rem;">
-                            💾 บันทึกแบบฟอร์มประจำวัน
-                        </button>
                     </div>
 
                     <!-- Section 1: ข้อมูลกะทำงาน (1 แถว 3 ช่อง เต็มความกว้าง) -->
@@ -729,8 +775,8 @@
                             </div>
                         </div>
                         <div style="display: flex; justify-content: flex-end; margin-top: 0.85rem;">
-                            <button type="button" class="btn-primary-custom" onclick="addDailyReportRecord()" style="padding: 0.6rem 1.5rem;">
-                                ➕ เพิ่มลงในตาราง
+                            <button type="button" class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.6rem 1.5rem;">
+                                💾 บันทึกข้อมูลทันที
                             </button>
                         </div>
                     </div>
@@ -777,7 +823,7 @@
                 </section>
 
                 <!-- TAB 2: HISTORY TABLE -->
-                <section id="history-tab" class="tab-page" style="display: none;">
+                <section id="history-tab" class="tab-page" data-permission="history.read" style="display: none;">
                     <div class="section-title-bar">
                         <h1 class="page-title">ประวัติการตรวจเช็คทั้งหมด</h1>
                         <button style="background: #10b981; color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 20px; font-weight: 700; cursor: pointer;" onclick="loadDataFromAPI()">
@@ -811,22 +857,20 @@
                     </div>
                 </section>
 
-                <!-- TAB 3: SETTINGS -->
-                <section id="settings-tab" class="tab-page" style="display: none;">
+                <!-- USER APPROVAL & ACCESS MANAGEMENT -->
+                <section id="settings-tab" class="tab-page" data-permission="users.manage" style="display: none;">
                     <div class="section-title-bar">
-                        <h1 class="page-title">ตั้งค่าการเชื่อมต่อ API</h1>
+                        <h1 class="page-title">จัดการผู้ใช้งานและสิทธิ์</h1>
+                        <button class="btn-primary-custom" type="button" onclick="PaintingAuth.loadUsers()">รีเฟรชรายชื่อ</button>
                     </div>
-
-                    <div class="table-card" style="max-width: 700px;">
-                        <div class="form-group" style="margin-bottom: 1.25rem;">
-                            <label style="font-weight: 800; color: #0e3a60; margin-bottom: 0.5rem; display: block;">Google Apps Script Web App URL</label>
-                            <input type="text" id="settingApiUrl" class="form-control-custom" style="width: 100%;" placeholder="https://script.google.com/macros/s/.../exec">
-                            <span style="font-size: 0.8rem; color: #64748b; margin-top: 0.35rem; display: block;">URL ของ Web App ที่ deploy จาก Google Apps Script (code.gs)</span>
-                        </div>
-
-                        <button class="btn-primary-custom" onclick="saveSettings()">
-                            💾 บันทึกตั้งค่า
-                        </button>
+                    <div class="user-summary-grid">
+                        <div><span id="pendingUserCount">0</span><small>รออนุมัติ</small></div>
+                        <div><span id="activeUserCount">0</span><small>ใช้งานได้</small></div>
+                        <div><span id="disabledUserCount">0</span><small>ปฏิเสธ/ระงับ</small></div>
+                    </div>
+                    <div id="userManagementMessage" class="auth-message" hidden></div>
+                    <div id="usersContainer" class="users-container">
+                        <div class="users-loading">กำลังโหลดรายชื่อผู้สมัคร...</div>
                     </div>
                 </section>
 
@@ -837,29 +881,29 @@
     <!-- MOBILE BOTTOM NAVIGATION BAR (Android & iOS Smartphones) -->
     <nav class="mobile-bottom-nav">
         <div class="mobile-nav-items">
-            <div class="mobile-nav-item active" onclick="switchTab('dashboard-tab', this)">
-                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <div class="mobile-nav-item active" data-permission="dashboard.read" onclick="switchTab('dashboard-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
                 <span>Dashboard</span>
             </div>
-            <div class="mobile-nav-item" onclick="openInspectionModal()">
-                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <div class="mobile-nav-item" data-permission="inspection.create" onclick="openInspectionModal()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
                 <span>บันทึกงาน</span>
             </div>
-            <div class="mobile-nav-item" onclick="switchTab('daily-report-tab', this)">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <div class="mobile-nav-item" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>
                 <span>ฟอร์มผลิต</span>
             </div>
-            <div class="mobile-nav-item" onclick="switchTab('event-tab', this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <div class="mobile-nav-item" data-permission="events.read" onclick="switchTab('event-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 <span>Event 5M1E</span>
             </div>
-            <div class="mobile-nav-item" onclick="switchTab('history-tab', this)">
-                <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            <div class="mobile-nav-item" data-permission="history.read" onclick="switchTab('history-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>
                 <span>ประวัติ</span>
             </div>
-            <div class="mobile-nav-item" onclick="switchTab('settings-tab', this)">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
-                <span>ตั้งค่า</span>
+            <div class="mobile-nav-item" data-permission="users.manage" onclick="switchTab('settings-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                <span>ผู้ใช้งาน</span>
             </div>
         </div>
     </nav>
@@ -1076,10 +1120,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=33.0.0"></script>
-    <script src="js/app.js?v=33.0.0"></script>
-    <script src="js/daily-report.js?v=33.0.0"></script>
-    <script src="js/events.js?v=33.0.0"></script>
+    <script src="js/auth.js?v=1.0.0"></script>
+    <script src="js/api.js?v=36.0.0"></script>
+    <script src="js/app.js?v=36.0.5"></script>
+    <script src="js/daily-report.js?v=36.0.1"></script>
+    <script src="js/events.js?v=36.0.0"></script>
 </body>
 
 </html>
