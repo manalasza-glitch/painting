@@ -156,6 +156,9 @@ function switchTab(tabId, element) {
         if (typeof renderDailyReportList === 'function') {
             renderDailyReportList();
         }
+        if (typeof refreshDailyReportHistory === 'function') {
+            refreshDailyReportHistory();
+        }
     } else if (tabId === "event-tab") {
         if (typeof renderEventsTab === 'function') {
             renderEventsTab();

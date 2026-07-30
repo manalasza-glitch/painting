@@ -393,6 +393,7 @@ function deleteStaffName(index) {
 }
 
 let dailyReportRecords = [];
+let dailyReportHistoryRecords = [];
 
 function initDailyReportForm() {
     const today = new Date().toISOString().split('T')[0];
@@ -423,11 +424,13 @@ function initDailyReportForm() {
     if (draft) {
         try {
             dailyReportRecords = JSON.parse(draft) || [];
-            renderDailyReportList();
         } catch (e) {
             dailyReportRecords = [];
         }
     }
+
+    renderDailyReportList();
+    refreshDailyReportHistory();
 }
 
 function addDailyReportRecord({ silent = false } = {}) {
@@ -501,22 +504,117 @@ function renderDailyReportList() {
     const tbody = document.getElementById('dailyReportListBody');
     if (!tbody) return;
 
-    if (dailyReportRecords.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีรายการที่เพิ่ม</td></tr>`;
+    const savedRecords = getSavedDailyReportRecords().slice(0, 5);
+    if (savedRecords.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1.5rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = dailyReportRecords.map((r, i) => `
+    tbody.innerHTML = savedRecords.map(r => `
         <tr>
-            <td style="font-size: 0.85rem; font-weight: 600;">${r.model}</td>
-            <td><span class="badge" style="background:#e2e8f0; color:#475569;">${r.timeSlot}</span></td>
-            <td style="font-weight: bold; color: #10b981;">${r.prodQty}</td>
-            <td><span class="badge-defect ${r.totalDefect > 0 ? 'badge-has-defect' : 'badge-zero'}">${r.totalDefect}</span></td>
-            <td style="text-align: center;">
-                <button type="button" class="btn-action-delete" onclick="removeDailyReportRecord(${i})" style="padding: 4px 8px; font-size: 0.8rem;">🗑️ ลบ</button>
-            </td>
+            <td style="font-size: 0.85rem; font-weight: 700; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
+            <td style="font-size: 0.85rem; font-weight: 600;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
+            <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
+            <td style="font-weight: bold; color: #10b981;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
+            <td><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
         </tr>
     `).join('');
+}
+
+function getSavedDailyReportRecords() {
+    let records = dailyReportHistoryRecords;
+
+    if (!Array.isArray(records) || records.length === 0) {
+        try {
+            records = JSON.parse(localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE") || "[]");
+        } catch (e) {
+            records = [];
+        }
+    }
+
+    return (Array.isArray(records) ? records : [])
+        .map((record, index) => ({ record, index }))
+        .sort((a, b) => {
+            const timeDiff = getDailyReportSortValue(b.record) - getDailyReportSortValue(a.record);
+            return timeDiff || b.index - a.index;
+        })
+        .map(item => item.record);
+}
+
+function getDailyReportSortValue(record) {
+    const raw = record.timestamp || record.Timestamp || record.date || record.Date || "";
+    const value = new Date(raw).getTime();
+    return Number.isFinite(value) ? value : 0;
+}
+
+function getDailyReportDefectTotal(record) {
+    const explicit = Number(record.totalDefect || record.TotalDefect || record.total_defect);
+    if (Number.isFinite(explicit)) return explicit;
+
+    return ["dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "otherDefect"]
+        .reduce((total, key) => total + (Number(record[key]) || 0), 0);
+}
+
+function formatDailyReportDate(date, timestamp) {
+    const raw = String(date || timestamp || "").substring(0, 10);
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return match ? `${match[3]}/${match[2]}/${match[1]}` : (raw || "-");
+}
+
+function escapeDailyReportHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[char]);
+}
+
+async function refreshDailyReportHistory() {
+    try {
+        if (typeof fetchDailyReportDataFromAPI === "function") {
+            dailyReportHistoryRecords = await fetchDailyReportDataFromAPI();
+        }
+    } catch (error) {
+        console.warn("Unable to refresh daily report history:", error);
+    }
+
+    renderDailyReportList();
+}
+
+async function openDailyReportHistory() {
+    const modal = document.getElementById("dailyReportHistoryModal");
+    const tbody = document.getElementById("dailyReportHistoryBody");
+    if (!modal || !tbody) return;
+
+    modal.classList.add("active");
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td></tr>`;
+
+    await refreshDailyReportHistory();
+    const records = getSavedDailyReportRecords();
+
+    if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = records.map(r => `
+        <tr>
+            <td style="font-weight: 700; white-space: nowrap;">${formatDailyReportDate(r.date || r.Date, r.timestamp || r.Timestamp)}</td>
+            <td style="font-weight: 600;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
+            <td><span class="badge" style="background:#e2e8f0; color:#475569;">${escapeDailyReportHtml(r.timeSlot || r.TimeSlot || '-')}</span></td>
+            <td>${escapeDailyReportHtml(r.shift || r.Shift || '-')}</td>
+            <td style="font-weight: 700; color: #10b981;">${Number(r.prodQty || r.ProdQty || r.prod_qty || r.qty) || 0}</td>
+            <td><span class="badge-defect ${getDailyReportDefectTotal(r) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(r)}</span></td>
+            <td>${escapeDailyReportHtml(r.recorder || r.Recorder || '-')}</td>
+        </tr>
+    `).join('');
+}
+
+function closeDailyReportHistory() {
+    const modal = document.getElementById("dailyReportHistoryModal");
+    if (modal) modal.classList.remove("active");
 }
 
 async function submitDailyReport() {
@@ -610,6 +708,7 @@ async function submitDailyReport() {
         });
         localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(list));
         localStorage.setItem("PAINTING_OUTPUTDIARY_INIT", "true");
+        dailyReportHistoryRecords = list;
 
         showToast("บันทึกข้อมูลลง Google Sheets เรียบร้อยแล้ว!", "success");
         
