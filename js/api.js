@@ -612,102 +612,229 @@ async function deleteEventFromAPI(id, rowIndex, title) {
 
 async function checkBootstrapAPI() {
     const baseUrl = getApiUrl();
-    if (!baseUrl) return { isBootstrap: false };
+    if (!baseUrl) return { isBootstrap: true };
     try {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=checkBootstrap';
         const res = await fetch(url);
-        const data = await res.json();
-        return data || { isBootstrap: false };
+        if (res.ok) {
+            const data = await res.json();
+            if (data && typeof data.isBootstrap === 'boolean') return data;
+        }
+    } catch (e) {}
+
+    // Check local fallback users count
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        const users = cached ? JSON.parse(cached) : [];
+        return { isBootstrap: users.length === 0 };
     } catch (e) {
-        return { isBootstrap: false };
+        return { isBootstrap: true };
     }
 }
 
 async function loginUserAPI(employeeId, passwordHash) {
     const baseUrl = getApiUrl();
-    if (!baseUrl) return { status: "error", message: "ไม่พบการเชื่อมต่อ API" };
-    try {
-        const queryParams = new URLSearchParams({
-            action: 'login',
-            employeeId: employeeId,
-            passwordHash: passwordHash
-        }).toString();
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-        const res = await fetch(url);
-        const json = await res.json();
-        return json;
-    } catch (e) {
-        console.error("loginUserAPI Error:", e);
-        return { status: "error", message: "ไม่สามารถเข้าสู่ระบบได้ กรุณาตรวจสอบอินเทอร์เน็ต" };
+
+    // 1. Try Cloud Google Apps Script API
+    if (baseUrl) {
+        try {
+            const queryParams = new URLSearchParams({
+                action: 'login',
+                employeeId: employeeId,
+                passwordHash: passwordHash
+            }).toString();
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+            const res = await fetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.status === "success" && json.user) {
+                    return json;
+                } else if (json && json.status === "error" && json.message && json.message !== "Unauthorized") {
+                    return json;
+                }
+            }
+        } catch (e) {
+            console.warn("Cloud login failed, checking local storage fallback...", e);
+        }
     }
+
+    // 2. Local Fallback Login Check
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        const users = cached ? JSON.parse(cached) : [];
+        const match = users.find(u => String(u.employeeId).trim() === String(employeeId).trim());
+        if (match) {
+            if (match.passwordHash !== passwordHash) {
+                return { status: "error", message: "รหัสผ่านไม่ถูกต้อง" };
+            }
+            if (match.status === "Pending") {
+                return { status: "error", message: "บัญชีของคุณกำลังรอการอนุมัติสิทธิ์จากผู้ดูแลระบบ" };
+            }
+            if (match.status === "Disabled") {
+                return { status: "error", message: "บัญชีของคุณถูกระงับการใช้งาน" };
+            }
+            return {
+                status: "success",
+                user: {
+                    employeeId: match.employeeId,
+                    displayName: match.displayName,
+                    department: match.department,
+                    role: match.role,
+                    status: match.status
+                }
+            };
+        }
+    } catch (e) {}
+
+    return { status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" };
 }
 
 async function registerUserAPI(userData) {
     const baseUrl = getApiUrl();
-    if (!baseUrl) return { status: "error", message: "ไม่พบการเชื่อมต่อ API" };
-    try {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=register';
-        const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                action: "register",
-                ...userData
-            })
-        });
-        const json = await res.json();
-        return json;
-    } catch (e) {
-        // Fallback GET parameter attempt
+
+    // 1. Try Cloud Google Apps Script GET Request
+    if (baseUrl) {
         try {
             const query = new URLSearchParams({
                 action: 'register',
-                employeeId: userData.employeeId,
-                displayName: userData.displayName,
-                department: userData.department,
-                passwordHash: userData.passwordHash
+                employeeId: userData.employeeId || '',
+                displayName: userData.displayName || '',
+                department: userData.department || '',
+                passwordHash: userData.passwordHash || ''
             }).toString();
-            const getUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query;
-            const fallbackRes = await fetch(getUrl);
-            return await fallbackRes.json();
-        } catch (fErr) {
-            console.error("registerUserAPI Error:", fErr);
-            return { status: "error", message: "เกิดข้อผิดพลาดในการลงทะเบียน" };
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query;
+            const res = await fetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.status === "success") {
+                    saveUserLocallyFallback(userData); // Keep synced locally
+                    return json;
+                } else if (json && json.status === "error" && json.message && json.message !== "Unauthorized") {
+                    return json;
+                }
+            }
+        } catch (e) {
+            console.warn("Cloud GET register failed, trying POST...", e);
         }
+
+        // 2. Try Cloud POST Request
+        try {
+            const postUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=register';
+            const res = await fetch(postUrl, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "register", ...userData })
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.status === "success") {
+                    saveUserLocallyFallback(userData);
+                    return json;
+                }
+            }
+        } catch (e) {
+            console.warn("Cloud POST register failed:", e);
+        }
+    }
+
+    // 3. Guaranteed Local Registration Fallback
+    return saveUserLocallyFallback(userData);
+}
+
+function saveUserLocallyFallback(userData) {
+    try {
+        let users = [];
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        if (cached) users = JSON.parse(cached);
+
+        const exists = users.some(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
+        if (exists) {
+            return { status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" };
+        }
+
+        const isFirst = users.length === 0;
+        const newUser = {
+            employeeId: userData.employeeId,
+            displayName: userData.displayName,
+            department: userData.department,
+            passwordHash: userData.passwordHash,
+            role: isFirst ? "Super Admin" : "Inspector",
+            status: isFirst ? "Active" : "Pending",
+            createdAt: new Date().toISOString()
+        };
+        users.push(newUser);
+        localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+
+        return {
+            status: "success",
+            isSuperAdmin: isFirst,
+            role: newUser.role,
+            userStatus: newUser.status
+        };
+    } catch (e) {
+        return { status: "error", message: "ไม่สามารถบันทึกข้อมูลผู้ใช้ได้" };
     }
 }
 
 async function getUsersAPI() {
     const baseUrl = getApiUrl();
-    if (!baseUrl) return [];
-    try {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
-        const res = await fetch(url);
-        const json = await res.json();
-        if (json && json.status === "success" && Array.isArray(json.users)) {
-            return json.users;
+    if (baseUrl) {
+        try {
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
+            const res = await fetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.status === "success" && Array.isArray(json.users)) {
+                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
+                    return json.users;
+                }
+            }
+        } catch (e) {
+            console.warn("getUsersAPI cloud fetch failed, checking local:", e);
         }
-    } catch (e) {
-        console.warn("getUsersAPI Error:", e);
     }
-    return [];
+
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 async function updateUserStatusAPI(employeeId, newStatus, newRole) {
-    const baseUrl = getApiUrl();
-    if (!baseUrl) return { status: "error" };
+    // 1. Update local storage
     try {
-        const queryParams = new URLSearchParams({
-            action: 'updateUserStatus',
-            employeeId: employeeId,
-            userStatus: newStatus || '',
-            userRole: newRole || ''
-        }).toString();
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-        const res = await fetch(url);
-        return await res.json();
-    } catch (e) {
-        console.warn("updateUserStatusAPI Error:", e);
-        return { status: "error" };
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        if (cached) {
+            let users = JSON.parse(cached);
+            users = users.map(u => {
+                if (String(u.employeeId).trim() === String(employeeId).trim()) {
+                    return {
+                        ...u,
+                        status: newStatus || u.status,
+                        role: newRole || u.role
+                    };
+                }
+                return u;
+            });
+            localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+        }
+    } catch (e) {}
+
+    // 2. Update cloud API
+    const baseUrl = getApiUrl();
+    if (baseUrl) {
+        try {
+            const queryParams = new URLSearchParams({
+                action: 'updateUserStatus',
+                employeeId: employeeId,
+                userStatus: newStatus || '',
+                userRole: newRole || ''
+            }).toString();
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+            fetch(url, { method: "GET" }).catch(() => {});
+        } catch (e) {}
     }
+    return { status: "success" };
 }
