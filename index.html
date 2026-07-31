@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=51.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=51.0.0">
+    <link rel="stylesheet" href="css/style.css?v=52.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=52.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -409,6 +409,61 @@
         .btn-modal-save:hover {
             background: linear-gradient(135deg, #0369a1, #1d4ed8) !important;
             box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .btn-primary-custom,
+        #submitDailyBtn,
+        .btn-submit-custom {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            padding: 0.7rem 1.6rem !important;
+            border-radius: 12px !important;
+            font-size: 0.9rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.5rem !important;
+            white-space: nowrap !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+            outline: none !important;
+        }
+
+        .btn-primary-custom:hover,
+        #submitDailyBtn:hover,
+        .btn-submit-custom:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important;
+            border-color: rgba(255, 255, 255, 0.45) !important;
+            box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .btn-secondary-custom {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.7rem 1.6rem !important;
+            border-radius: 12px !important;
+            font-size: 0.9rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            transition: all 0.25s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.4rem !important;
+            white-space: nowrap !important;
+            outline: none !important;
+        }
+
+        .btn-secondary-custom:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
             transform: translateY(-2px) !important;
         }
 
@@ -905,9 +960,8 @@
                                 ระบบบันทึกการเปลี่ยนแปลง Man, Machine, Material, Method, Measurement, Environment เพื่อการวิเคราะห์คุณภาพเชิงลึก
                             </span>
                         </div>
-                        <button class="btn-primary-custom" onclick="openEventModal()" style="display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                            <span>บันทึกเหตุการณ์ 5M1E</span>
+                        <button type="button" class="btn-primary-custom" onclick="openEventModal()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; padding: 0.7rem 1.6rem !important; border-radius: 12px !important; font-size: 0.9rem !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; white-space: nowrap !important; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;">
+                            ➕ บันทึกเหตุการณ์ 5M1E
                         </button>
                     </div>
 
@@ -1079,8 +1133,8 @@
                                 <div class="form-group"><label>อื่นๆ</label><input type="number" id="drOtherDefect" class="form-control" min="0" placeholder="0"></div>
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: flex-end; margin-top: 0.85rem;">
-                            <button type="button" class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="padding: 0.6rem 1.5rem;">
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                            <button type="button" class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; padding: 0.75rem 1.8rem !important; border-radius: 12px !important; font-size: 0.92rem !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; white-space: nowrap !important; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;">
                                 💾 บันทึกข้อมูลทันที
                             </button>
                         </div>
@@ -1400,9 +1454,13 @@
                     <select id="eventRecorderSelect" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required></select>
                 </div>
 
-                <div style="position: sticky; bottom: 0; background: #0b1329; padding-top: 0.75rem; padding-bottom: 0.25rem; border-top: 1px solid rgba(56, 189, 248, 0.2); display: flex; justify-content: flex-end; gap: 0.75rem; z-index: 10;">
-                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: rgba(255, 255, 255, 0.1); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.5rem 1.25rem; border-radius: 20px; font-weight: 600;">ยกเลิก</button>
-                    <button type="submit" class="btn-primary-custom" style="padding: 0.5rem 1.25rem;">💾 บันทึกเหตุการณ์ 5M1E</button>
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.85rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: rgba(255, 255, 255, 0.08) !important; color: #cbd5e1 !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; padding: 0.75rem 1.6rem !important; border-radius: 12px !important; font-size: 0.9rem !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.4rem !important;">
+                        ✖️ ยกเลิก
+                    </button>
+                    <button type="submit" class="btn-primary-custom" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; padding: 0.75rem 1.8rem !important; border-radius: 12px !important; font-size: 0.92rem !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; white-space: nowrap !important; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;">
+                        💾 บันทึกเหตุการณ์ 5M1E
+                    </button>
                 </div>
             </form>
         </div>
@@ -1469,11 +1527,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=51.0.0"></script>
-    <script src="js/auth.js?v=51.0.0"></script>
-    <script src="js/app.js?v=51.0.0"></script>
-    <script src="js/daily-report.js?v=51.0.0"></script>
-    <script src="js/events.js?v=51.0.0"></script>
+    <script src="js/api.js?v=52.0.0"></script>
+    <script src="js/auth.js?v=52.0.0"></script>
+    <script src="js/app.js?v=52.0.0"></script>
+    <script src="js/daily-report.js?v=52.0.0"></script>
+    <script src="js/events.js?v=52.0.0"></script>
 </body>
 
 </html>

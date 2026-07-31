@@ -681,41 +681,25 @@ button, input, textarea, select {
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   padding: 0.75rem 1.6rem !important;
   border-radius: 12px !important;
-  font-size: 0.92rem !important;
+  padding: 0.7rem 1.6rem !important;
+  border-radius: 12px !important;
+  font-size: 0.9rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
   transition: all 0.25s ease !important;
   display: inline-flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 0.4rem !important;
+  white-space: nowrap !important;
+  outline: none !important;
 }
 
+.btn-secondary-custom:hover,
 .btn-modal-cancel:hover {
   background: rgba(239, 68, 68, 0.2) !important;
   color: #f87171 !important;
   border-color: rgba(239, 68, 68, 0.4) !important;
-  transform: translateY(-2px) !important;
-}
-
-.btn-modal-save {
-  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  padding: 0.75rem 1.8rem !important;
-  border-radius: 12px !important;
-  font-size: 0.92rem !important;
-  font-weight: 800 !important;
-  cursor: pointer !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.45rem !important;
-  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
-}
-
-.btn-modal-save:hover {
-  background: linear-gradient(135deg, #0369a1, #1d4ed8) !important;
-  box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
   transform: translateY(-2px) !important;
 }
 
@@ -1199,6 +1183,201 @@ button, input, textarea, select {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: inline-flex !important;
   align-items: center !important;
+    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6 {
+        grid-template-columns: 1fr !important;
+    }
+    .dr-grid-3 .form-group:last-child {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+  }
+  .app-container {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+  .app-sidebar {
+    display: none !important; /* Hidden on mobile; bottom nav is used instead */
+  }
+  .mobile-bottom-nav {
+    display: block !important;
+  }
+  .main-wrapper {
+    padding-bottom: 5.5rem !important; /* Prevent bottom nav overlap */
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .content-body {
+    padding: 1rem 0.65rem !important;
+    gap: 1rem !important;
+    width: 100% !important;
+  }
+  .app-header {
+    padding: 0.6rem 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+  .header-search {
+    width: 130px !important;
+    padding: 0.35rem 0.6rem !important;
+  }
+  .header-search input {
+    font-size: 0.8rem !important;
+  }
+  .section-title-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+  .date-filter-wrap {
+    width: 100% !important;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.6rem !important;
+  }
+  .kpi-card {
+    padding: 0.75rem 0.6rem !important;
+    border-radius: 12px !important;
+  }
+  .kpi-label {
+    font-size: 0.75rem !important;
+  }
+  .kpi-value {
+    font-size: 1.25rem !important;
+  }
+  .kpi-subtext {
+    font-size: 0.7rem !important;
+  }
+  .kpi-icon-box {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 1rem !important;
+  }
+  .chart-card {
+    padding: 1rem 0.75rem !important;
+    border-radius: 14px !important;
+  }
+  .chart-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  .chart-title {
+    font-size: 0.88rem !important;
+  }
+  .chart-container-wrapper {
+    height: 200px !important;
+  }
+  .table-card {
+    padding: 1rem 0.65rem !important;
+    border-radius: 14px !important;
+    overflow-x: auto !important;
+  }
+  .custom-table, .data-table {
+    font-size: 0.8rem !important;
+  }
+  .custom-table th, .custom-table td, .data-table th, .data-table td {
+    padding: 0.5rem 0.4rem !important;
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid-2col {
+    gap: 0.75rem 0.5rem !important;
+  }
+  .defect-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .form-group.full-width {
+    grid-column: span 1 !important;
+  }
+  .modal-box {
+    width: 96% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    border-radius: 20px 20px 0 0 !important;
+    position: fixed;
+    bottom: 0;
+  }
+  .toast-container {
+    bottom: 5rem;
+    right: 0.75rem;
+    left: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .btn-primary-custom {
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.82rem !important;
+  }
+  .status-badge span:not(.status-dot) {
+    display: none !important; /* Hide long status text on tiny screens */
+  }
+  .dr-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Action Buttons Styling for Edit & Delete */
+/* Premium Glassmorphism Action Buttons for Table Rows */
+.action-btn-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  flex-wrap: nowrap !important;
+}
+
+.btn-action-edit {
+  background: rgba(56, 189, 248, 0.14) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  padding: 0.4rem 0.75rem !important;
+  border-radius: 10px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.35rem !important;
+  white-space: nowrap !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.btn-action-edit:hover {
+  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn-action-delete {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  padding: 0.4rem 0.75rem !important;
+  border-radius: 10px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 0.35rem !important;
   white-space: nowrap !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
@@ -1209,5 +1388,73 @@ button, input, textarea, select {
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
   box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* World-Class Glassmorphism & Gradient Buttons */
+.btn-primary-custom,
+.btn-modal-save,
+#submitDailyBtn,
+.btn-submit-custom {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 0.7rem 1.6rem !important;
+  border-radius: 12px !important;
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  white-space: nowrap !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+  outline: none !important;
+}
+
+.btn-primary-custom:hover,
+.btn-modal-save:hover,
+#submitDailyBtn:hover,
+.btn-submit-custom:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn-primary-custom:active,
+.btn-modal-save:active,
+#submitDailyBtn:active,
+.btn-submit-custom:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+.btn-secondary-custom,
+.btn-modal-cancel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 0.7rem 1.6rem !important;
+  border-radius: 12px !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  white-space: nowrap !important;
+  outline: none !important;
+}
+
+.btn-secondary-custom:hover,
+.btn-modal-cancel:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
   transform: translateY(-2px) !important;
 }
