@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=44.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=44.0.0">
+    <link rel="stylesheet" href="css/style.css?v=45.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=45.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -168,6 +168,7 @@
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
             gap: 1.25rem !important;
+            margin-bottom: 1.75rem !important;
         }
 
         .dashboard-grid {
@@ -527,7 +528,7 @@
                     </div>
 
                     <!-- KPI Stat Cards Grid -->
-                    <div class="kpi-grid">
+                    <div class="kpi-grid" style="margin-bottom: 1.75rem !important;">
                         <div class="kpi-card blue">
                             <div class="kpi-info">
                                 <span class="kpi-label">จำนวนการตรวจทั้งหมด</span>
@@ -590,7 +591,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="chart-container-wrapper" style="height: 350px; max-height: 380px; overflow: hidden; position: relative;">
+                            <div class="chart-container-wrapper" style="height: 420px; max-height: 440px; flex-grow: 1; overflow: hidden; position: relative;">
                                 <canvas id="dailyChart"></canvas>
                             </div>
                         </div>
@@ -1329,11 +1330,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=44.0.0"></script>
-    <script src="js/auth.js?v=44.0.0"></script>
-    <script src="js/app.js?v=44.0.0"></script>
-    <script src="js/daily-report.js?v=44.0.0"></script>
-    <script src="js/events.js?v=44.0.0"></script>
+    <script src="js/api.js?v=45.0.0"></script>
+    <script src="js/auth.js?v=45.0.0"></script>
+    <script src="js/app.js?v=45.0.0"></script>
+    <script src="js/daily-report.js?v=45.0.0"></script>
+    <script src="js/events.js?v=45.0.0"></script>
 </body>
 
 </html>

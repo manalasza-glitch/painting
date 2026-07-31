@@ -205,14 +205,22 @@ button, input, textarea, select {
 .chart-container-wrapper {
   position: relative;
   width: 100%;
-  height: 280px !important;
-  max-height: 320px !important;
-  overflow: hidden !important;
+  height: 280px;
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.chart-card.navy-theme {
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .chart-card.navy-theme .chart-container-wrapper {
-  height: 280px !important;
-  max-height: 320px !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 380px !important;
+  max-height: 420px !important;
+  flex-grow: 1 !important;
   overflow: hidden !important;
 }
 
@@ -236,6 +244,7 @@ button, input, textarea, select {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
+  margin-bottom: 1.75rem !important;
 }
 
 .kpi-card {
