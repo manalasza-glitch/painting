@@ -138,29 +138,6 @@ const PaintingAuth = {
         }
     },
 
-    quickDemoLogin() {
-        const demoUser = {
-            employeeId: "ADM-01",
-            displayName: "Mana Subintan",
-            department: "Engineer (วิศวกร)",
-            role: "Super Admin",
-            permissions: ["dashboard.read", "inspection.read", "inspection.write", "daily_report.read", "daily_report.write", "events.read", "events.write", "users.manage", "settings.manage"]
-        };
-        this.currentUser = demoUser;
-        localStorage.setItem("PAINTING_CURRENT_USER", JSON.stringify(demoUser));
-        this.updateUserHeaderUI();
-        this.hideAuthModal();
-        if (typeof showToast === "function") {
-            showToast("เข้าสู่ระบบด่วนสำเร็จ (Super Admin)", "success");
-        }
-        if (typeof renderDashboard === "function") {
-            renderDashboard();
-        }
-        if (typeof renderEventsTab === "function") {
-            renderEventsTab();
-        }
-    },
-
     async handleRegister(event) {
         if (event) event.preventDefault();
         const empId = document.getElementById("regEmployeeId")?.value.trim();
