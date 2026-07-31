@@ -299,7 +299,7 @@ const PaintingAuth = {
                                 <div class="user-avatar">${(u.displayName || u.employeeId || 'U').charAt(0).toUpperCase()}</div>
                                 <div class="user-details">
                                     <h4>${u.displayName || u.employeeId} <small style="color:#64748b;">(${u.employeeId})</small></h4>
-                                    <p>แผนก: ${u.department || '-'} | ล่าสุด: ${u.lastLogin || '-'}</p>
+                                    <p>ตำแหน่ง: ${u.department || '-'} | ล่าสุด: ${u.lastLogin || '-'}</p>
                                     <div style="display: flex; gap: 0.4rem; margin-top: 0.3rem;">
                                         <span class="${roleBadgeClass}">${u.role || 'Inspector'}</span>
                                         <span class="${statusBadgeClass}">${statusText}</span>
