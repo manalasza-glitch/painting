@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=50.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=50.0.0">
+    <link rel="stylesheet" href="css/style.css?v=51.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=51.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -331,6 +331,84 @@
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.3) !important;
             box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .modal-body {
+            padding: 1.25rem 1.5rem !important;
+            overflow-y: auto !important;
+            flex: 1 !important;
+            max-height: calc(85vh - 65px) !important;
+        }
+
+        .modal-box form {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+
+        .total-preview-box {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7)) !important;
+            border: 1px solid rgba(56, 189, 248, 0.4) !important;
+            border-radius: 14px !important;
+            padding: 0.85rem 1.1rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            font-weight: 700 !important;
+            color: #e2e8f0 !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.08) !important;
+        }
+
+        .total-preview-value {
+            font-size: 1.5rem !important;
+            font-weight: 800 !important;
+            color: #38bdf8 !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.6) !important;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.75rem 1.6rem !important;
+            border-radius: 12px !important;
+            font-size: 0.92rem !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            transition: all 0.25s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.4rem !important;
+        }
+
+        .btn-modal-cancel:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .btn-modal-save {
+            background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            padding: 0.75rem 1.8rem !important;
+            border-radius: 12px !important;
+            font-size: 0.92rem !important;
+            font-weight: 800 !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.45rem !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+        }
+
+        .btn-modal-save:hover {
+            background: linear-gradient(135deg, #0369a1, #1d4ed8) !important;
+            box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
             transform: translateY(-2px) !important;
         }
 
@@ -1223,13 +1301,13 @@
                             <input type="number" id="chemical" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
-                        <div class="form-group full-width">
+                        <div class="form-group">
                             <label>🟣 คราบน้ำมัน (Oil)</label>
                             <input type="number" id="oil" class="form-control-custom" value="0" min="0" oninput="calculateTotalDefects()">
                         </div>
 
-                        <div class="form-group full-width">
-                            <div class="total-preview-box">
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <div class="total-preview-box" style="width: 100%;">
                                 <span>🧮 รวมข้อผิดพลาดทั้งหมด:</span>
                                 <span class="total-preview-value" id="modalTotalPreview">0 ชิ้น</span>
                             </div>
@@ -1237,14 +1315,16 @@
 
                         <div class="form-group full-width">
                             <label>💬 หมายเหตุ</label>
-                            <textarea id="note" class="form-control-custom" rows="3" placeholder="ระบุข้อความหรือหมายเหตุเพิ่มเติม..."></textarea>
+                            <textarea id="note" class="form-control-custom" rows="2" placeholder="ระบุข้อความหรือหมายเหตุเพิ่มเติม..."></textarea>
                         </div>
 
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                        <button type="button" style="background: #e2e8f0; color: #475569; border: none; padding: 0.65rem 1.5rem; border-radius: 20px; font-weight: 700; cursor: pointer;" onclick="closeInspectionModal()">ยกเลิก</button>
-                        <button type="submit" class="btn-primary-custom" id="submitBtn">
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.85rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <button type="button" class="btn-modal-cancel" onclick="closeInspectionModal()">
+                            ✖️ ยกเลิก
+                        </button>
+                        <button type="submit" class="btn-modal-save" id="submitBtn">
                             💾 บันทึกข้อมูล
                         </button>
                     </div>
@@ -1389,11 +1469,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=50.0.0"></script>
-    <script src="js/auth.js?v=50.0.0"></script>
-    <script src="js/app.js?v=50.0.0"></script>
-    <script src="js/daily-report.js?v=50.0.0"></script>
-    <script src="js/events.js?v=50.0.0"></script>
+    <script src="js/api.js?v=51.0.0"></script>
+    <script src="js/auth.js?v=51.0.0"></script>
+    <script src="js/app.js?v=51.0.0"></script>
+    <script src="js/daily-report.js?v=51.0.0"></script>
+    <script src="js/events.js?v=51.0.0"></script>
 </body>
 
 </html>

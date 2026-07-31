@@ -655,19 +655,68 @@ button, input, textarea, select {
 .total-preview-box {
   background: #f0f9ff;
   border: 2px dashed var(--accent-cyan);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 800;
-  color: var(--bg-card-navy);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  border-radius: 14px !important;
+  padding: 0.85rem 1.1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-weight: 700 !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.08) !important;
 }
 
 .total-preview-value {
-  font-size: 1.5rem;
-  color: var(--accent-blue);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.6) !important;
+}
+
+.btn-modal-cancel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 0.75rem 1.6rem !important;
+  border-radius: 12px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.btn-modal-cancel:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn-modal-save {
+  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 0.75rem 1.8rem !important;
+  border-radius: 12px !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+}
+
+.btn-modal-save:hover {
+  background: linear-gradient(135deg, #0369a1, #1d4ed8) !important;
+  box-shadow: 0 8px 25px rgba(2, 132, 199, 0.65) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Toast Container */
