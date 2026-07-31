@@ -209,16 +209,15 @@ function closeInspectionModal() {
     }
 }
 
-// Global modal dismiss listeners (Click backdrop or Press ESC)
+// Universal Date & Time Picker Auto-Open Listener
 document.addEventListener("click", (e) => {
-    if (e.target && e.target.classList && e.target.classList.contains("modal-overlay")) {
-        e.target.classList.remove("active");
-    }
-});
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        document.querySelectorAll(".modal-overlay.active").forEach(m => m.classList.remove("active"));
+    const el = e.target;
+    if (el && el.tagName === "INPUT" && (el.type === "date" || el.type === "time" || el.type === "datetime-local")) {
+        if (typeof el.showPicker === "function") {
+            try {
+                el.showPicker();
+            } catch (err) {}
+        }
     }
 });
 

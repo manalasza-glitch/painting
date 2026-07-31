@@ -44,7 +44,10 @@ function renderEventsTab() {
     }
 
     if (dateFilter) {
-        filtered = filtered.filter(e => String(e.date).substring(0, 10) === dateFilter);
+        filtered = filtered.filter(e => {
+            const eDateStr = typeof getStandardISODate === 'function' ? getStandardISODate(e.date || e.timestamp) : String(e.date).substring(0, 10);
+            return eDateStr === dateFilter;
+        });
     }
 
     if (keyword) {

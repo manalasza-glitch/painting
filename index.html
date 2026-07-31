@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=52.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=52.0.0">
+    <link rel="stylesheet" href="css/style.css?v=53.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=53.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -465,6 +465,31 @@
             color: #f87171 !important;
             border-color: rgba(239, 68, 68, 0.4) !important;
             transform: translateY(-2px) !important;
+        }
+
+        input[type="date"],
+        input[type="time"],
+        input[type="datetime-local"] {
+            color-scheme: dark !important;
+            cursor: pointer !important;
+            font-family: inherit !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            cursor: pointer !important;
+            filter: invert(0.85) sepia(100%) saturate(300%) hue-rotate(180deg) !important;
+            opacity: 0.9 !important;
+            padding: 0.25rem !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        input[type="time"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1 !important;
+            background: rgba(56, 189, 248, 0.2) !important;
+            transform: scale(1.15) !important;
         }
 
         .mobile-bottom-nav {
@@ -1029,7 +1054,7 @@
 
                             <div class="form-group" style="margin: 0;">
                                 <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1;">กรองตามวันที่</label>
-                                <input type="date" id="eventDateFilter" class="form-control" onchange="renderEventsTab()">
+                                <input type="date" id="eventDateFilter" class="form-control" onchange="renderEventsTab()" onclick="if(this.showPicker) this.showPicker();" style="color-scheme: dark; cursor: pointer;">
                             </div>
 
                             <div class="form-group" style="margin: 0;">
@@ -1080,7 +1105,7 @@
                         <div class="dr-grid-3">
                             <div class="form-group">
                                 <label>วันที่ (Date)</label>
-                                <input type="date" id="reportDate" class="form-control" required>
+                                <input type="date" id="reportDate" class="form-control" onclick="if(this.showPicker) this.showPicker();" style="color-scheme: dark; cursor: pointer;" required>
                             </div>
                             <div class="form-group">
                                 <label>กะทำงาน (Shift)</label>
@@ -1327,12 +1352,12 @@
                         
                         <div class="form-group">
                             <label>📅 วันที่ตรวจเช็ค</label>
-                            <input type="date" id="date" class="form-control-custom" required>
+                            <input type="date" id="date" class="form-control-custom" onclick="if(this.showPicker) this.showPicker();" style="color-scheme: dark; cursor: pointer;" required>
                         </div>
 
                         <div class="form-group">
                             <label>⏰ เวลาที่ตรวจเช็ค</label>
-                            <input type="time" id="time" class="form-control-custom" required>
+                            <input type="time" id="time" class="form-control-custom" onclick="if(this.showPicker) this.showPicker();" style="color-scheme: dark; cursor: pointer;" required>
                         </div>
 
                         <div class="form-group">
@@ -1401,11 +1426,11 @@
                 <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 0.75rem; gap: 0.75rem;">
                     <div class="form-group">
                         <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">วันที่เกิดเหตุการณ์</label>
-                        <input type="date" id="eventDate" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
+                        <input type="date" id="eventDate" class="form-control" onclick="if(this.showPicker) this.showPicker();" style="padding: 0.4rem 0.6rem; min-height: 38px; color-scheme: dark; cursor: pointer;" required>
                     </div>
                     <div class="form-group">
                         <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">เวลา</label>
-                        <input type="time" id="eventTime" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
+                        <input type="time" id="eventTime" class="form-control" onclick="if(this.showPicker) this.showPicker();" style="padding: 0.4rem 0.6rem; min-height: 38px; color-scheme: dark; cursor: pointer;" required>
                     </div>
                     <div class="form-group">
                         <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">กะทำงาน (Shift)</label>
@@ -1527,11 +1552,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=52.0.0"></script>
-    <script src="js/auth.js?v=52.0.0"></script>
-    <script src="js/app.js?v=52.0.0"></script>
-    <script src="js/daily-report.js?v=52.0.0"></script>
-    <script src="js/events.js?v=52.0.0"></script>
+    <script src="js/api.js?v=53.0.0"></script>
+    <script src="js/auth.js?v=53.0.0"></script>
+    <script src="js/app.js?v=53.0.0"></script>
+    <script src="js/daily-report.js?v=53.0.0"></script>
+    <script src="js/events.js?v=53.0.0"></script>
 </body>
 
 </html>
