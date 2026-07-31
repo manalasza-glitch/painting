@@ -3,18 +3,9 @@ const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCGi9XE6U0RYli
 // Automatically clear legacy sample mock data from browser localStorage
 (function purgeLegacyMockCaches() {
     try {
-        const events = localStorage.getItem("PAINTING_EVENTS_CACHE");
-        if (events && (events.includes("evt_101") || events.includes("ปรับเพิ่มอุณหภูมิตู้อบสี") || events.includes("Sample"))) {
-            localStorage.removeItem("PAINTING_EVENTS_CACHE");
-        }
-        const output = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
-        if (output && (output.includes("Box NMS 4/6 W.") || output.includes("Cover NMS 6 w."))) {
-            localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
-        }
-        const inspection = localStorage.getItem("PAINTING_INSPECTION_CACHE");
-        if (inspection && (inspection.includes("สุ่มตรวจประจำวัน") || inspection.includes("พบคราบสนิมบางชิ้นงาน"))) {
-            localStorage.removeItem("PAINTING_INSPECTION_CACHE");
-        }
+        localStorage.removeItem("PAINTING_INSPECTION_CACHE");
+        localStorage.removeItem("PAINTING_EVENTS_CACHE");
+        localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
     } catch (e) {}
 })();
 
@@ -75,14 +66,29 @@ async function fetchInspectionDataFromAPI() {
         }
 
         const data = await response.json();
+        let records = [];
         if (Array.isArray(data)) {
-            localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(data));
-            return data;
-        } else if (data.status === "error") {
-            console.warn("API Error:", data.message);
-            return getCachedOrSampleData();
+            records = data;
+        } else if (data && Array.isArray(data.inspectionRecords)) {
+            records = data.inspectionRecords;
+        } else if (data && Array.isArray(data.data)) {
+            records = data.data;
+        } else if (data && Array.isArray(data.records)) {
+            records = data.records;
         }
-        return getCachedOrSampleData();
+
+        // Clean out any legacy mock data
+        records = records.filter(item => {
+            const note = String(item.note || '');
+            return !note.includes("สุ่มตรวจประจำวัน") &&
+                   !note.includes("พบคราบสนิมบางชิ้นงาน") &&
+                   !note.includes("มีรอยบุบและสะเก็ดเชื่อม") &&
+                   !note.includes("พบคราบน้ำมันบนพื้นผิว") &&
+                   !note.includes("ทดสอบความหนาชั้นสี");
+        });
+
+        localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(records));
+        return records;
     } catch (err) {
         console.warn("Failed to fetch from Google Apps Script API. Using cached data:", err);
         return getCachedOrSampleData();
@@ -263,61 +269,27 @@ function getCachedOrSampleData() {
     const cached = localStorage.getItem("PAINTING_INSPECTION_CACHE");
     if (cached) {
         try {
-            return JSON.parse(cached);
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                const clean = parsed.filter(item => {
+                    const note = String(item.note || '');
+                    return !note.includes("สุ่มตรวจประจำวัน") &&
+                           !note.includes("พบคราบสนิมบางชิ้นงาน") &&
+                           !note.includes("มีรอยบุบและสะเก็ดเชื่อม") &&
+                           !note.includes("พบคราบน้ำมันบนพื้นผิว") &&
+                           !note.includes("ทดสอบความหนาชั้นสี");
+                });
+                return clean;
+            }
         } catch (e) {
             console.error("Cache parse error", e);
         }
     }
-    return generateSampleData();
+    return [];
 }
 
 function generateSampleData() {
-    const sample = [];
-    const notes = [
-        "สุ่มตรวจประจำวัน ผลการตรวจสอบอยู่ในเกณฑ์มาตรฐาน",
-        "พบคราบสนิมบางชิ้นงาน ดำเนินการล้างน้ำยาทำความสะอาดเพิ่มเติม",
-        "มีรอยบุบและสะเก็ดเชื่อม ดำเนินการแจ้งแผนกเชื่อมเจียรแต่งขอบ",
-        "พบคราบน้ำมันบนพื้นผิว ส่งคืนแผนกเตรียมชิ้นงานรีล้างใหม่",
-        "ทดสอบความหนาชั้นสีผ่านเกณฑ์ปกติ 60-80 ไมครอน",
-        "การตรวจเช็ครอบกะดึก ผลปกติ",
-        "ปรับพารามิเตอร์เครื่องพ่นสีเนื่องจากพบรอยละอองสีบางจุด"
-    ];
-
-    // Generate 1 full month of sample inspection data (July 1 - July 31, 2026)
-    for (let day = 1; day <= 31; day++) {
-        const dd = ('0' + day).slice(-2);
-        const dateStr = `2026-07-${dd}`;
-        
-        // 1 - 2 inspection records per day
-        const recordsPerDay = 1 + (day % 2);
-        for (let r = 0; r < recordsPerDay; r++) {
-            const hour = r === 0 ? "09:30" : "14:15";
-            const fullDate = `${dateStr} ${hour}`;
-            
-            const rust = (day % 3 === 0) ? (2 + (day % 4)) : (day % 5 === 0 ? 1 : 0);
-            const dent = (day % 4 === 0) ? (1 + (day % 3)) : 0;
-            const weld = (day % 2 === 0) ? (2 + (day % 5)) : 1;
-            const chemical = (day % 7 === 0) ? 2 : 0;
-            const oil = (day % 6 === 0) ? 1 : 0;
-            
-            const noteText = notes[(day + r) % notes.length];
-
-            sample.push({
-                rowIndex: sample.length + 2,
-                date: fullDate,
-                timestamp: fullDate,
-                rust: rust,
-                dent: dent,
-                weld: weld,
-                chemical: chemical,
-                oil: oil,
-                note: noteText
-            });
-        }
-    }
-
-    localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(sample));
-    return sample;
+    return [];
 }
 
 // Fetch recorder names list from Cloud Google Sheet (Recorders tab)
@@ -414,62 +386,7 @@ async function fetchDailyReportDataFromAPI() {
 }
 
 function generateSampleOutputDiaryData() {
-    const sample = [];
-    const models = [
-        "Box NMS 4/6 W. 240 mm.",
-        "Door NLC 450 mm.",
-        "BOX 300x400x200",
-        "GLAND PLATE (MEDIUM)",
-        "DOOR PANEL NLC-01",
-        "U-BOX STANDARD",
-        "DOOR PANEL NMS-01",
-        "BOX 400x500x200",
-        "Cover NMS 6 w. 245 mm.",
-        "Cover NLC EZ100 600 mm.",
-        "Flat Door LC 600"
-    ];
-    const recorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
-
-    // Seed full month of July 2026 (2026-07-01 to 2026-07-31) matching sheet tab gid=236266615
-    for (let day = 1; day <= 31; day++) {
-        const dd = ('0' + day).slice(-2);
-        const dateStr = `2026-07-${dd}`;
-        
-        // 2 - 4 production runs per day
-        const runsCount = 2 + (day % 3);
-        for (let r = 0; r < runsCount; r++) {
-            const mIdx = (day + r * 3) % models.length;
-            const model = models[mIdx];
-            const recorder = recorders[(day + r) % recorders.length];
-            
-            // Peak day volume spikes (e.g. July 27)
-            let baseQty = 45 + ((day * 7 + r * 15) % 110);
-            if (day === 27) baseQty = 450 + (r * 120);
-
-            const totalDefect = (day % 4 === 0) ? (1 + (day % 3)) : (day % 2 === 0 ? 1 : 0);
-
-            sample.push({
-                timestamp: `${dateStr} 08:30`,
-                date: dateStr,
-                shift: r % 2 === 0 ? "กะเช้า" : "กะดึก",
-                recorder: recorder,
-                checker: "",
-                model: model,
-                timeSlot: `${8 + r * 2}:00 - ${10 + r * 2}:00`,
-                prodQty: baseQty,
-                dent: totalDefect > 0 ? 1 : 0,
-                colorDrop: 0,
-                thinPaint: totalDefect > 1 ? 1 : 0,
-                thickPaint: 0,
-                waterStain: 0,
-                otherDefect: 0,
-                totalDefect: totalDefect
-            });
-        }
-    }
-
-    localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(sample));
-    return sample;
+    return [];
 }
 
 // Fetch PartModel mapping from Cloud Google Sheet (PartModel sheet tab)

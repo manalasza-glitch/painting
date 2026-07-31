@@ -72,11 +72,12 @@ function setCurrentDateTimeDefaults() {
 window.onload = async () => {
     setCurrentDateTimeDefaults();
 
-    // Auto-clear stale test cache from old v1.0.4 version
     const cacheVer = localStorage.getItem("PAINTING_INSPECTION_CACHE_VER");
-    if (cacheVer !== "1.5.0") {
+    if (cacheVer !== "2.0.0") {
         localStorage.removeItem("PAINTING_INSPECTION_CACHE");
-        localStorage.setItem("PAINTING_INSPECTION_CACHE_VER", "1.5.0");
+        localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
+        localStorage.removeItem("PAINTING_EVENTS_CACHE");
+        localStorage.setItem("PAINTING_INSPECTION_CACHE_VER", "2.0.0");
     }
 
     if (typeof initDailyReportForm === 'function') {
