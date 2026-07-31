@@ -515,10 +515,10 @@ async function fetchEventsFromAPI() {
             if (response.ok) {
                 const res = await response.json();
                 if (res.status === "success" && Array.isArray(res.data)) {
-                    // Update cache with real backend data (clears local cache if backend is empty)
-                    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(res.data));
-                    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
-                    return res.data;
+                    // Filter out legacy mock sample items
+                    const realData = res.data.filter(evt => !String(evt.id || '').startsWith("evt_10") && String(evt.title || '') !== "ปรับเพิ่มอุณหภูมิตู้อบสี");
+                    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(realData));
+                    return realData;
                 }
             }
         } catch (e) {
@@ -530,7 +530,12 @@ async function fetchEventsFromAPI() {
     if (cached !== null) {
         try {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) return parsed;
+            if (Array.isArray(parsed)) {
+                // Filter out legacy mock sample items from local storage
+                const realUserEvents = parsed.filter(evt => !String(evt.id || '').startsWith("evt_10") && String(evt.title || '') !== "ปรับเพิ่มอุณหภูมิตู้อบสี");
+                localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(realUserEvents));
+                return realUserEvents;
+            }
         } catch (e) {}
     }
 
