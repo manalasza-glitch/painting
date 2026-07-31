@@ -135,6 +135,7 @@ function switchTab(tabId, element) {
     // Hide all tab pages & remove active class
     document.querySelectorAll(".tab-page").forEach(page => {
         page.classList.remove("active");
+        page.style.display = "none";
     });
     
     // Remove active class from all nav items (sidebar links & mobile bottom nav items)
@@ -144,6 +145,7 @@ function switchTab(tabId, element) {
     const targetTab = document.getElementById(tabId);
     if (targetTab) {
         targetTab.classList.add("active");
+        targetTab.style.display = "block";
     }
 
     // Highlight all matching navigation items (both desktop & mobile)

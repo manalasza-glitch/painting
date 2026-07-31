@@ -49,6 +49,14 @@ html, body {
   box-sizing: border-box;
 }
 
+.tab-page {
+  display: none;
+}
+
+.tab-page.active {
+  display: block !important;
+}
+
 ul, ol {
   list-style: none;
   padding: 0;
