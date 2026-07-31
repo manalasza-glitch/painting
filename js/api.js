@@ -605,3 +605,109 @@ async function deleteEventFromAPI(id, rowIndex, title) {
     }
     return { status: "success" };
 }
+
+// ==========================================
+// Authentication & User Management API Helpers
+// ==========================================
+
+async function checkBootstrapAPI() {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return { isBootstrap: false };
+    try {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=checkBootstrap';
+        const res = await fetch(url);
+        const data = await res.json();
+        return data || { isBootstrap: false };
+    } catch (e) {
+        return { isBootstrap: false };
+    }
+}
+
+async function loginUserAPI(employeeId, passwordHash) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return { status: "error", message: "ไม่พบการเชื่อมต่อ API" };
+    try {
+        const queryParams = new URLSearchParams({
+            action: 'login',
+            employeeId: employeeId,
+            passwordHash: passwordHash
+        }).toString();
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+        const res = await fetch(url);
+        const json = await res.json();
+        return json;
+    } catch (e) {
+        console.error("loginUserAPI Error:", e);
+        return { status: "error", message: "ไม่สามารถเข้าสู่ระบบได้ กรุณาตรวจสอบอินเทอร์เน็ต" };
+    }
+}
+
+async function registerUserAPI(userData) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return { status: "error", message: "ไม่พบการเชื่อมต่อ API" };
+    try {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=register';
+        const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "register",
+                ...userData
+            })
+        });
+        const json = await res.json();
+        return json;
+    } catch (e) {
+        // Fallback GET parameter attempt
+        try {
+            const query = new URLSearchParams({
+                action: 'register',
+                employeeId: userData.employeeId,
+                displayName: userData.displayName,
+                department: userData.department,
+                passwordHash: userData.passwordHash
+            }).toString();
+            const getUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query;
+            const fallbackRes = await fetch(getUrl);
+            return await fallbackRes.json();
+        } catch (fErr) {
+            console.error("registerUserAPI Error:", fErr);
+            return { status: "error", message: "เกิดข้อผิดพลาดในการลงทะเบียน" };
+        }
+    }
+}
+
+async function getUsersAPI() {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return [];
+    try {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json && json.status === "success" && Array.isArray(json.users)) {
+            return json.users;
+        }
+    } catch (e) {
+        console.warn("getUsersAPI Error:", e);
+    }
+    return [];
+}
+
+async function updateUserStatusAPI(employeeId, newStatus, newRole) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return { status: "error" };
+    try {
+        const queryParams = new URLSearchParams({
+            action: 'updateUserStatus',
+            employeeId: employeeId,
+            userStatus: newStatus || '',
+            userRole: newRole || ''
+        }).toString();
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
+        const res = await fetch(url);
+        return await res.json();
+    } catch (e) {
+        console.warn("updateUserStatusAPI Error:", e);
+        return { status: "error" };
+    }
+}

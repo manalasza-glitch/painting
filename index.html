@@ -23,6 +23,7 @@
 
     <!-- Custom CSS File -->
     <link rel="stylesheet" href="css/style.css?v=35.0.4">
+    <link rel="stylesheet" href="css/auth.css?v=2.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -222,6 +223,75 @@
 
 <body>
 
+    <!-- Authentication Glassmorphism Modal Shell -->
+    <section class="auth-shell" id="authShell" hidden>
+        <div class="auth-card">
+            <div class="auth-brand">
+                <img src="assets/logo.png" alt="Painting Inspection Logo">
+                <h1>Painting Quality</h1>
+                <p>Inspection & Management System</p>
+            </div>
+
+            <div id="authSetupNotice" class="auth-setup-notice" style="display: none;"></div>
+            <div id="authMessage" class="auth-message" hidden></div>
+
+            <div class="auth-tabs">
+                <button type="button" class="active" id="authTabLogin" onclick="PaintingAuth.switchTab('login')">เข้าสู่ระบบ</button>
+                <button type="button" id="authTabRegister" onclick="PaintingAuth.switchTab('register')">สมัครใช้งาน</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="authLoginForm" class="auth-form" onsubmit="PaintingAuth.handleLogin(event)">
+                <div>
+                    <label for="loginEmployeeId">รหัสพนักงาน <span>(Employee ID)</span></label>
+                    <input type="text" id="loginEmployeeId" placeholder="เช่น EMP-001 หรือ ADM-01" required autocomplete="username">
+                </div>
+
+                <div>
+                    <label for="loginPassword">รหัสผ่าน <span>(Password)</span></label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="auth-submit" id="loginSubmitBtn">เข้าสู่ระบบ</button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="authRegisterForm" class="auth-form" style="display: none;" onsubmit="PaintingAuth.handleRegister(event)">
+                <div>
+                    <label for="regEmployeeId">รหัสพนักงาน <span>(Employee ID)</span></label>
+                    <input type="text" id="regEmployeeId" placeholder="ระบุรหัสพนักงานของคุณ" required>
+                </div>
+
+                <div>
+                    <label for="regDisplayName">ชื่อ-นามสกุล <span>(Full Name)</span></label>
+                    <input type="text" id="regDisplayName" placeholder="ระบุชื่อ-นามสกุล" required>
+                </div>
+
+                <div>
+                    <label for="regDepartment">แผนก / สายงาน <span>(Department)</span></label>
+                    <select id="regDepartment" required>
+                        <option value="แผนกพ่นสี (Painting Line)">แผนกพ่นสี (Painting Line)</option>
+                        <option value="แผนกควบคุมคุณภาพ (QC/QA)">แผนกควบคุมคุณภาพ (QC/QA)</option>
+                        <option value="แผนกวางแผนและวิศวกรรม (PE/IE)">แผนกวางแผนและวิศวกรรม (PE/IE)</option>
+                        <option value="ผู้บริหาร / หัวหน้างาน (Management)">ผู้บริหาร / หัวหน้างาน (Management)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="regPassword">ตั้งรหัสผ่าน <span>(อย่างน้อย 6 ตัวอักษร)</span></label>
+                    <input type="password" id="regPassword" placeholder="••••••••" required autocomplete="new-password">
+                </div>
+
+                <div>
+                    <label for="regPasswordConfirm">ยืนยันรหัสผ่าน <span>(Confirm Password)</span></label>
+                    <input type="password" id="regPasswordConfirm" placeholder="••••••••" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="auth-submit" id="regSubmitBtn">ส่งข้อมูลสมัครสมาชิก</button>
+            </form>
+        </div>
+    </section>
+
     <div class="app-container">
 
         <!-- Sidebar Navigation (Desktop & Tablet) -->
@@ -277,7 +347,17 @@
                     <input type="text" id="globalSearch" placeholder="ค้นหาข้อมูล..." onkeyup="filterHistoryTable()">
                 </div>
 
-                <div class="header-actions">
+                <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <!-- User Profile Chip -->
+                    <div class="user-chip" id="currentUserChip" style="display: flex; align-items: center; gap: 0.5rem; background: #ffffff; padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(15,23,42,0.05);">
+                        <div id="userHeaderAvatar" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">U</div>
+                        <div style="display: flex; flex-direction: column; font-size: 0.78rem;">
+                            <span id="userHeaderName" style="font-weight: 700; color: #0f172a; line-height: 1.1;">ผู้ใช้งาน</span>
+                            <span id="userHeaderRole" style="font-size: 0.7rem; color: #64748b; font-weight: 600;">-</span>
+                        </div>
+                        <button type="button" onclick="PaintingAuth.logout()" title="ออกจากระบบ" style="background: transparent; border: none; color: #ef4444; font-weight: 700; cursor: pointer; padding: 0 0.2rem; font-size: 0.9rem; margin-left: 0.2rem;">🚪</button>
+                    </div>
+
                     <div class="status-badge" id="statusBadge">
                         <span class="status-dot"></span>
                         <span id="statusText">เชื่อมต่อระบบแล้ว</span>
@@ -1108,6 +1188,7 @@
 
     <!-- JS Files -->
     <script src="js/api.js?v=36.0.0"></script>
+    <script src="js/auth.js?v=2.0.0"></script>
     <script src="js/app.js?v=36.0.6"></script>
     <script src="js/daily-report.js?v=36.1.1"></script>
     <script src="js/events.js?v=36.0.0"></script>

@@ -278,10 +278,139 @@ function doPost(e) {
   }
 }
 
+function getOrCreateUsersSheet(ss) {
+  let uSheet = ss.getSheetByName("Users");
+  if (!uSheet) {
+    uSheet = ss.insertSheet("Users");
+    uSheet.appendRow(["EmployeeID", "DisplayName", "Department", "PasswordHash", "Role", "Status", "CreatedAt", "LastLogin"]);
+    SpreadsheetApp.flush();
+  }
+  return uSheet;
+}
+
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
+
+    // Handle checkBootstrap
+    if (action === "checkBootstrap") {
+      let uSheet = getOrCreateUsersSheet(ss);
+      const rows = uSheet.getLastRow();
+      return ContentService.createTextOutput(JSON.stringify({ isBootstrap: rows <= 1 })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle login
+    if (action === "login") {
+      let uSheet = getOrCreateUsersSheet(ss);
+      const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
+      const passHash = String((e && e.parameter && e.parameter.passwordHash) || "").trim();
+
+      const values = uSheet.getDataRange().getValues();
+      for (let i = 1; i < values.length; i++) {
+        const rowEmpId = String(values[i][0] || "").trim();
+        const rowHash = String(values[i][3] || "").trim();
+        if (rowEmpId === empId) {
+          if (rowHash !== passHash) {
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" })).setMimeType(ContentService.MimeType.JSON);
+          }
+          const status = String(values[i][5] || "Pending").trim();
+          if (status === "Pending") {
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณกำลังรอการอนุมัติสิทธิ์จากผู้ดูแลระบบ" })).setMimeType(ContentService.MimeType.JSON);
+          }
+          if (status === "Disabled") {
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณถูกระงับการใช้งาน" })).setMimeType(ContentService.MimeType.JSON);
+          }
+
+          // Update Last Login
+          const nowStr = formatDateStr(new Date(), true);
+          uSheet.getRange(i + 1, 8).setValue(nowStr);
+          SpreadsheetApp.flush();
+
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "success",
+            user: {
+              employeeId: values[i][0],
+              displayName: values[i][1],
+              department: values[i][2],
+              role: values[i][4],
+              status: values[i][5]
+            }
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle register
+    if (action === "register") {
+      let uSheet = getOrCreateUsersSheet(ss);
+      const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
+      const name = String((e && e.parameter && e.parameter.displayName) || "").trim();
+      const dept = String((e && e.parameter && e.parameter.department) || "แผนกพ่นสี").trim();
+      const passHash = String((e && e.parameter && e.parameter.passwordHash) || "").trim();
+
+      const values = uSheet.getDataRange().getValues();
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][0]).trim() === empId) {
+          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+
+      const isFirstUser = values.length <= 1;
+      const role = isFirstUser ? "Super Admin" : "Inspector";
+      const status = isFirstUser ? "Active" : "Pending";
+      const nowStr = formatDateStr(new Date(), true);
+
+      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, ""]);
+      SpreadsheetApp.flush();
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        isSuperAdmin: isFirstUser,
+        role: role,
+        userStatus: status
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle getUsers
+    if (action === "getUsers") {
+      let uSheet = getOrCreateUsersSheet(ss);
+      const values = uSheet.getDataRange().getValues();
+      if (!values || values.length <= 1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", users: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+      values.shift();
+      const usersList = values.map(r => ({
+        employeeId: String(r[0] || ""),
+        displayName: String(r[1] || ""),
+        department: String(r[2] || ""),
+        role: String(r[4] || "Inspector"),
+        status: String(r[5] || "Pending"),
+        createdAt: formatDateStr(r[6], true),
+        lastLogin: formatDateStr(r[7], true)
+      }));
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", users: usersList })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle updateUserStatus
+    if (action === "updateUserStatus") {
+      let uSheet = getOrCreateUsersSheet(ss);
+      const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
+      const newStatus = String((e && e.parameter && e.parameter.userStatus) || "").trim();
+      const newRole = String((e && e.parameter && e.parameter.userRole) || "").trim();
+
+      const values = uSheet.getDataRange().getValues();
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][0]).trim() === empId) {
+          if (newStatus) uSheet.getRange(i + 1, 6).setValue(newStatus);
+          if (newRole) uSheet.getRange(i + 1, 5).setValue(newRole);
+          SpreadsheetApp.flush();
+          return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "User not found" })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // Handle submitDailyReport via GET (fallback)
     if (action === "submitDailyReport") {
