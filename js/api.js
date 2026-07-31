@@ -497,17 +497,17 @@ async function fetchEventsFromAPI() {
             if (response.ok) {
                 const res = await response.json();
                 if (res.status === "success" && Array.isArray(res.data)) {
+                    // Update cache with real backend data (clears local cache if backend is empty)
                     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(res.data));
                     localStorage.setItem("PAINTING_EVENTS_INIT", "true");
                     return res.data;
                 }
             }
         } catch (e) {
-            console.warn("Failed to fetch 5M1E events from cloud API, using cache:", e);
+            console.warn("Failed to fetch 5M1E events from cloud API, checking cache:", e);
         }
     }
 
-    const isInit = localStorage.getItem("PAINTING_EVENTS_INIT");
     const cached = localStorage.getItem("PAINTING_EVENTS_CACHE");
     if (cached !== null) {
         try {
@@ -516,11 +516,7 @@ async function fetchEventsFromAPI() {
         } catch (e) {}
     }
 
-    if (isInit === "true") {
-        return [];
-    }
-
-    return generateSampleEventsData();
+    return [];
 }
 
 function generateSampleEventsData() {
