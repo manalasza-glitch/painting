@@ -581,7 +581,8 @@ function renderDonutChart(defectsCategory, grandTotal) {
             datasets: [{
                 data: defectsCategory.map(c => c.val),
                 backgroundColor: defectsCategory.map(c => c.color),
-                borderWidth: 0,
+                borderWidth: 2,
+                borderColor: '#0f172a',
                 hoverOffset: 6
             }]
         },
@@ -590,11 +591,19 @@ function renderDonutChart(defectsCategory, grandTotal) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'right',
-                    labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 12 }
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.raw || 0;
+                            const pct = grandTotal > 0 ? Math.round((val / grandTotal) * 100) : 0;
+                            return ` ${context.label}: ${val} ชิ้น (${pct}%)`;
+                        }
+                    }
                 }
             },
-            cutout: '70%'
+            cutout: '68%'
         }
     });
 }
@@ -606,13 +615,16 @@ function renderSeverityBars(defectsCategory, grandTotal) {
     container.innerHTML = defectsCategory.map(item => {
         const pct = grandTotal > 0 ? Math.round((item.val / grandTotal) * 100) : 0;
         return `
-            <div class="severity-item">
-                <div class="severity-info">
-                    <span>${item.name}</span>
-                    <span>${item.val} ชิ้น (${pct}%)</span>
+            <div class="severity-item" style="margin-bottom: 0.65rem;">
+                <div class="severity-info" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 700; color: #f8fafc; margin-bottom: 0.35rem;">
+                    <span style="display: flex; align-items: center; gap: 0.45rem;">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${item.color}; display: inline-block; box-shadow: 0 0 8px ${item.color};"></span>
+                        ${item.name}
+                    </span>
+                    <span style="color: #38bdf8; font-weight: 800;">${item.val} <span style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">ชิ้น (${pct}%)</span></span>
                 </div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width: ${pct}%; background-color: ${item.color};"></div>
+                <div class="progress-track" style="height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="progress-fill" style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, ${item.color}, ${item.color}dd); border-radius: 8px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px ${item.color}88;"></div>
                 </div>
             </div>
         `;

@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=43.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=43.0.0">
+    <link rel="stylesheet" href="css/style.css?v=44.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=44.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -186,38 +186,53 @@
         }
 
         .kpi-card {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)) !important;
-            border: 1px solid rgba(56, 189, 248, 0.25) !important;
-            border-radius: 16px;
-            padding: 1.25rem;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.85)) !important;
+            border: 1px solid rgba(56, 189, 248, 0.2) !important;
+            border-radius: 18px;
+            padding: 1.25rem 1.35rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
             color: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.15) !important;
+        }
+
+        .kpi-card.blue { border-top: 3.5px solid #2563eb !important; }
+        .kpi-card.teal { border-top: 3.5px solid #10b981 !important; }
+        .kpi-card.cyan { border-top: 3.5px solid #38bdf8 !important; }
+        .kpi-card.amber { border-top: 3.5px solid #f59e0b !important; }
 
         .kpi-info {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.2rem;
+            flex-grow: 1;
         }
 
         .kpi-label {
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.82rem;
+            font-weight: 700;
             color: #94a3b8;
+            letter-spacing: 0.3px;
         }
 
         .kpi-value {
             font-size: 1.85rem;
             font-weight: 800;
             color: #f8fafc;
-            line-height: 1.2;
+            line-height: 1.25;
         }
 
         .kpi-subtext {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             color: #64748b;
         }
@@ -230,17 +245,18 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            border: 1px solid transparent;
         }
 
-        .kpi-card.blue .kpi-icon-box { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
-        .kpi-card.teal .kpi-icon-box { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-        .kpi-card.cyan .kpi-icon-box { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
-        .kpi-card.amber .kpi-icon-box { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .kpi-card.blue .kpi-icon-box { background: rgba(37, 99, 235, 0.18); color: #60a5fa; border-color: rgba(37, 99, 235, 0.3); box-shadow: 0 0 12px rgba(37, 99, 235, 0.2); }
+        .kpi-card.teal .kpi-icon-box { background: rgba(16, 185, 129, 0.18); color: #34d399; border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 12px rgba(16, 185, 129, 0.2); }
+        .kpi-card.cyan .kpi-icon-box { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); }
+        .kpi-card.amber .kpi-icon-box { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
 
-        .kpi-card.blue .kpi-value { color: #60a5fa; }
-        .kpi-card.teal .kpi-value { color: #34d399; }
-        .kpi-card.cyan .kpi-value { color: #38bdf8; }
-        .kpi-card.amber .kpi-value { color: #fbbf24; }
+        .kpi-card.blue .kpi-value { color: #60a5fa; text-shadow: 0 0 15px rgba(96, 165, 250, 0.3); }
+        .kpi-card.teal .kpi-value { color: #34d399; text-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
+        .kpi-card.cyan .kpi-value { color: #38bdf8; text-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .kpi-card.amber .kpi-value { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
 
         .section-title-bar {
             display: flex;
@@ -516,10 +532,10 @@
                             <div class="kpi-info">
                                 <span class="kpi-label">จำนวนการตรวจทั้งหมด</span>
                                 <span class="kpi-value" id="kpiTotalInspections">0</span>
-                                <span class="kpi-subtext">↑ รายการทั้งหมด</span>
+                                <span class="kpi-subtext" style="color: #60a5fa; font-weight: 700;">↑ รายการทั้งหมด</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
                             </div>
                         </div>
 
@@ -527,21 +543,21 @@
                             <div class="kpi-info">
                                 <span class="kpi-label">ของเสียรวมทั้งหมด</span>
                                 <span class="kpi-value" id="kpiTotalDefects">0</span>
-                                <span class="kpi-subtext" id="kpiAvgDefectPerJob">เฉลี่ย 0 ชิ้น/งาน</span>
+                                <span class="kpi-subtext" id="kpiAvgDefectPerJob" style="color: #34d399; font-weight: 700;">เฉลี่ย 0 ชิ้น/งาน</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                             </div>
                         </div>
 
                         <div class="kpi-card cyan">
-                            <div class="kpi-info">
+                            <div class="kpi-info" style="max-width: calc(100% - 54px);">
                                 <span class="kpi-label">ปัญหาที่พบมากที่สุด</span>
-                                <span class="kpi-value" id="kpiTopDefect" style="font-size: 1.35rem;">-</span>
-                                <span class="kpi-subtext" id="kpiTopDefectCount">0 ชิ้น</span>
+                                <span class="kpi-value" id="kpiTopDefect" style="font-size: 1.1rem; color: #38bdf8; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-top: 0.15rem; margin-bottom: 0.15rem;" title="-">-</span>
+                                <span class="kpi-subtext" id="kpiTopDefectCount" style="color: #38bdf8; font-weight: 700;">0 ชิ้น</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v8.99h9c-.53-4.74-4.26-8.47-9-8.99zm0 11.01V22c4.74-.53 8.47-4.26 9-8.99h-9z"/></svg>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v8.99h9c-.53-4.74-4.26-8.47-9-8.99zm0 11.01V22c4.74-.53 8.47-4.26 9-8.99h-9z"/></svg>
                             </div>
                         </div>
 
@@ -549,10 +565,10 @@
                             <div class="kpi-info">
                                 <span class="kpi-label">อัตราของเสียวันนี้</span>
                                 <span class="kpi-value" id="kpiTodayDefects">0</span>
-                                <span class="kpi-subtext" id="kpiTodayDate">วันนี้</span>
+                                <span class="kpi-subtext" id="kpiTodayDate" style="color: #fbbf24; font-weight: 700;">วันนี้</span>
                             </div>
                             <div class="kpi-icon-box">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
                             </div>
                         </div>
                     </div>
@@ -574,7 +590,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="chart-container-wrapper" style="height: 280px; max-height: 300px; overflow: hidden; position: relative;">
+                            <div class="chart-container-wrapper" style="height: 350px; max-height: 380px; overflow: hidden; position: relative;">
                                 <canvas id="dailyChart"></canvas>
                             </div>
                         </div>
@@ -583,14 +599,14 @@
                         <div class="chart-card">
                             <div class="chart-header">
                                 <div class="chart-title">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0e3a60"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
                                     <span>สัดส่วนของเสีย (Defect Breakdown)</span>
                                 </div>
                                 <button class="btn-chart-expand" onclick="openChartFullscreen('donutChart', 'สัดส่วนของเสียแยกตามประเภท')" title="ขยายเต็มหน้าจอ">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                                 </button>
                             </div>
-                            <div class="chart-container-wrapper" style="height: 200px;">
+                            <div class="chart-container-wrapper" style="height: 160px; max-height: 180px; overflow: hidden; position: relative;">
                                 <canvas id="donutChart"></canvas>
                             </div>
                             
@@ -1313,11 +1329,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=43.0.0"></script>
-    <script src="js/auth.js?v=43.0.0"></script>
-    <script src="js/app.js?v=43.0.0"></script>
-    <script src="js/daily-report.js?v=43.0.0"></script>
-    <script src="js/events.js?v=43.0.0"></script>
+    <script src="js/api.js?v=44.0.0"></script>
+    <script src="js/auth.js?v=44.0.0"></script>
+    <script src="js/app.js?v=44.0.0"></script>
+    <script src="js/daily-report.js?v=44.0.0"></script>
+    <script src="js/events.js?v=44.0.0"></script>
 </body>
 
 </html>
