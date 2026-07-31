@@ -550,25 +550,7 @@ async function deleteEventFromAPI(id, rowIndex, title) {
 // ==========================================
 
 async function checkBootstrapAPI() {
-    const baseUrl = getApiUrl();
-    if (!baseUrl) return { isBootstrap: true };
-    try {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=checkBootstrap';
-        const res = await fetch(url);
-        if (res.ok) {
-            const data = await res.json();
-            if (data && typeof data.isBootstrap === 'boolean') return data;
-        }
-    } catch (e) {}
-
-    // Check local fallback users count
-    try {
-        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        const users = cached ? JSON.parse(cached) : [];
-        return { isBootstrap: users.length === 0 };
-    } catch (e) {
-        return { isBootstrap: true };
-    }
+    return { isBootstrap: false };
 }
 
 async function loginUserAPI(employeeId, passwordHash) {

@@ -80,18 +80,11 @@ const PaintingAuth = {
 
     async checkFirstTimeBootstrap() {
         const noticeEl = document.getElementById("authSetupNotice");
-        if (!noticeEl) return;
-
-        if (typeof checkBootstrapAPI === "function") {
-            const res = await checkBootstrapAPI();
-            if (res && res.isBootstrap) {
-                noticeEl.innerHTML = `⭐ <b>ระบบใหม่ยังไม่มีผู้ดูแลระบบ</b>: ผู้สมัครใช้งานคนแรกจะได้รับสิทธิ์เป็น <b>Super Admin</b> ทันที`;
-                noticeEl.style.display = "block";
-                this.switchTab("register");
-            } else {
-                noticeEl.style.display = "none";
-            }
+        if (noticeEl) {
+            noticeEl.style.display = "none";
+            noticeEl.setAttribute("hidden", "true");
         }
+        this.switchTab("login");
     },
 
     async handleLogin(event) {
