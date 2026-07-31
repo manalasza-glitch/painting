@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=38.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=38.0.0">
+    <link rel="stylesheet" href="css/style.css?v=39.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=39.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -349,13 +349,13 @@
 
                 <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
                     <!-- User Profile Chip -->
-                    <div class="user-chip" id="currentUserChip" style="display: flex; align-items: center; gap: 0.5rem; background: #ffffff; padding: 0.3rem 0.75rem; border-radius: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(15,23,42,0.05);">
+                    <div class="user-chip" id="currentUserChip" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(56, 189, 248, 0.12); padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                         <div id="userHeaderAvatar" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">U</div>
                         <div style="display: flex; flex-direction: column; font-size: 0.78rem;">
-                            <span id="userHeaderName" style="font-weight: 700; color: #0f172a; line-height: 1.1;">ผู้ใช้งาน</span>
-                            <span id="userHeaderRole" style="font-size: 0.7rem; color: #64748b; font-weight: 600;">-</span>
+                            <span id="userHeaderName" style="font-weight: 700; color: #f8fafc; line-height: 1.1;">ผู้ใช้งาน</span>
+                            <span id="userHeaderRole" style="font-size: 0.7rem; color: #38bdf8; font-weight: 600;">-</span>
                         </div>
-                        <button type="button" onclick="PaintingAuth.logout()" title="ออกจากระบบ" style="background: transparent; border: none; color: #ef4444; font-weight: 700; cursor: pointer; padding: 0 0.2rem; font-size: 0.9rem; margin-left: 0.2rem;">🚪</button>
+                        <button type="button" onclick="PaintingAuth.logout()" title="ออกจากระบบ" style="background: transparent; border: none; color: #f87171; font-weight: 700; cursor: pointer; padding: 0 0.2rem; font-size: 0.9rem; margin-left: 0.2rem;">🚪</button>
                     </div>
 
                     <div class="status-badge" id="statusBadge">
@@ -633,42 +633,42 @@
 
                     <!-- 5M1E Category KPI Summary Grid -->
                     <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div class="kpi-card" style="border-left: 4px solid #3b82f6; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #3b82f6;">
                             <div class="kpi-info">
                                 <span class="kpi-label">👨‍🌾 Man (คน)</span>
                                 <span class="kpi-value" id="kpiEvt_Man" style="color: #3b82f6;">0</span>
                                 <span class="kpi-subtext">รายการเปลี่ยนแปลง</span>
                             </div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #ef4444; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #ef4444;">
                             <div class="kpi-info">
                                 <span class="kpi-label">⚙️ Machine (เครื่อง)</span>
                                 <span class="kpi-value" id="kpiEvt_Machine" style="color: #ef4444;">0</span>
                                 <span class="kpi-subtext">รายการเปลี่ยนแปลง</span>
                             </div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #f59e0b; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
                             <div class="kpi-info">
                                 <span class="kpi-label">📦 Material (สี/วัตถุดิบ)</span>
                                 <span class="kpi-value" id="kpiEvt_Material" style="color: #f59e0b;">0</span>
                                 <span class="kpi-subtext">รายการเปลี่ยนแปลง</span>
                             </div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #10b981; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #10b981;">
                             <div class="kpi-info">
                                 <span class="kpi-label">📐 Method (วิธี)</span>
                                 <span class="kpi-value" id="kpiEvt_Method" style="color: #10b981;">0</span>
                                 <span class="kpi-subtext">รายการเปลี่ยนแปลง</span>
                             </div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #8b5cf6; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #8b5cf6;">
                             <div class="kpi-info">
                                 <span class="kpi-label">🧪 Measurement (การวัด)</span>
                                 <span class="kpi-value" id="kpiEvt_Measurement" style="color: #8b5cf6;">0</span>
                                 <span class="kpi-subtext">รายการเปลี่ยนแปลง</span>
                             </div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #06b6d4; background: #ffffff;">
+                        <div class="kpi-card" style="border-left: 4px solid #06b6d4;">
                             <div class="kpi-info">
                                 <span class="kpi-label">🌍 Environment (อากาศ)</span>
                                 <span class="kpi-value" id="kpiEvt_Environment" style="color: #06b6d4;">0</span>
@@ -681,7 +681,7 @@
                     <div class="table-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: center;">
                             <div class="form-group" style="margin: 0;">
-                                <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a;">กรองตามหมวดหมู่ 5M1E</label>
+                                <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1;">กรองตามหมวดหมู่ 5M1E</label>
                                 <select id="eventCategoryFilter" class="form-control" onchange="renderEventsTab()">
                                     <option value="">ทั้งหมด (All Categories)</option>
                                     <option value="Man">👨‍🌾 Man (คน / พนักงาน)</option>
@@ -694,12 +694,12 @@
                             </div>
 
                             <div class="form-group" style="margin: 0;">
-                                <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a;">กรองตามวันที่</label>
+                                <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1;">กรองตามวันที่</label>
                                 <input type="date" id="eventDateFilter" class="form-control" onchange="renderEventsTab()">
                             </div>
 
                             <div class="form-group" style="margin: 0;">
-                                <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a;">ค้นหาหัวข้อ / รายละเอียด</label>
+                                <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1;">ค้นหาหัวข้อ / รายละเอียด</label>
                                 <input type="text" id="eventSearchInput" class="form-control" placeholder="พิมพ์คำค้นหา..." onkeyup="renderEventsTab()">
                             </div>
                         </div>
@@ -1064,15 +1064,15 @@
             <form id="eventForm" onsubmit="handleEventFormSubmit(event)" style="padding: 1rem 1.25rem;">
                 <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 0.75rem; gap: 0.75rem;">
                     <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">วันที่เกิดเหตุการณ์</label>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">วันที่เกิดเหตุการณ์</label>
                         <input type="date" id="eventDate" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">เวลา</label>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">เวลา</label>
                         <input type="time" id="eventTime" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">กะทำงาน (Shift)</label>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">กะทำงาน (Shift)</label>
                         <select id="eventShift" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;">
                             <option value="กะเช้า">กะเช้า (Day)</option>
                             <option value="กะดึก">กะดึก (Night)</option>
@@ -1082,7 +1082,7 @@
 
                 <div class="form-grid" style="margin-bottom: 0.75rem; gap: 0.75rem;">
                     <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">หมวดหมู่ 5M1E</label>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">หมวดหมู่ 5M1E</label>
                         <select id="eventCategory" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required>
                             <option value="Man">👨‍🌾 Man (คน / พนักงาน)</option>
                             <option value="Machine" selected>⚙️ Machine (เครื่องจักร / อุปกรณ์)</option>
@@ -1093,33 +1093,33 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">ขั้นตอน / สายการผลิต (Process)</label>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">ขั้นตอน / สายการผลิต (Process)</label>
                         <input type="text" id="eventProcess" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" placeholder="เช่น เตาอบสี, ห้องพ่นสีผง" required>
                     </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0.75rem;">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">หัวข้อการเปลี่ยนแปลง (Title)</label>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">หัวข้อการเปลี่ยนแปลง (Title)</label>
                     <input type="text" id="eventTitle" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" placeholder="ระบุหัวข้อสั้นๆ เช่น ปรับเพิ่มอุณหภูมิตู้อบ" required>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0.75rem;">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">รายละเอียดการเปลี่ยนแปลง (Detail)</label>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">รายละเอียดการเปลี่ยนแปลง (Detail)</label>
                     <textarea id="eventDetail" class="form-control" rows="2" style="padding: 0.4rem 0.6rem; min-height: 50px;" placeholder="ระบุสาเหตุหรือรายละเอียดการเปลี่ยนแปลง..." required></textarea>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0.75rem;">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">การรับมือ / การดำเนินการแก้ไข (Action Taken)</label>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">การรับมือ / การดำเนินการแก้ไข (Action Taken)</label>
                     <textarea id="eventActionTaken" class="form-control" rows="2" style="padding: 0.4rem 0.6rem; min-height: 50px;" placeholder="ระบุผลกระทบ หรือ การตรวจสอบรองรับ..."></textarea>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.25rem;">ผู้บันทึก (Recorded By)</label>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">ผู้บันทึก (Recorded By)</label>
                     <select id="eventRecorderSelect" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required></select>
                 </div>
 
-                <div style="position: sticky; bottom: 0; background: #ffffff; padding-top: 0.75rem; padding-bottom: 0.25rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 0.75rem; z-index: 10;">
-                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: #e2e8f0; color: #334155; border: none; padding: 0.5rem 1.25rem; border-radius: 20px; font-weight: 600;">ยกเลิก</button>
+                <div style="position: sticky; bottom: 0; background: #0b1329; padding-top: 0.75rem; padding-bottom: 0.25rem; border-top: 1px solid rgba(56, 189, 248, 0.2); display: flex; justify-content: flex-end; gap: 0.75rem; z-index: 10;">
+                    <button type="button" class="btn-secondary-custom" onclick="closeEventModal()" style="background: rgba(255, 255, 255, 0.1); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.15); padding: 0.5rem 1.25rem; border-radius: 20px; font-weight: 600;">ยกเลิก</button>
                     <button type="submit" class="btn-primary-custom" style="padding: 0.5rem 1.25rem;">💾 บันทึกเหตุการณ์ 5M1E</button>
                 </div>
             </form>
@@ -1137,15 +1137,15 @@
             </div>
             <div style="padding: 1.25rem 1.5rem;">
                 <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.4rem; display: block;">เพิ่มชื่อพนักงานใหม่</label>
+                    <label style="font-weight: 700; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">เพิ่มชื่อพนักงานใหม่</label>
                     <div style="display: flex; gap: 0.5rem;">
                         <input type="text" id="newStaffInput" class="form-control" placeholder="ระบุ ชื่อ - นามสกุล" style="flex: 1;">
                         <button type="button" class="btn-primary-custom" onclick="saveNewStaff()" style="white-space: nowrap; padding: 0.6rem 1rem;">➕ เพิ่ม</button>
                     </div>
                 </div>
 
-                <label style="font-weight: 700; color: #1e3a8a; margin-bottom: 0.4rem; display: block;">รายชื่อพนักงานในระบบ</label>
-                <div id="staffListContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.25rem;">
+                <label style="font-weight: 700; color: #cbd5e1; margin-bottom: 0.4rem; display: block;">รายชื่อพนักงานในระบบ</label>
+                <div id="staffListContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid rgba(56, 189, 248, 0.25); background: #0b1329; border-radius: 8px; padding: 0.25rem;">
                     <!-- Staff list items rendered dynamically -->
                 </div>
 
@@ -1187,11 +1187,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=38.0.0"></script>
-    <script src="js/auth.js?v=38.0.0"></script>
-    <script src="js/app.js?v=38.0.0"></script>
-    <script src="js/daily-report.js?v=38.0.0"></script>
-    <script src="js/events.js?v=38.0.0"></script>
+    <script src="js/api.js?v=39.0.0"></script>
+    <script src="js/auth.js?v=39.0.0"></script>
+    <script src="js/app.js?v=39.0.0"></script>
+    <script src="js/daily-report.js?v=39.0.0"></script>
+    <script src="js/events.js?v=39.0.0"></script>
 </body>
 
 </html>

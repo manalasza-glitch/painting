@@ -226,7 +226,7 @@ const PaintingAuth = {
         const chipName = document.getElementById("userHeaderName");
         const chipRole = document.getElementById("userHeaderRole");
         const chipAvatar = document.getElementById("userHeaderAvatar");
-        const settingsTabBtn = document.querySelector('.nav-item[data-tab="settings"]');
+        const settingsTabBtn = document.querySelector('.nav-link[data-permission="users.manage"], .nav-link[onclick*="settings"]');
 
         if (this.currentUser) {
             if (chipName) chipName.innerText = this.currentUser.displayName || this.currentUser.employeeId;

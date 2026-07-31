@@ -336,9 +336,9 @@ function renderStaffListInModal() {
     }
 
     container.innerHTML = PAINTING_RECORDERS_LIST.map((name, index) => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem;">
-            <span style="font-weight: 600; color: #334155;">👤 ${name}</span>
-            <button type="button" onclick="deleteStaffName(${index})" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🗑️ ลบ</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.9rem;">
+            <span style="font-weight: 600; color: #f8fafc;">👤 ${name}</span>
+            <button type="button" onclick="deleteStaffName(${index})" style="background: none; border: none; color: #f87171; font-size: 0.8rem; font-weight: 700; cursor: pointer;">🗑️ ลบ</button>
         </div>
     `).join('');
 }
