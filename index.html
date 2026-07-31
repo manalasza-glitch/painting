@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=45.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=45.0.0">
+    <link rel="stylesheet" href="css/style.css?v=46.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=46.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -486,8 +486,8 @@
             <!-- Top Header -->
             <header class="app-header">
                 <div class="header-search">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                    <input type="text" id="globalSearch" placeholder="ค้นหาข้อมูล..." onkeyup="filterHistoryTable()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input type="text" id="globalSearch" placeholder="ค้นหาข้อมูลทั้งหมดในระบบ (เช่น รุ่นงาน, รหัสพนักงาน, วันที่...)" onkeyup="filterHistoryTable()">
                 </div>
 
                 <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
@@ -516,12 +516,12 @@
                     
                     <div class="section-title-bar">
                         <h1 class="page-title">Painting Inspection Dashboard</h1>
-                        <div class="date-filter-wrap" style="display: flex; gap: 0.5rem; align-items: center;">
-                            <div style="position: relative; flex-grow: 1;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#38bdf8" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-                                <input type="date" id="dashboardDateFilter" onchange="renderDashboard()" style="width: 100%; padding-left: 36px; padding-right: 10px; height: 38px; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; background: #0b1329; color: #f8fafc; font-weight: 600; font-size: 0.9rem;">
+                        <div class="date-filter-wrap" style="display: flex; gap: 0.6rem; align-items: center;">
+                            <div style="position: relative; flex-grow: 1; min-width: 180px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="#38bdf8" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 2;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                                <input type="date" id="dashboardDateFilter" onchange="renderDashboard()" onclick="if(this.showPicker) this.showPicker();" style="width: 100%; padding-left: 40px; padding-right: 12px; height: 42px; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; background: #0b1329; color: #f8fafc; font-weight: 700; font-size: 0.92rem; color-scheme: dark; cursor: pointer; outline: none; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
                             </div>
-                            <button onclick="document.getElementById('dashboardDateFilter').value = ''; renderDashboard();" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 0 16px; height: 38px; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
+                            <button type="button" id="btnResetDashboardFilter" onclick="resetDashboardDateFilter()" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 0 20px; height: 42px; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.9rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); transition: all 0.2s ease;">
                                 All Time
                             </button>
                         </div>
@@ -1330,11 +1330,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=45.0.0"></script>
-    <script src="js/auth.js?v=45.0.0"></script>
-    <script src="js/app.js?v=45.0.0"></script>
-    <script src="js/daily-report.js?v=45.0.0"></script>
-    <script src="js/events.js?v=45.0.0"></script>
+    <script src="js/api.js?v=46.0.0"></script>
+    <script src="js/auth.js?v=46.0.0"></script>
+    <script src="js/app.js?v=46.0.0"></script>
+    <script src="js/daily-report.js?v=46.0.0"></script>
+    <script src="js/events.js?v=46.0.0"></script>
 </body>
 
 </html>

@@ -379,6 +379,29 @@ async function handleFormSubmit(event) {
     }
 }
 
+function getStandardISODate(raw) {
+    if (!raw) return '';
+    let s = String(raw).trim();
+    if (s.includes('T')) s = s.split('T')[0];
+    if (s.includes(' ')) s = s.split(' ')[0];
+    if (s.includes('/')) {
+        const p = s.split('/');
+        if (p.length === 3) {
+            if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+            return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+        }
+    }
+    return s.substring(0, 10);
+}
+
+function resetDashboardDateFilter() {
+    const filterInput = document.getElementById("dashboardDateFilter");
+    if (filterInput) {
+        filterInput.value = "";
+    }
+    renderDashboard();
+}
+
 function renderDashboard() {
     renderDailyReportCharts();
 
@@ -391,7 +414,7 @@ function renderDashboard() {
     let filteredRecords = inspectionRecords;
     if (filterDate) {
         filteredRecords = inspectionRecords.filter(r => {
-            const recordDateStr = String(r.date || r.timestamp || '').split('T')[0].substring(0, 10);
+            const recordDateStr = getStandardISODate(r.date || r.timestamp);
             return recordDateStr === filterDate;
         });
     }
@@ -400,7 +423,7 @@ function renderDashboard() {
     let totalInspections = filteredRecords.length;
     let totalRust = 0, totalDent = 0, totalWeld = 0, totalChemical = 0, totalOil = 0;
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getStandardISODate(new Date().toISOString());
     let todayDefects = 0;
 
     filteredRecords.forEach(r => {
