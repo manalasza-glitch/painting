@@ -696,6 +696,20 @@ function saveUserLocallyFallback(userData) {
             try { users = JSON.parse(cached); } catch(e){}
         }
 
+        // Pre-populate Super Admin ADM-01 so system always has an existing Admin
+        const hasAdmin = users.some(u => u.role === "Super Admin" || u.employeeId === "ADM-01");
+        if (!hasAdmin) {
+            users.unshift({
+                employeeId: "ADM-01",
+                displayName: "Mana Subintan",
+                department: "Engineer (วิศวกร)",
+                passwordHash: "",
+                role: "Super Admin",
+                status: "Active",
+                createdAt: "2026-07-31T00:00:00.000Z"
+            });
+        }
+
         let existingUser = users.find(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
         if (existingUser) {
             existingUser.displayName = userData.displayName;
