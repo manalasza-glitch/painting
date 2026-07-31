@@ -709,7 +709,10 @@ async function registerUserAPI(userData) {
                 if (json && json.status === "success") {
                     saveUserLocallyFallback(userData); // Keep synced locally
                     return json;
-                } else if (json && json.status === "error" && json.message && json.message !== "Unauthorized") {
+                } else if (json && json.status === "error") {
+                    if (json.message === "Unauthorized" || !json.message) {
+                        return saveUserLocallyFallback(userData);
+                    }
                     return json;
                 }
             }
@@ -730,6 +733,11 @@ async function registerUserAPI(userData) {
                 if (json && json.status === "success") {
                     saveUserLocallyFallback(userData);
                     return json;
+                } else if (json && json.status === "error") {
+                    if (json.message === "Unauthorized" || !json.message) {
+                        return saveUserLocallyFallback(userData);
+                    }
+                    return json;
                 }
             }
         } catch (e) {
@@ -745,11 +753,22 @@ function saveUserLocallyFallback(userData) {
     try {
         let users = [];
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        if (cached) users = JSON.parse(cached);
+        if (cached) {
+            try { users = JSON.parse(cached); } catch(e){}
+        }
 
-        const exists = users.some(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
-        if (exists) {
-            return { status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" };
+        let existingUser = users.find(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
+        if (existingUser) {
+            existingUser.displayName = userData.displayName;
+            existingUser.department = userData.department;
+            existingUser.passwordHash = userData.passwordHash;
+            localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+            return {
+                status: "success",
+                isSuperAdmin: existingUser.role === "Super Admin",
+                role: existingUser.role,
+                userStatus: existingUser.status
+            };
         }
 
         const isFirst = users.length === 0;
