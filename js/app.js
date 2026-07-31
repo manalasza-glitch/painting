@@ -689,9 +689,9 @@ function renderRecentTable(recordsData = inspectionRecords) {
                 <td><span class="badge-defect badge-total">${total}</span></td>
                 <td style="color: #64748b; font-size: 0.85rem;">${r.note || '-'}</td>
                 <td style="text-align: center;">
-                    <div class="action-btn-group">
-                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข">✏️ แก้ไข</button>
-                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ">🗑️ ลบ</button>
+                    <div class="action-btn-group" style="display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข" style="background: rgba(56, 189, 248, 0.14) !important; color: #38bdf8 !important; border: 1px solid rgba(56, 189, 248, 0.35) !important; padding: 0.4rem 0.75rem !important; border-radius: 10px !important; font-size: 0.82rem !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.35rem !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;">✏️ แก้ไข</button>
+                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ" style="background: rgba(239, 68, 68, 0.14) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; padding: 0.4rem 0.75rem !important; border-radius: 10px !important; font-size: 0.82rem !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.35rem !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;">🗑️ ลบ</button>
                     </div>
                 </td>
             </tr>
@@ -719,7 +719,7 @@ function renderFullHistoryTable(records) {
 
         return `
             <tr>
-                <td style="font-weight: 800; color: #2563eb; white-space: nowrap;">${dateFormatted}</td>
+                <td style="font-weight: 800; color: #38bdf8; white-space: nowrap;">${dateFormatted}</td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -728,9 +728,9 @@ function renderFullHistoryTable(records) {
                 <td><span class="badge-defect badge-total">${total} ชิ้น</span></td>
                 <td>${r.note || '-'}</td>
                 <td style="text-align: center;">
-                    <div class="action-btn-group">
-                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข">✏️ แก้ไข</button>
-                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ">🗑️ ลบ</button>
+                    <div class="action-btn-group" style="display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+                        <button class="btn-action-edit" onclick="editInspectionRecord(${i})" title="แก้ไข" style="background: rgba(56, 189, 248, 0.14) !important; color: #38bdf8 !important; border: 1px solid rgba(56, 189, 248, 0.35) !important; padding: 0.4rem 0.75rem !important; border-radius: 10px !important; font-size: 0.82rem !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.35rem !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;">✏️ แก้ไข</button>
+                        <button class="btn-action-delete" onclick="deleteInspectionRecord(${i})" title="ลบ" style="background: rgba(239, 68, 68, 0.14) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.35) !important; padding: 0.4rem 0.75rem !important; border-radius: 10px !important; font-size: 0.82rem !important; font-weight: 700 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.35rem !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;">🗑️ ลบ</button>
                     </div>
                 </td>
             </tr>
