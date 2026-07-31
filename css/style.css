@@ -119,229 +119,6 @@ button, input, textarea, select {
   box-shadow: none !important;
   border: 0 !important;
 }
-
-.brand-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #ffffff;
-  line-height: 1.2;
-}
-
-.brand-subtitle {
-  font-size: 0.75rem;
-  color: var(--accent-sky);
-  font-weight: 600;
-}
-
-.nav-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex-grow: 1;
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.8rem 1rem;
-  color: #94a3b8 !important;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: var(--transition-fast);
-  cursor: pointer;
-  min-height: 44px;
-}
-
-.chart-container-wrapper {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  flex-grow: 1;
-}
-
-.chart-card.navy-theme .chart-container-wrapper {
-  height: 100%;
-  min-height: 340px;
-  flex: 1;
-}
-
-/* Category Severity Bars */
-.severity-bars-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  margin-top: 1.25rem;
-}
-
-.severity-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.section-header-left {
-    text-align: left;
-    margin-bottom: 1rem;
-    margin-top: 0.5rem;
-}
-
-/* ===== Daily Report Compact Layout ===== */
-.dr-top-grid {
-    display: grid;
-    grid-template-columns: 0.95fr 1.05fr;
-    gap: 1.25rem;
-    align-items: stretch;
-    width: 100%;
-}
-
-.dr-card {
-    background: linear-gradient(145deg, #0f172a, #1e293b);
-    border-radius: 16px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.25rem;
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-    overflow: visible;
-    width: 100%;
-    box-sizing: border-box;
-    color: #f8fafc;
-}
-
-.dr-section-title {
-    color: #38bdf8;
-    font-weight: 800;
-    font-size: 1.05rem;
-    margin: 0 0 0.85rem 0;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid rgba(56, 189, 248, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.dr-defect-label {
-    color: #f8fafc;
-    font-weight: 800;
-    font-size: 0.92rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.25rem;
-}
-
-.dr-form-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-}
-
-/* Compact Grids Forced Full Width */
-.dr-grid-3 {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr 1.4fr !important;
-    gap: 1.25rem !important;
-    align-items: end !important;
-    width: 100% !important;
-}
-
-.dr-grid-2 {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 1.25rem !important;
-    align-items: end !important;
-    width: 100% !important;
-}
-
-.dr-grid-6 {
-    display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
-    gap: 0.75rem !important;
-    align-items: end !important;
-    width: 100% !important;
-}
-
-.dr-grid-4 {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 0.85rem !important;
-    align-items: end !important;
-    width: 100% !important;
-}
-
-/* iOS-Style Segmented Control for Shift Radio Pills */
-.dr-radio-pills {
-    display: flex;
-    gap: 0.25rem;
-    height: 44px;
-    align-items: center;
-    background: #0b1329;
-    padding: 3px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-sizing: border-box;
-    width: 100%;
-}
-
-.dr-radio-pills label {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    background: transparent;
-    border: none;
-    border-radius: 7px;
-    padding: 0.4rem 0.65rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #94a3b8;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    height: 100%;
-    box-sizing: border-box;
-    user-select: none;
-}
-
-.dr-radio-pills input[type="radio"] {
-    display: none !important;
-}
-
-.dr-radio-pills label:has(input:checked) {
-    background: linear-gradient(135deg, #0284c7, #2563eb);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-}
-
-@media (max-width: 1024px) {
-    .dr-top-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .dr-grid-3 {
-        grid-template-columns: 1fr 1fr !important;
-    }
-    .dr-grid-3 .form-group:last-child {
-        grid-column: 1 / -1;
-    }
-    .dr-grid-6 {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-    .dr-grid-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 500px) {
-    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6 {
-        grid-template-columns: 1fr !important;
     }
     .dr-grid-3 .form-group:last-child {
         grid-column: auto;
@@ -798,14 +575,221 @@ button, input, textarea, select {
   fill: currentColor;
 }
 
-/* Responsive Grid Adjustments for Mobile & Tablet */
-@media (max-width: 1100px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .dashboard-grid {
-    grid-template-columns: 1fr !important;
-  }
+/* Responsive Grid Adjustments for  border: 0 !important;
+}
+
+.brand-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--accent-sky);
+  font-weight: 600;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-grow: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 1rem;
+  color: #94a3b8 !important;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.nav-link:hover {
+  background-color: var(--sidebar-hover) !important;
+  color: #ffffff !important;
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+}
+
+.chart-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px !important;
+  max-height: 320px !important;
+  overflow: hidden !important;
+}
+
+.chart-card.navy-theme .chart-container-wrapper {
+  height: 280px !important;
+  max-height: 320px !important;
+  overflow: hidden !important;
+}
+
+/* ===== Daily Report Compact Layout ===== */
+.dr-top-grid {
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: 1.25rem;
+    align-items: stretch;
+    width: 100%;
+}
+
+.dr-card {
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    overflow: visible;
+    width: 100%;
+    box-sizing: border-box;
+    color: #f8fafc;
+}
+
+.dr-section-title {
+    color: #38bdf8;
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin: 0 0 0.85rem 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dr-defect-label {
+    color: #f8fafc;
+    font-weight: 800;
+    font-size: 0.92rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.dr-form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.dr-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1.4fr !important;
+    gap: 1.25rem !important;
+    align-items: end !important;
+    width: 100% !important;
+}
+
+.dr-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.25rem !important;
+    align-items: end !important;
+    width: 100% !important;
+}
+
+.dr-grid-6 {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: end !important;
+    width: 100% !important;
+}
+
+.dr-grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.85rem !important;
+    align-items: end !important;
+    width: 100% !important;
+}
+
+/* iOS-Style Segmented Control for Shift Radio Pills */
+.dr-radio-pills {
+    display: flex;
+    gap: 0.25rem;
+    height: 44px;
+    align-items: center;
+    background: #0b1329;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.dr-radio-pills label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.dr-radio-pills input[type="radio"] {
+    display: none !important;
+}
+
+.dr-radio-pills label:has(input:checked) {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+}
+
+@media (max-width: 1024px) {
+    .dr-top-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .dr-grid-3 {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .dr-grid-3 .form-group:last-child {
+        grid-column: 1 / -1;
+    }
+    .dr-grid-6 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    .dr-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 500px) {
+    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6 {
+        grid-template-columns: 1fr !important;
+    }
+    .dr-grid-3 .form-group:last-child {
+        grid-column: auto;
+    }
 }
 
 @media (max-width: 768px) {
