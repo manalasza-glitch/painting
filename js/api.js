@@ -1,5 +1,23 @@
 const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCGi9XE6U0RYliOgyyQZaWOazVOn5xXAo8RVF_AilQi6gy1mWr-sl5_L0Mhv4QjLRj/exec";
 
+// Automatically clear legacy sample mock data from browser localStorage
+(function purgeLegacyMockCaches() {
+    try {
+        const events = localStorage.getItem("PAINTING_EVENTS_CACHE");
+        if (events && (events.includes("evt_101") || events.includes("ปรับเพิ่มอุณหภูมิตู้อบสี") || events.includes("Sample"))) {
+            localStorage.removeItem("PAINTING_EVENTS_CACHE");
+        }
+        const output = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+        if (output && (output.includes("Box NMS 4/6 W.") || output.includes("Cover NMS 6 w."))) {
+            localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
+        }
+        const inspection = localStorage.getItem("PAINTING_INSPECTION_CACHE");
+        if (inspection && (inspection.includes("สุ่มตรวจประจำวัน") || inspection.includes("พบคราบสนิมบางชิ้นงาน"))) {
+            localStorage.removeItem("PAINTING_INSPECTION_CACHE");
+        }
+    } catch (e) {}
+})();
+
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
 let activeSyncRequests = 0;
@@ -520,61 +538,7 @@ async function fetchEventsFromAPI() {
 }
 
 function generateSampleEventsData() {
-    const sample = [];
-    const categories = ["Machine", "Material", "Man", "Environment", "Measurement", "Method"];
-    const processes = ["เตาอบสี (Baking Oven)", "ห้องผสมสี (Color Mix Room)", "ไลน์พ่นสีชิ้นงาน", "ห้องพ่นสี (Spray Booth)", "ห้อง QC ตรวจสอบ", "ไลน์ล้างทำความสะอาด"];
-    const titles = [
-        "ปรับเพิ่มอุณหภูมิตู้อบสี",
-        "เปลี่ยนล็อตสีพ่นผงชั่วคราว",
-        "เปลี่ยนตัวพนักงานพ่นสีหลัก",
-        "เปลี่ยนแผ่นกรองฝุ่นห้องพ่นสี",
-        "สอบเทียบเครื่องวัดความหนาสี (Elcometer)",
-        "ล้างทำความสะอาดหัวพ่นสีและท่อส่งสี"
-    ];
-    const details = [
-        "เพิ่มอุณหภูมิอบสีจาก 180°C เป็น 190°C เพื่อรองรับความหนาชิ้นงานรุ่นใหม่",
-        "เปิดใช้สีผงล็อตใหม่ Batch #202607-A เนื่องจากสีล็อตเดิมหมดสต็อก",
-        "พนักงานประจำลาป่วย ให้พนักงานสำรองดำเนินการพ่นสีแทน",
-        "ทำความสะอาดและเปลี่ยน Filter กรองอากาศใหม่เนื่องจากฝุ่นสะสม",
-        "ปรับแต่ง Calibration Zero & Foil Shim สำหรับเครื่องวัดความหนาสี",
-        "ล้างคราบสีเกาะแน่นในหัวพ่นเพื่อป้องกันการอุดตันระหว่างกะ"
-    ];
-    const actions = [
-        "สุ่มตรวจความหนาและพ่นติดของสีผ่านเกณฑ์ 100%",
-        "ทำการเทียบเฉดสี Gloss & Color Shade อยู่ในเกณฑ์มาตรฐาน",
-        "หัวหน้างานเข้ากำกับเทคนิคการพ่นสีใกล้ชิดตลอดกะ",
-        "วัดค่าแรงดันลมในห้องพ่นสีกลับสู่สภาวะปกติ",
-        "เครื่องมือผ่านการ Calibration พร้อมติดสติ๊กเกอร์รับรอง",
-        "ทดสอบแรงดันฉีดพ่นสีปกติ พร้อมลุยงานต่อ"
-    ];
-    const recorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
-
-    // Generate 12 events across July 1 - July 31, 2026
-    const sampleDays = [3, 6, 9, 12, 15, 18, 21, 23, 24, 25, 26, 27];
-    sampleDays.forEach((day, idx) => {
-        const dd = ('0' + day).slice(-2);
-        const dateStr = `2026-07-${dd}`;
-        const timeStr = idx % 2 === 0 ? "08:30" : "13:45";
-        const catIdx = idx % categories.length;
-
-        sample.push({
-            id: `evt_10${idx + 1}`,
-            date: dateStr,
-            time: timeStr,
-            shift: idx % 2 === 0 ? "กะเช้า" : "กะดึก",
-            category: categories[catIdx],
-            process: processes[catIdx],
-            title: titles[catIdx],
-            detail: details[catIdx],
-            action: actions[catIdx],
-            recorder: recorders[idx % recorders.length],
-            timestamp: `${dateStr} ${timeStr}`
-        });
-    });
-
-    localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(sample));
-    localStorage.setItem("PAINTING_EVENTS_INIT", "true");
-    return sample;
+    return [];
 }
 
 async function sendEventToAPI(eventData) {
