@@ -1509,6 +1509,28 @@ button, input, textarea, select {
   }
 }
 
+/* Dashboard reading order: show the daily production statistics immediately
+   after the date-filter/KPI summary, before the inspection trend charts. */
+#dashboard-tab.active {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#dashboard-tab.active > #dashboardProductionReport {
+  order: 1 !important;
+  width: 100% !important;
+}
+
+#dashboard-tab.active > #dashboardInspectionCharts {
+  order: 2 !important;
+  width: 100% !important;
+}
+
+#dashboard-tab.active > .table-card {
+  order: 3 !important;
+  width: 100% !important;
+}
+
 @media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
