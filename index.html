@@ -22,8 +22,8 @@
     <title>Painting Inspection Dashboard</title>
 
     <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=71.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=71.0.0">
+    <link rel="stylesheet" href="css/style.css?v=72.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=72.0.0">
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -619,32 +619,34 @@
             <!-- REGISTER FORM -->
             <form id="authRegisterForm" class="auth-form" style="display: none;" autocomplete="off" onsubmit="PaintingAuth.handleRegister(event)">
                 <div>
-                    <label for="regEmployeeId">รหัสพนักงาน <span>(Employee ID)</span></label>
-                    <input type="text" id="regEmployeeId" placeholder="ระบุรหัสพนักงานของคุณ" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                </div>
-
-                <div>
                     <label for="regDisplayName">ชื่อ-นามสกุล <span>(Full Name)</span></label>
                     <input type="text" id="regDisplayName" placeholder="ระบุชื่อ-นามสกุล" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 </div>
 
-                <div>
-                    <label for="regDepartment">ตำแหน่งงาน <span>(Position)</span></label>
-                    <select id="regDepartment" required autocomplete="off">
-                        <option value="Engineer">Engineer (วิศวกร)</option>
-                        <option value="Leader">Leader (หัวหน้าทีม / กะ)</option>
-                        <option value="Operator">Operator (พนักงานปฏิบัติการ)</option>
-                    </select>
+                <div class="auth-form-row">
+                    <div>
+                        <label for="regEmployeeId">รหัสพนักงาน <span>(ID)</span></label>
+                        <input type="text" id="regEmployeeId" placeholder="ระบุรหัสพนักงาน" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    </div>
+                    <div>
+                        <label for="regDepartment">ตำแหน่งงาน <span>(Position)</span></label>
+                        <select id="regDepartment" required autocomplete="off">
+                            <option value="Engineer">วิศวกร (Engineer)</option>
+                            <option value="Leader">หัวหน้าทีม (Leader)</option>
+                            <option value="Operator" selected>พนักงานปฏิบัติการ (Operator)</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label for="regPassword">ตั้งรหัสผ่าน <span>(อย่างน้อย 6 ตัวอักษร)</span></label>
-                    <input type="password" id="regPassword" placeholder="••••••••" required autocomplete="new-password" autocorrect="off" autocapitalize="off">
-                </div>
-
-                <div>
-                    <label for="regPasswordConfirm">ยืนยันรหัสผ่าน <span>(Confirm Password)</span></label>
-                    <input type="password" id="regPasswordConfirm" placeholder="••••••••" required autocomplete="new-password" autocorrect="off" autocapitalize="off">
+                <div class="auth-form-row">
+                    <div>
+                        <label for="regPassword">ตั้งรหัสผ่าน <span>(6+ ตัว)</span></label>
+                        <input type="password" id="regPassword" placeholder="••••••••" required autocomplete="new-password" autocorrect="off" autocapitalize="off">
+                    </div>
+                    <div>
+                        <label for="regPasswordConfirm">ยืนยันรหัสผ่าน <span>(Confirm)</span></label>
+                        <input type="password" id="regPasswordConfirm" placeholder="••••••••" required autocomplete="new-password" autocorrect="off" autocapitalize="off">
+                    </div>
                 </div>
 
                 <button type="submit" class="auth-submit" id="regSubmitBtn">ส่งข้อมูลสมัครสมาชิก</button>
@@ -1597,11 +1599,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=71.0.0"></script>
-    <script src="js/auth.js?v=71.0.0"></script>
-    <script src="js/app.js?v=71.0.0"></script>
-    <script src="js/daily-report.js?v=71.0.0"></script>
-    <script src="js/events.js?v=71.0.0"></script>
+    <script src="js/api.js?v=72.0.0"></script>
+    <script src="js/auth.js?v=72.0.0"></script>
+    <script src="js/app.js?v=72.0.0"></script>
+    <script src="js/daily-report.js?v=72.0.0"></script>
+    <script src="js/events.js?v=72.0.0"></script>
 </body>
 
 </html>

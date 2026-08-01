@@ -134,6 +134,12 @@
     gap: 0.65rem;
 }
 
+.auth-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
 .auth-form label {
     font-size: 0.78rem;
     font-weight: 700;
