@@ -21,9 +21,7 @@
 
     <title>Painting Inspection Dashboard</title>
 
-    <!-- Custom CSS File -->
-    <link rel="stylesheet" href="css/style.css?v=78.0.0">
-    <link rel="stylesheet" href="css/auth.css?v=78.0.0">
+    <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
     <style>
@@ -530,13 +528,28 @@
                 background: rgba(29, 78, 216, 0.8);
             }
             .main-wrapper {
-                padding-bottom: 4.5rem !important;
+                padding-bottom: 5.5rem !important;
             }
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
+            .content-body {
+                padding: 0.75rem 0.85rem !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .kpi-grid, .dashboard-grid, .chart-card, .table-card, .card-custom, .user-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                box-sizing: border-box !important;
+                align-self: stretch !important;
             }
             .dashboard-grid {
-                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.85rem !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
         }
 
@@ -575,6 +588,10 @@
             opacity: 1 !important;
         }
     </style>
+
+    <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
+    <link rel="stylesheet" href="css/style.css?v=79.0.0">
+    <link rel="stylesheet" href="css/auth.css?v=79.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1599,11 +1616,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=78.0.0"></script>
-    <script src="js/auth.js?v=78.0.0"></script>
-    <script src="js/app.js?v=78.0.0"></script>
-    <script src="js/daily-report.js?v=78.0.0"></script>
-    <script src="js/events.js?v=78.0.0"></script>
+    <script src="js/api.js?v=79.0.0"></script>
+    <script src="js/auth.js?v=79.0.0"></script>
+    <script src="js/app.js?v=79.0.0"></script>
+    <script src="js/daily-report.js?v=79.0.0"></script>
+    <script src="js/events.js?v=79.0.0"></script>
 </body>
 
 </html>
