@@ -133,6 +133,13 @@ async function loadDataFromAPI(silent = false) {
 }
 
 function switchTab(tabId, element) {
+    const targetForPermission = document.getElementById(tabId);
+    const requiredPermission = targetForPermission ? targetForPermission.dataset.permission : "";
+    if (requiredPermission && window.PaintingAuth && typeof PaintingAuth.hasPermission === 'function' && !PaintingAuth.hasPermission(requiredPermission)) {
+        if (typeof showToast === 'function') showToast("คุณไม่มีสิทธิ์เข้าถึงส่วนนี้", "error");
+        return;
+    }
+
     // Hide all tab pages & remove active class
     document.querySelectorAll(".tab-page").forEach(page => {
         page.classList.remove("active");
@@ -186,6 +193,10 @@ function switchTab(tabId, element) {
 }
 
 function openInspectionModal() {
+    if (window.PaintingAuth && typeof PaintingAuth.hasPermission === 'function' && !PaintingAuth.hasPermission('inspection.create')) {
+        if (typeof showToast === 'function') showToast("คุณไม่มีสิทธิ์บันทึกงานตรวจ", "error");
+        return;
+    }
     const modal = document.getElementById("inspectionModal");
     if (modal) {
         // Clear Edit Mode Flags

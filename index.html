@@ -1585,6 +1585,22 @@
         </div>
     </div>
 
+    <!-- USER PERMISSIONS MODAL -->
+    <div class="modal-overlay" id="permissionModal">
+        <div class="modal-box" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="permissionModalTitle">กำหนดสิทธิ์ผู้ใช้งาน</h3>
+                <button class="modal-close" type="button" onclick="PaintingAuth.closePermissionsModal()">&times;</button>
+            </div>
+            <input type="hidden" id="permissionEmployeeId">
+            <div id="permissionOptions" style="display: grid; gap: 0.65rem; padding: 1.25rem 1.5rem;"></div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 0 1.5rem 1.25rem;">
+                <button type="button" class="btn-modal-cancel" onclick="PaintingAuth.closePermissionsModal()">ยกเลิก</button>
+                <button type="button" class="btn-modal-save" onclick="PaintingAuth.savePermissions()">บันทึกสิทธิ์</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FULLSCREEN CHART MODAL -->
     <div class="modal-overlay" id="chartFullscreenModal">
         <div class="modal-box" style="width: 95vw; max-width: 1400px; height: 90vh; max-height: 90vh; display: flex; flex-direction: column; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; box-shadow: 0 25px 60px rgba(0,0,0,0.5);">
@@ -1616,10 +1632,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=84.0.0"></script>
-    <script src="js/auth.js?v=84.0.0"></script>
-    <script src="js/app.js?v=84.0.0"></script>
-    <script src="js/daily-report.js?v=84.0.0"></script>
+    <script src="js/api.js?v=85.0.0"></script>
+    <script src="js/auth.js?v=85.0.0"></script>
+    <script src="js/app.js?v=85.0.0"></script>
+    <script src="js/daily-report.js?v=85.0.0"></script>
     <script src="js/events.js?v=83.0.0"></script>
 </body>
 

@@ -1187,6 +1187,24 @@ button, input, textarea, select {
     }
 }
 
+.permission-option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+}
+
+.permission-option input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #38bdf8;
+}
+
 @media (max-width: 500px) {
     .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6 {
         grid-template-columns: 1fr !important;

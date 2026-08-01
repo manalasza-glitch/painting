@@ -2,6 +2,28 @@
 
 const PaintingAuth = {
     currentUser: null,
+    users: [],
+    permissionOptions: [
+        { key: "dashboard.read", label: "ดู Dashboard" },
+        { key: "inspection.create", label: "บันทึกงานตรวจ" },
+        { key: "daily_report.read", label: "ดูรายงานรายวัน" },
+        { key: "events.read", label: "ดู Event (5M1E)" },
+        { key: "history.read", label: "ดูประวัติย้อนหลัง" },
+        { key: "users.manage", label: "จัดการผู้ใช้งาน" }
+    ],
+
+    hasPermission(permission) {
+        if (!this.currentUser) return false;
+        if (String(this.currentUser.role || "") === "Super Admin" || String(this.currentUser.employeeId || "") === "69112") return true;
+        return Array.isArray(this.currentUser.permissions) && this.currentUser.permissions.includes(permission);
+    },
+
+    applyPermissions() {
+        document.querySelectorAll('.nav-link[data-permission], .mobile-nav-item[data-permission]').forEach(item => {
+            if (this.hasPermission(item.dataset.permission)) item.style.removeProperty('display');
+            else item.style.display = 'none';
+        });
+    },
 
     async hashPassword(password) {
         if (!password) return "";
@@ -22,6 +44,7 @@ const PaintingAuth = {
         if (storedUser) {
             try {
                 this.currentUser = JSON.parse(storedUser);
+                this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
                 this.updateUserHeaderUI();
                 this.hideAuthModal();
                 return;
@@ -237,6 +260,7 @@ const PaintingAuth = {
                     settingsTabBtn.style.display = "none";
                 }
             }
+            this.applyPermissions();
         }
     },
 
@@ -259,6 +283,7 @@ const PaintingAuth = {
         if (typeof getUsersAPI === "function") {
             let users = await getUsersAPI();
             if (!Array.isArray(users)) users = [];
+            this.users = users;
 
             // 1. Ensure 69112 (Mana Subintan) is ALWAYS present at the top as Super Admin
             const adminUser = {
@@ -331,6 +356,7 @@ const PaintingAuth = {
                             </div>
                         </div>
                         <div class="user-card-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+                            ${!isSuper ? `<button class="btn-secondary-custom" style="padding: 0.5rem 0.8rem; font-size: 0.8rem;" onclick="PaintingAuth.openPermissionsModal('${u.employeeId}')">กำหนดสิทธิ์</button>` : ''}
                             ${isPending ? `
                                 <button class="btn-primary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="PaintingAuth.approveUser('${u.employeeId}')">✅ อนุมัติ</button>
                                 <button class="btn-secondary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">❌ ปฏิเสธ</button>
@@ -345,6 +371,49 @@ const PaintingAuth = {
                     </div>
                 `;
             }).join("");
+        }
+    },
+
+    openPermissionsModal(employeeId) {
+        const user = this.users.find(item => String(item.employeeId).trim() === String(employeeId).trim());
+        const modal = document.getElementById("permissionModal");
+        const options = document.getElementById("permissionOptions");
+        const title = document.getElementById("permissionModalTitle");
+        const idInput = document.getElementById("permissionEmployeeId");
+        if (!user || !modal || !options) return;
+
+        const selected = normalizeUserPermissions(user.permissions, user.role, user.employeeId);
+        if (title) title.textContent = `กำหนดสิทธิ์: ${user.displayName || user.employeeId}`;
+        if (idInput) idInput.value = user.employeeId;
+        options.innerHTML = this.permissionOptions.map(option => `
+            <label class="permission-option">
+                <input type="checkbox" value="${option.key}" ${selected.includes(option.key) ? "checked" : ""}>
+                <span>${option.label}</span>
+            </label>
+        `).join("");
+        modal.classList.add("active");
+    },
+
+    closePermissionsModal() {
+        const modal = document.getElementById("permissionModal");
+        if (modal) modal.classList.remove("active");
+    },
+
+    async savePermissions() {
+        const idInput = document.getElementById("permissionEmployeeId");
+        const employeeId = idInput ? idInput.value : "";
+        const user = this.users.find(item => String(item.employeeId).trim() === String(employeeId).trim());
+        if (!user) return;
+
+        const permissions = Array.from(document.querySelectorAll("#permissionOptions input[type=checkbox]:checked"))
+            .map(input => input.value);
+        const result = await updateUserStatusAPI(employeeId, user.status, user.role, permissions);
+        if (result && result.status === "success") {
+            this.closePermissionsModal();
+            if (typeof showToast === "function") showToast(`บันทึกสิทธิ์ของ ${user.displayName || employeeId} แล้ว`, "success");
+            await this.loadUsers();
+        } else if (typeof showToast === "function") {
+            showToast((result && result.message) || "บันทึกสิทธิ์ไม่สำเร็จ", "error");
         }
     },
 

@@ -1,4 +1,26 @@
 const SHEET_NAME = "Inspection";
+const ALL_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read", "users.manage"];
+const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read"];
+
+function getDefaultPermissions(role) {
+  return String(role || "").trim() === "Super Admin" ? ALL_PERMISSIONS.slice() : DEFAULT_USER_PERMISSIONS.slice();
+}
+
+function parsePermissions(value, role) {
+  if (String(role || "").trim() === "Super Admin") return ALL_PERMISSIONS.slice();
+  if (!value) return getDefaultPermissions(role);
+  try {
+    const parsed = Array.isArray(value) ? value : JSON.parse(String(value));
+    if (!Array.isArray(parsed)) return getDefaultPermissions(role);
+    return parsed.filter(p => ALL_PERMISSIONS.indexOf(String(p)) >= 0);
+  } catch (e) {
+    return getDefaultPermissions(role);
+  }
+}
+
+function permissionsJson(value, role) {
+  return JSON.stringify(parsePermissions(value, role));
+}
 
 function formatDateStr(d, includeTime) {
   if (!d) return "";
@@ -95,7 +117,8 @@ function doPost(e) {
               displayName: values[i][1],
               department: values[i][2],
               role: values[i][4],
-              status: values[i][5]
+              status: values[i][5],
+              permissions: parsePermissions(values[i][8], values[i][4])
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
@@ -121,9 +144,10 @@ function doPost(e) {
       const isFirstUser = values.length <= 1;
       const role = isFirstUser ? "Super Admin" : "Inspector";
       const status = isFirstUser ? "Active" : "Pending";
+      const permissions = getDefaultPermissions(role);
       const nowStr = formatDateStr(new Date(), true);
 
-      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, ""]);
+      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, "", JSON.stringify(permissions)]);
       SpreadsheetApp.flush();
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -148,6 +172,7 @@ function doPost(e) {
         department: String(r[2] || ""),
         role: String(r[4] || "Inspector"),
         status: String(r[5] || "Pending"),
+        permissions: parsePermissions(r[8], String(r[4] || "Inspector")),
         createdAt: formatDateStr(r[6], true),
         lastLogin: formatDateStr(r[7], true)
       }));
@@ -160,12 +185,14 @@ function doPost(e) {
       const empId = String((data && data.employeeId) || (e && e.parameter && e.parameter.employeeId) || "").trim();
       const newStatus = String((data && data.userStatus) || (e && e.parameter && e.parameter.userStatus) || "").trim();
       const newRole = String((data && data.userRole) || (e && e.parameter && e.parameter.userRole) || "").trim();
+      const newPermissions = (data && data.permissions) || (e && e.parameter && e.parameter.permissions) || "";
 
       const values = uSheet.getDataRange().getValues();
       for (let i = 1; i < values.length; i++) {
         if (String(values[i][0]).trim() === empId) {
           if (newStatus) uSheet.getRange(i + 1, 6).setValue(newStatus);
           if (newRole) uSheet.getRange(i + 1, 5).setValue(newRole);
+          if (newPermissions) uSheet.getRange(i + 1, 9).setValue(permissionsJson(newPermissions, newRole || values[i][4]));
           SpreadsheetApp.flush();
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }
@@ -401,7 +428,10 @@ function getOrCreateUsersSheet(ss) {
   let uSheet = ss.getSheetByName("Users");
   if (!uSheet) {
     uSheet = ss.insertSheet("Users");
-    uSheet.appendRow(["EmployeeID", "DisplayName", "Department", "PasswordHash", "Role", "Status", "CreatedAt", "LastLogin"]);
+    uSheet.appendRow(["EmployeeID", "DisplayName", "Department", "PasswordHash", "Role", "Status", "CreatedAt", "LastLogin", "Permissions"]);
+    SpreadsheetApp.flush();
+  } else if (uSheet.getLastColumn() < 9) {
+    uSheet.getRange(1, 9).setValue("Permissions");
     SpreadsheetApp.flush();
   }
   return uSheet;
@@ -453,7 +483,8 @@ function doGet(e) {
               displayName: values[i][1],
               department: values[i][2],
               role: values[i][4],
-              status: values[i][5]
+              status: values[i][5],
+              permissions: parsePermissions(values[i][8], values[i][4])
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
@@ -479,9 +510,10 @@ function doGet(e) {
       const isFirstUser = values.length <= 1;
       const role = isFirstUser ? "Super Admin" : "Inspector";
       const status = isFirstUser ? "Active" : "Pending";
+      const permissions = getDefaultPermissions(role);
       const nowStr = formatDateStr(new Date(), true);
 
-      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, ""]);
+      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, "", JSON.stringify(permissions)]);
       SpreadsheetApp.flush();
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -506,6 +538,7 @@ function doGet(e) {
         department: String(r[2] || ""),
         role: String(r[4] || "Inspector"),
         status: String(r[5] || "Pending"),
+        permissions: parsePermissions(r[8], String(r[4] || "Inspector")),
         createdAt: formatDateStr(r[6], true),
         lastLogin: formatDateStr(r[7], true)
       }));
@@ -518,12 +551,14 @@ function doGet(e) {
       const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
       const newStatus = String((e && e.parameter && e.parameter.userStatus) || "").trim();
       const newRole = String((e && e.parameter && e.parameter.userRole) || "").trim();
+      const newPermissions = (e && e.parameter && e.parameter.permissions) || "";
 
       const values = uSheet.getDataRange().getValues();
       for (let i = 1; i < values.length; i++) {
         if (String(values[i][0]).trim() === empId) {
           if (newStatus) uSheet.getRange(i + 1, 6).setValue(newStatus);
           if (newRole) uSheet.getRange(i + 1, 5).setValue(newRole);
+          if (newPermissions) uSheet.getRange(i + 1, 9).setValue(permissionsJson(newPermissions, newRole || values[i][4]));
           SpreadsheetApp.flush();
           return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
         }

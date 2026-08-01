@@ -545,6 +545,24 @@ async function deleteEventFromAPI(id, rowIndex, title) {
 // Authentication & User Management API Helpers
 // ==========================================
 
+const USER_PERMISSION_KEYS = [
+    "dashboard.read",
+    "inspection.create",
+    "daily_report.read",
+    "events.read",
+    "history.read",
+    "users.manage"
+];
+const DEFAULT_USER_PERMISSION_KEYS = USER_PERMISSION_KEYS.filter(key => key !== "users.manage");
+
+function normalizeUserPermissions(permissions, role, employeeId) {
+    if (String(role || "").trim() === "Super Admin" || String(employeeId || "").trim() === "69112") {
+        return [...USER_PERMISSION_KEYS];
+    }
+    if (!Array.isArray(permissions)) return [...DEFAULT_USER_PERMISSION_KEYS];
+    return permissions.filter(key => USER_PERMISSION_KEYS.includes(String(key)));
+}
+
 async function checkBootstrapAPI() {
     return { isBootstrap: false };
 }
@@ -603,7 +621,8 @@ async function loginUserAPI(employeeId, passwordHash) {
                     displayName: match.displayName,
                     department: match.department,
                     role: match.role || "Inspector",
-                    status: "Active"
+                    status: "Active",
+                    permissions: normalizeUserPermissions(match.permissions, match.role, match.employeeId)
                 }
             };
         }
@@ -618,7 +637,8 @@ async function loginUserAPI(employeeId, passwordHash) {
                 displayName: "Mana Subintan",
                 department: "Engineer (วิศวกร)",
                 role: "Super Admin",
-                status: "Active"
+                status: "Active",
+                permissions: [...USER_PERMISSION_KEYS]
             }
         };
     }
@@ -674,6 +694,7 @@ function saveUserLocallyFallback(userData) {
             existingUser.department = userData.department || existingUser.department;
             if (userData.passwordHash) existingUser.passwordHash = userData.passwordHash;
             existingUser.role = isSuper69112 ? "Super Admin" : (existingUser.role === "Super Admin" ? "Inspector" : existingUser.role);
+            existingUser.permissions = normalizeUserPermissions(userData.permissions || existingUser.permissions, existingUser.role, existingUser.employeeId);
             localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
             return {
                 status: "success",
@@ -690,7 +711,8 @@ function saveUserLocallyFallback(userData) {
             passwordHash: userData.passwordHash || "",
             role: isSuper69112 ? "Super Admin" : "Inspector",
             status: isSuper69112 ? "Active" : "Pending",
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            permissions: normalizeUserPermissions(userData.permissions, isSuper69112 ? "Super Admin" : "Inspector", userData.employeeId)
         };
         users.push(newUser);
         localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
@@ -717,8 +739,12 @@ async function getUsersAPI() {
             if (res.ok) {
                 const json = await res.json();
                 if (json && json.status === "success" && Array.isArray(json.users)) {
-                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
-                    return json.users;
+                    const users = json.users.map(user => ({
+                        ...user,
+                        permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
+                    }));
+                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+                    return users;
                 }
             }
         } catch (e) {
@@ -730,13 +756,17 @@ async function getUsersAPI() {
 
     try {
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        return cached ? JSON.parse(cached) : [];
+        const users = cached ? JSON.parse(cached) : [];
+        return Array.isArray(users) ? users.map(user => ({
+            ...user,
+            permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
+        })) : [];
     } catch (e) {
         return [];
     }
 }
 
-async function updateUserStatusAPI(employeeId, newStatus, newRole) {
+async function updateUserStatusAPI(employeeId, newStatus, newRole, permissions) {
     // 1. Update local storage
     try {
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
@@ -747,7 +777,8 @@ async function updateUserStatusAPI(employeeId, newStatus, newRole) {
                     return {
                         ...u,
                         status: newStatus || u.status,
-                        role: newRole || u.role
+                        role: newRole || u.role,
+                        permissions: permissions ? normalizeUserPermissions(permissions, newRole || u.role, u.employeeId) : u.permissions
                     };
                 }
                 return u;
@@ -764,12 +795,15 @@ async function updateUserStatusAPI(employeeId, newStatus, newRole) {
                 action: 'updateUserStatus',
                 employeeId: employeeId || '',
                 userStatus: newStatus || '',
-                userRole: newRole || ''
+                userRole: newRole || '',
+                permissions: permissions ? JSON.stringify(permissions) : ''
             }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+            const response = await fetch(url, { method: "GET", cache: "no-cache" });
+            return await requireJsonResponse(response, 'Update user permissions');
         } catch (e) {
             console.warn("Cloud updateUserStatus dispatch failed:", e);
+            return { status: "error", message: e.message || "Unable to update user" };
         }
     }
     return { status: "success" };
