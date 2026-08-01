@@ -258,74 +258,89 @@ const PaintingAuth = {
 
         if (typeof getUsersAPI === "function") {
             let users = await getUsersAPI();
-            if (Array.isArray(users)) {
-                // Sort: Super Admin first, then PENDING users directly below, then Active, then Disabled
+            if (!Array.isArray(users)) users = [];
 
-                users.sort((a, b) => {
-                    if (a.role === "Super Admin") return -1;
-                    if (b.role === "Super Admin") return 1;
-                    if (a.status === "Pending" && b.status !== "Pending") return -1;
-                    if (b.status === "Pending" && a.status !== "Pending") return 1;
-                    return 0;
+            // Always preserve the current logged-in Super Admin (Mana Subintan) so your account never disappears
+            const activeUser = this.currentUser || {
+                employeeId: "69112",
+                displayName: "Mana Subintan",
+                department: "Engineer (วิศวกร)",
+                role: "Super Admin",
+                status: "Active"
+            };
+
+            const hasSuperAdmin = users.some(u => String(u.employeeId).trim() === String(activeUser.employeeId).trim() || u.role === "Super Admin");
+            if (!hasSuperAdmin) {
+                users.unshift({
+                    employeeId: activeUser.employeeId || "69112",
+                    displayName: activeUser.displayName || "Mana Subintan",
+                    department: activeUser.department || "Engineer (วิศวกร)",
+                    role: "Super Admin",
+                    status: "Active",
+                    lastLogin: new Date().toISOString()
                 });
+            }
 
-                let pending = 0, active = 0, disabled = 0;
-                users.forEach(u => {
-                    if (u.status === "Pending") pending++;
-                    else if (u.status === "Disabled") disabled++;
-                    else active++;
-                });
+            // Sort: Super Admin first, then PENDING users directly below, then Active, then Disabled
+            users.sort((a, b) => {
+                if (a.role === "Super Admin") return -1;
+                if (b.role === "Super Admin") return 1;
+                if (a.status === "Pending" && b.status !== "Pending") return -1;
+                if (b.status === "Pending" && a.status !== "Pending") return 1;
+                return 0;
+            });
 
-                if (pendingCountEl) pendingCountEl.innerText = pending;
-                if (activeCountEl) activeCountEl.innerText = active;
-                if (disabledCountEl) disabledCountEl.innerText = disabled;
+            let pending = 0, active = 0, disabled = 0;
+            users.forEach(u => {
+                if (u.status === "Pending") pending++;
+                else if (u.status === "Disabled") disabled++;
+                else active++;
+            });
 
-                if (users.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; padding: 2rem; color: #64748b;">ยังไม่มีรายชื่อผู้ใช้งานในระบบ</div>`;
-                    return;
-                }
+            if (pendingCountEl) pendingCountEl.innerText = pending;
+            if (activeCountEl) activeCountEl.innerText = active;
+            if (disabledCountEl) disabledCountEl.innerText = disabled;
 
-                container.innerHTML = users.map(u => {
-                    const isPending = u.status === "Pending";
-                    const isDisabled = u.status === "Disabled";
-                    const isSuper = u.role === "Super Admin";
+            container.innerHTML = users.map(u => {
+                const isPending = u.status === "Pending";
+                const isDisabled = u.status === "Disabled";
+                const isSuper = u.role === "Super Admin";
 
-                    const roleBadgeClass = isSuper ? "badge-role-super" : "badge-role-inspector";
-                    const statusBadgeClass = isPending ? "badge-status-pending" : (isDisabled ? "badge-status-disabled" : "badge-status-active");
-                    const statusText = isPending ? "⏳ รออนุมัติ" : (isDisabled ? "🔴 ระงับใช้งาน" : "🟢 ใช้งานได้");
+                const roleBadgeClass = isSuper ? "badge-role-super" : "badge-role-inspector";
+                const statusBadgeClass = isPending ? "badge-status-pending" : (isDisabled ? "badge-status-disabled" : "badge-status-active");
+                const statusText = isPending ? "⏳ รออนุมัติ" : (isDisabled ? "🔴 ระงับใช้งาน" : "🟢 ใช้งานได้");
 
-                    return `
-                        <div class="user-card" style="${isPending ? 'border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.08); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);' : ''}">
-                            <div class="user-card-info">
-                                <div class="user-avatar" style="${isPending ? 'background: linear-gradient(135deg, #f59e0b, #d97706);' : ''}">${(u.displayName || u.employeeId || 'U').charAt(0).toUpperCase()}</div>
-                                <div class="user-details">
-                                    <h4 style="display: flex; align-items: center; gap: 0.5rem;">
-                                        ${u.displayName || u.employeeId} 
-                                        <small style="color:#94a3b8; font-weight: 600;">(รหัส: ${u.employeeId})</small>
-                                    </h4>
-                                    <p style="color: #cbd5e1; margin-top: 0.2rem;">ตำแหน่ง: ${u.department || '-'} | สมัครเมื่อ / ล่าสุด: ${u.createdAt || u.lastLogin || '-'}</p>
-                                    <div style="display: flex; gap: 0.4rem; margin-top: 0.4rem;">
-                                        <span class="${roleBadgeClass}">${u.role || 'Inspector'}</span>
-                                        <span class="${statusBadgeClass}">${statusText}</span>
-                                    </div>
+                return `
+                    <div class="user-card" style="${isPending ? 'border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.08); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);' : ''}">
+                        <div class="user-card-info">
+                            <div class="user-avatar" style="${isPending ? 'background: linear-gradient(135deg, #f59e0b, #d97706);' : ''}">${(u.displayName || u.employeeId || 'U').charAt(0).toUpperCase()}</div>
+                            <div class="user-details">
+                                <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                                    ${u.displayName || u.employeeId} 
+                                    <small style="color:#94a3b8; font-weight: 600;">(รหัส: ${u.employeeId})</small>
+                                </h4>
+                                <p style="color: #cbd5e1; margin-top: 0.2rem;">ตำแหน่ง: ${u.department || '-'} | ล่าสุด: ${u.createdAt || u.lastLogin || '-'}</p>
+                                <div style="display: flex; gap: 0.4rem; margin-top: 0.4rem;">
+                                    <span class="${roleBadgeClass}">${u.role || 'Inspector'}</span>
+                                    <span class="${statusBadgeClass}">${statusText}</span>
                                 </div>
                             </div>
-                            <div class="user-card-actions" style="display: flex; gap: 0.5rem; align-items: center;">
-                                ${isPending ? `
-                                    <button class="btn-primary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="PaintingAuth.approveUser('${u.employeeId}')">✅ อนุมัติ</button>
-                                    <button class="btn-secondary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">❌ ปฏิเสธ</button>
-                                ` : (!isSuper ? `
-                                    ${isDisabled ? `
-                                        <button class="btn-primary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #10b981; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Active')">🟢 เปิดใช้งาน</button>
-                                    ` : `
-                                        <button class="btn-secondary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #ef4444; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">🔴 ปิดใช้งาน</button>
-                                    `}
-                                ` : `<span style="font-size: 0.85rem; color: #38bdf8; font-weight: 800; background: rgba(56, 189, 248, 0.15); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">👑 เจ้าของระบบ</span>`)}
-                            </div>
                         </div>
-                    `;
-                }).join("");
-            }
+                        <div class="user-card-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+                            ${isPending ? `
+                                <button class="btn-primary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="PaintingAuth.approveUser('${u.employeeId}')">✅ อนุมัติ</button>
+                                <button class="btn-secondary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">❌ ปฏิเสธ</button>
+                            ` : (!isSuper ? `
+                                ${isDisabled ? `
+                                    <button class="btn-primary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #10b981; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Active')">🟢 เปิดใช้งาน</button>
+                                ` : `
+                                    <button class="btn-secondary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #ef4444; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">🔴 ปิดใช้งาน</button>
+                                `}
+                            ` : `<span style="font-size: 0.85rem; color: #38bdf8; font-weight: 800; background: rgba(56, 189, 248, 0.15); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">👑 เจ้าของระบบ</span>`)}
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
     },
 
