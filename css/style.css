@@ -1530,6 +1530,11 @@ button, input, textarea, select {
   width: 100% !important;
 }
 
+#dashboard-tab.active > #dashboardChartHeading {
+  order: 2 !important;
+  width: 100% !important;
+}
+
 #dashboard-tab.active > #dashboardInspectionCharts {
   order: 4 !important;
   width: 100% !important;
@@ -1541,7 +1546,7 @@ button, input, textarea, select {
 }
 
 #dashboard-tab.active > #dashboardControlsHeader {
-  order: 2 !important;
+  order: 0 !important;
   width: 100% !important;
 }
 

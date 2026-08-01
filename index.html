@@ -590,7 +590,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=94.0.0">
+    <link rel="stylesheet" href="css/style.css?v=95.0.0">
     <link rel="stylesheet" href="css/auth.css?v=83.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -750,8 +750,7 @@
                 <!-- TAB 1: DASHBOARD OVERVIEW -->
                 <section id="dashboard-tab" class="tab-page active" data-permission="dashboard.read">
                     
-                    <div id="dashboardControlsHeader" class="section-title-bar" style="margin-bottom: 1.75rem !important;">
-                        <h1 class="page-title">ยอดคัดออกจากราวพ่นสี</h1>
+                    <div id="dashboardControlsHeader" class="section-title-bar" style="margin-bottom: 1.75rem !important; justify-content: flex-end !important;">
                         <div class="date-filter-wrap" style="display: flex; gap: 0.6rem; align-items: center;">
                             <div style="position: relative; flex-grow: 1; min-width: 180px;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#38bdf8" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 2;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
@@ -761,6 +760,10 @@
                                 ดูข้อมูลทั้งหมด
                             </button>
                         </div>
+                    </div>
+
+                    <div id="dashboardChartHeading" class="section-title-bar dashboard-chart-heading" style="margin-bottom: 1rem !important;">
+                        <h1 class="page-title">ยอดคัดออกจากราวพ่นสี</h1>
                     </div>
 
                     <!-- KPI Stat Cards Grid -->
