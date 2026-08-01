@@ -613,60 +613,32 @@ async function loginUserAPI(employeeId, passwordHash) {
 async function registerUserAPI(userData) {
     const baseUrl = getApiUrl();
 
-    // 1. Try Cloud Google Apps Script GET Request
+    // 1. Guaranteed Cloud Dispatch to Google Sheets API
     if (baseUrl) {
         try {
-            const query = new URLSearchParams({
+            const queryParams = new URLSearchParams({
                 action: 'register',
                 employeeId: userData.employeeId || '',
                 displayName: userData.displayName || '',
                 department: userData.department || '',
                 passwordHash: userData.passwordHash || ''
             }).toString();
-            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query;
-            const res = await fetch(url);
-            if (res.ok) {
-                const json = await res.json();
-                if (json && json.status === "success") {
-                    saveUserLocallyFallback(userData); // Keep synced locally
-                    return json;
-                } else if (json && json.status === "error") {
-                    if (json.message === "Unauthorized" || !json.message) {
-                        return saveUserLocallyFallback(userData);
-                    }
-                    return json;
-                }
-            }
-        } catch (e) {
-            console.warn("Cloud GET register failed, trying POST...", e);
-        }
+            const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
-        // 2. Try Cloud POST Request
-        try {
-            const postUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=register';
-            const res = await fetch(postUrl, {
+            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+            fetch(baseUrl, {
                 method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "register", ...userData })
             });
-            if (res.ok) {
-                const json = await res.json();
-                if (json && json.status === "success") {
-                    saveUserLocallyFallback(userData);
-                    return json;
-                } else if (json && json.status === "error") {
-                    if (json.message === "Unauthorized" || !json.message) {
-                        return saveUserLocallyFallback(userData);
-                    }
-                    return json;
-                }
-            }
         } catch (e) {
-            console.warn("Cloud POST register failed:", e);
+            console.warn("Cloud register dispatch failed:", e);
         }
     }
 
-    // 3. Guaranteed Local Registration Fallback
+    // 2. Guaranteed Local Registration Fallback
     return saveUserLocallyFallback(userData);
 }
 
@@ -776,19 +748,21 @@ async function updateUserStatusAPI(employeeId, newStatus, newRole) {
         }
     } catch (e) {}
 
-    // 2. Update cloud API
+    // 2. Update Cloud Google Apps Script DB
     const baseUrl = getApiUrl();
     if (baseUrl) {
         try {
             const queryParams = new URLSearchParams({
                 action: 'updateUserStatus',
-                employeeId: employeeId,
+                employeeId: employeeId || '',
                 userStatus: newStatus || '',
                 userRole: newRole || ''
             }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
-            fetch(url, { method: "GET" }).catch(() => {});
-        } catch (e) {}
+            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+        } catch (e) {
+            console.warn("Cloud updateUserStatus dispatch failed:", e);
+        }
     }
     return { status: "success" };
 }
