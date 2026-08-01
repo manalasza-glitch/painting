@@ -7,6 +7,7 @@ let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 let inspectionDataScope = "today";
+let dashboardDateChangeTimer = null;
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
@@ -419,6 +420,11 @@ function getStandardISODate(raw) {
     return s.substring(0, 10);
 }
 
+function queueDashboardDateChange(dateValue) {
+    clearTimeout(dashboardDateChangeTimer);
+    dashboardDateChangeTimer = setTimeout(() => changeDashboardDate(dateValue), 80);
+}
+
 async function changeDashboardDate(dateValue) {
     const selectedDate = String(dateValue || "").trim();
     await loadDataFromAPI(false, selectedDate || getStandardISODate(new Date().toISOString()));
@@ -434,9 +440,34 @@ function resetDashboardDateFilter() {
     return showAllDashboardData();
 }
 
+function resetInspectionDashboard() {
+    const zeroIds = [
+        "kpiTotalInspections",
+        "kpiTotalDefects",
+        "kpiTodayDefects",
+        "kpiTopDefectCount"
+    ];
+    zeroIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = id === "kpiTopDefectCount" ? "0 ชิ้น" : "0";
+    });
+
+    const topDefect = document.getElementById("kpiTopDefect");
+    if (topDefect) topDefect.innerText = "-";
+    const avgDefect = document.getElementById("kpiAvgDefectPerJob");
+    if (avgDefect) avgDefect.innerText = "เฉลี่ย 0 ชิ้น/ครั้ง";
+
+    if (dailyChartInstance) { dailyChartInstance.destroy(); dailyChartInstance = null; }
+    if (donutChartInstance) { donutChartInstance.destroy(); donutChartInstance = null; }
+    const severityList = document.getElementById("defectProgressList");
+    if (severityList) severityList.innerHTML = "";
+    renderRecentTable([]);
+    renderDailyReportCharts();
+}
+
 function renderDashboard() {
     if (!inspectionRecords || inspectionRecords.length === 0) {
-        renderDailyReportCharts();
+        resetInspectionDashboard();
         return;
     }
 
@@ -1425,3 +1456,10 @@ function resetChartZoomInFullscreen() {
         fullscreenChartInstance.resetZoom();
     }
 }
+
+// Expose dashboard controls explicitly for inline handlers and older cached pages.
+window.queueDashboardDateChange = queueDashboardDateChange;
+window.changeDashboardDate = changeDashboardDate;
+window.showAllDashboardData = showAllDashboardData;
+window.resetDashboardDateFilter = resetDashboardDateFilter;
+window.loadDataFromAPI = loadDataFromAPI;
