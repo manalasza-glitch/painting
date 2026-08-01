@@ -689,50 +689,6 @@ function saveUserLocallyFallback(userData) {
     }
 }
 
-function getLocalUsersList() {
-    let users = [];
-    try {
-        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        if (cached) {
-            users = JSON.parse(cached);
-        }
-    } catch (e) {}
-
-    // Ensure Super Admin ADM-01 / 69112 is present
-    const hasAdmin = users && users.some(u => u.role === "Super Admin" || String(u.employeeId).includes("ADM") || String(u.employeeId).includes("69112"));
-    if (!hasAdmin) {
-        users.unshift({
-            employeeId: "69112",
-            displayName: "Mana Subintan",
-            department: "Engineer (วิศวกร)",
-            passwordHash: "",
-            role: "Super Admin",
-            status: "Active",
-            createdAt: "2026-07-31 00:00"
-        });
-    }
-
-    // Ensure real registered employee 68036 from phone screenshot is included as Pending for approval
-    const hasEmp68036 = users && users.some(u => String(u.employeeId).trim() === "68036");
-    if (!hasEmp68036) {
-        users.push({
-            employeeId: "68036",
-            displayName: "พนักงานลงทะเบียน (รหัส 68036)",
-            department: "Operator (พนักงานปฏิบัติการ)",
-            passwordHash: "",
-            role: "Inspector",
-            status: "Pending",
-            createdAt: "2026-08-01 08:40"
-        });
-    }
-
-    // Filter out old legacy fake EMP-002
-    users = users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่ (รออนุมัติ)"));
-
-    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
-    return users;
-}
-
 async function getUsersAPI() {
     const baseUrl = getApiUrl();
     if (baseUrl) {
@@ -741,18 +697,22 @@ async function getUsersAPI() {
             const res = await fetch(url);
             if (res.ok) {
                 const json = await res.json();
-                if (json && json.status === "success" && Array.isArray(json.users) && json.users.length > 0) {
-                    const realUsers = json.users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
-                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(realUsers));
-                    return realUsers;
+                if (json && json.status === "success" && Array.isArray(json.users)) {
+                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
+                    return json.users;
                 }
             }
         } catch (e) {
-            console.warn("getUsersAPI cloud fetch failed, returning local:", e);
+            console.warn("getUsersAPI cloud fetch failed:", e);
         }
     }
 
-    return getLocalUsersList();
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 async function updateUserStatusAPI(employeeId, newStatus, newRole) {

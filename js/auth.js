@@ -259,23 +259,8 @@ const PaintingAuth = {
         if (typeof getUsersAPI === "function") {
             let users = await getUsersAPI();
             if (Array.isArray(users)) {
-                // Filter out any lingering fake EMP-002 data
-                users = users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
+                // Sort: Super Admin first, then PENDING users directly below, then Active, then Disabled
 
-                // Merge users from local storage if any registered locally
-                try {
-                    const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-                    if (cached) {
-                        const localUsers = JSON.parse(cached);
-                        localUsers.forEach(lu => {
-                            if (lu.employeeId !== "EMP-002" && !users.some(u => String(u.employeeId).trim() === String(lu.employeeId).trim())) {
-                                users.push(lu);
-                            }
-                        });
-                    }
-                } catch(e) {}
-
-                // Sort: Super Admin first, then PENDING users directly below Super Admin, then Active, then Disabled
                 users.sort((a, b) => {
                     if (a.role === "Super Admin") return -1;
                     if (b.role === "Super Admin") return 1;
