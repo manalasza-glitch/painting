@@ -1679,3 +1679,57 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(56, 189, 248, 0.2) !important;
   transform: scale(1.15) !important;
 }
+
+/* Compact dashboard overview charts: keep the cards and plots visually balanced. */
+.dashboard-overview-chart-grid {
+  align-items: stretch !important;
+}
+
+.dashboard-overview-chart-card {
+  height: 500px !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.dashboard-overview-daily-wrapper {
+  height: 330px !important;
+  max-height: 340px !important;
+  flex: 0 0 330px !important;
+}
+
+.dashboard-overview-donut-wrapper {
+  height: 200px !important;
+  max-height: 220px !important;
+  flex: 0 0 200px !important;
+}
+
+.dashboard-overview-donut-card .severity-item {
+  margin-bottom: 0.45rem !important;
+}
+
+.dashboard-overview-donut-card .severity-info {
+  font-size: 0.82rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.dashboard-overview-donut-card .progress-track {
+  height: 8px !important;
+}
+
+@media (max-width: 768px) {
+  .dashboard-overview-chart-card {
+    height: auto !important;
+  }
+
+  .dashboard-overview-daily-wrapper {
+    height: 240px !important;
+    max-height: 250px !important;
+    flex-basis: 240px !important;
+  }
+
+  .dashboard-overview-donut-wrapper {
+    height: 190px !important;
+    max-height: 200px !important;
+    flex-basis: 190px !important;
+  }
+}
