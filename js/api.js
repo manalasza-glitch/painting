@@ -101,7 +101,18 @@ async function fetchInspectionDataFromAPI() {
 // Send new inspection form data to Google Sheet API
 async function sendDataToAPI(data) {
     const baseUrl = getApiUrl();
-    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=create';
+    const queryParams = new URLSearchParams({
+        action: 'create',
+        date: data.date || data.timestamp || '',
+        rust: data.rust || 0,
+        dent: data.dent || 0,
+        weld: data.weld || 0,
+        chemical: data.chemical || 0,
+        oil: data.oil || 0,
+        note: data.note || '',
+        timestamp: data.timestamp || data.date || ''
+    }).toString();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
     try {
         activeSyncRequests++;
@@ -111,6 +122,9 @@ async function sendDataToAPI(data) {
             method: "POST",
             mode: "no-cors",
             cache: "no-cache",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
             body: JSON.stringify({
                 action: "create",
                 ...data
@@ -120,7 +134,7 @@ async function sendDataToAPI(data) {
         const cache = getCachedOrSampleData();
         cache.unshift({
             ...data,
-            timestamp: new Date().toISOString()
+            timestamp: data.timestamp || data.date || new Date().toISOString()
         });
         localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(cache));
 
@@ -141,7 +155,14 @@ async function updateDataToAPI(data) {
         action: 'update',
         rowIndex: data.rowIndex || '',
         date: data.date || '',
-        originalDate: data.originalDate || ''
+        originalDate: data.originalDate || '',
+        rust: data.rust || 0,
+        dent: data.dent || 0,
+        weld: data.weld || 0,
+        chemical: data.chemical || 0,
+        oil: data.oil || 0,
+        note: data.note || '',
+        timestamp: data.timestamp || data.date || ''
     }).toString();
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
@@ -169,6 +190,9 @@ async function updateDataToAPI(data) {
             method: "POST",
             mode: "no-cors",
             cache: "no-cache",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
             body: JSON.stringify({
                 action: "update",
                 ...data
