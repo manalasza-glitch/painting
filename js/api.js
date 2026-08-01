@@ -650,25 +650,13 @@ function saveUserLocallyFallback(userData) {
             try { users = JSON.parse(cached); } catch(e){}
         }
 
-        // Pre-populate Super Admin ADM-01 so system always has an existing Admin
-        const hasAdmin = users.some(u => u.role === "Super Admin" || u.employeeId === "ADM-01");
-        if (!hasAdmin) {
-            users.unshift({
-                employeeId: "ADM-01",
-                displayName: "Mana Subintan",
-                department: "Engineer (วิศวกร)",
-                passwordHash: "",
-                role: "Super Admin",
-                status: "Active",
-                createdAt: "2026-07-31T00:00:00.000Z"
-            });
-        }
-
         let existingUser = users.find(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
         if (existingUser) {
-            existingUser.displayName = userData.displayName;
-            existingUser.department = userData.department;
-            existingUser.passwordHash = userData.passwordHash;
+            existingUser.displayName = userData.displayName || existingUser.displayName;
+            existingUser.department = userData.department || existingUser.department;
+            if (userData.passwordHash) existingUser.passwordHash = userData.passwordHash;
+            if (userData.status) existingUser.status = userData.status;
+            if (userData.role) existingUser.role = userData.role;
             localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
             return {
                 status: "success",
@@ -678,14 +666,13 @@ function saveUserLocallyFallback(userData) {
             };
         }
 
-        const isFirst = users.length === 0;
         const newUser = {
             employeeId: userData.employeeId,
             displayName: userData.displayName,
             department: userData.department,
-            passwordHash: userData.passwordHash,
-            role: isFirst ? "Super Admin" : "Inspector",
-            status: isFirst ? "Active" : "Pending",
+            passwordHash: userData.passwordHash || "",
+            role: userData.role || "Inspector",
+            status: userData.status || "Pending",
             createdAt: new Date().toISOString()
         };
         users.push(newUser);
@@ -693,53 +680,13 @@ function saveUserLocallyFallback(userData) {
 
         return {
             status: "success",
-            isSuperAdmin: isFirst,
+            isSuperAdmin: false,
             role: newUser.role,
             userStatus: newUser.status
         };
     } catch (e) {
         return { status: "error", message: "ไม่สามารถบันทึกข้อมูลผู้ใช้ได้" };
     }
-}
-
-function getLocalUsersList() {
-    let users = [];
-    try {
-        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        if (cached) {
-            users = JSON.parse(cached);
-        }
-    } catch (e) {}
-
-    // Ensure initial users list always contains Super Admin and Pending registration for approval
-    const hasAdmin = users && users.some(u => u.role === "Super Admin" || String(u.employeeId).includes("ADM") || String(u.employeeId).includes("69112"));
-    if (!hasAdmin) {
-        users.unshift({
-            employeeId: "ADM-01",
-            displayName: "Mana Subintan (69112)",
-            department: "Engineer (วิศวกร)",
-            passwordHash: "",
-            role: "Super Admin",
-            status: "Active",
-            createdAt: "2026-07-31 00:00"
-        });
-    }
-
-    const hasPending = users && users.some(u => u.status === "Pending");
-    if (!hasPending) {
-        users.push({
-            employeeId: "EMP-002",
-            displayName: "พนักงานลงทะเบียนใหม่ (รออนุมัติ)",
-            department: "Operator (พนักงานปฏิบัติการ)",
-            passwordHash: "",
-            role: "Inspector",
-            status: "Pending",
-            createdAt: "2026-07-31 18:30"
-        });
-    }
-
-    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
-    return users;
 }
 
 async function getUsersAPI() {
@@ -750,7 +697,7 @@ async function getUsersAPI() {
             const res = await fetch(url);
             if (res.ok) {
                 const json = await res.json();
-                if (json && json.status === "success" && Array.isArray(json.users) && json.users.length > 0) {
+                if (json && json.status === "success" && Array.isArray(json.users)) {
                     localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
                     return json.users;
                 }
@@ -760,7 +707,13 @@ async function getUsersAPI() {
         }
     }
 
-    return getLocalUsersList();
+    // Fallback: return only real locally-stored users
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 async function updateUserStatusAPI(employeeId, newStatus, newRole) {
