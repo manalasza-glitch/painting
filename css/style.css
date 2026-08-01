@@ -1521,6 +1521,12 @@ button, input, textarea, select {
   width: 100% !important;
 }
 
+/* The page heading keeps the date controls, while the duplicate overview KPI
+   cards are presented in the detailed daily-production section below. */
+#dashboard-tab.active > #dashboardOverviewKpis {
+  display: none !important;
+}
+
 #dashboard-tab.active > #dashboardInspectionCharts {
   order: 2 !important;
   width: 100% !important;
