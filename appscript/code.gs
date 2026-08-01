@@ -1,4 +1,5 @@
 const SHEET_NAME = "Inspection";
+const DAILY_REPORT_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read"];
 
@@ -20,6 +21,25 @@ function parsePermissions(value, role) {
 
 function permissionsJson(value, role) {
   return JSON.stringify(parsePermissions(value, role));
+}
+
+// Keep daily-report submissions idempotent. If the browser times out after
+// Google Sheets has already written the rows, retrying the same submissionId
+// must not append a duplicate set of rows.
+function ensureDailyReportIdColumn(sheet) {
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  const existingIndex = headers.indexOf(DAILY_REPORT_ID_HEADER);
+  if (existingIndex >= 0) return existingIndex + 1;
+  const newColumn = lastColumn + 1;
+  sheet.getRange(1, newColumn).setValue(DAILY_REPORT_ID_HEADER);
+  return newColumn;
+}
+
+function hasDailyReportSubmission(sheet, submissionId, idColumn) {
+  if (!submissionId || sheet.getLastRow() < 2) return false;
+  const values = sheet.getRange(2, idColumn, sheet.getLastRow() - 1, 1).getValues();
+  return values.some(row => String(row[0] || "").trim() === submissionId);
 }
 
 function formatDateStr(d, includeTime) {
@@ -368,8 +388,14 @@ function doPost(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER
         ]);
+      }
+
+      const submissionId = String(data.submissionId || "").trim();
+      const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
+      if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
       
       const now = new Date();
@@ -407,7 +433,8 @@ function doPost(e) {
             r.thickPaint,     // Column P (Column 16)
             r.waterStain,     // Column Q (Column 17)
             r.otherDefect,    // Column R (Column 18)
-            r.totalDefect     // Column S (Column 19)
+            r.totalDefect,    // Column S (Column 19)
+            submissionId      // Column T: idempotency key
           ]);
         });
       }
@@ -658,7 +685,7 @@ function doGet(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect"
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER
         ]);
       }
 
@@ -667,6 +694,12 @@ function doGet(e) {
         try { payloadData = JSON.parse(e.parameter.payload); } catch(pErr){}
       } else {
         payloadData = e.parameter || {};
+      }
+
+      const submissionId = String(payloadData.submissionId || "").trim();
+      const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
+      if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
 
       const now = new Date();
@@ -703,7 +736,7 @@ function doGet(e) {
             now, dateVal, shiftVal, recorderVal, checkerVal,
             burner, wash, ovenEtc, dtNote,
             r.model, r.timeSlot, r.prodQty,
-            r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect
+            r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId
           ]);
         });
       }

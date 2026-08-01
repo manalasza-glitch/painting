@@ -394,6 +394,14 @@ function deleteStaffName(index) {
 
 let dailyReportRecords = [];
 let dailyReportHistoryRecords = [];
+let pendingDailyReportSubmissionId = null;
+
+function createDailyReportSubmissionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+    }
+    return `daily-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function initDailyReportForm() {
     const today = new Date().toISOString().split('T')[0];
@@ -695,6 +703,7 @@ async function submitDailyReport() {
 
     const payload = {
         action: "submitDailyReport",
+        submissionId: pendingDailyReportSubmissionId || (pendingDailyReportSubmissionId = createDailyReportSubmissionId()),
         date: date,
         shift: shift,
         recorder: recorder,
@@ -745,6 +754,7 @@ async function submitDailyReport() {
         
         // Reset Form & Clear Draft
         dailyReportRecords = [];
+        pendingDailyReportSubmissionId = null;
         localStorage.removeItem("PAINTING_DAILY_REPORT_DRAFT");
         renderDailyReportList();
         document.getElementById('dtBurner').value = "";

@@ -278,7 +278,11 @@ async function sendDailyReportToAPI(payload) {
             },
             body: JSON.stringify(payload)
         });
-        return await requireJsonResponse(response, 'Submit daily report');
+        const result = await requireJsonResponse(response, 'Submit daily report');
+        if (!result || result.status !== "success" || result.action !== "submitDailyReport") {
+            throw new Error("Submit daily report: backend did not confirm the save");
+        }
+        return result;
     } catch (err) {
         console.error("Daily Report Submit Error:", err);
         throw err;
