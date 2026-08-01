@@ -564,14 +564,22 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 0,
+                    right: window.innerWidth < 640 ? 25 : 15,
+                    top: 5,
+                    bottom: 5
+                }
+            },
             plugins: {
                 legend: {
                     position: 'top',
                     labels: { 
                         color: '#e2e8f0', 
                         font: { family: 'Sarabun', size: window.innerWidth < 640 ? 10 : 12 },
-                        boxWidth: window.innerWidth < 640 ? 12 : 20,
-                        padding: window.innerWidth < 640 ? 6 : 10
+                        boxWidth: window.innerWidth < 640 ? 10 : 20,
+                        padding: window.innerWidth < 640 ? 4 : 10
                     }
                 },
                 zoom: {
