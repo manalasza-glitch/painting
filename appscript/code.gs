@@ -777,7 +777,8 @@ function doGet(e) {
         thickPaint: Number(r[15]) || 0,
         waterStain: Number(r[16]) || 0,
         otherDefect: Number(r[17]) || 0,
-        totalDefect: Number(r[18]) || 0
+        totalDefect: Number(r[18]) || 0,
+        submissionId: String(r[19] || "")
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();

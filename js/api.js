@@ -285,6 +285,17 @@ async function sendDailyReportToAPI(payload) {
         return result;
     } catch (err) {
         console.error("Daily Report Submit Error:", err);
+
+        // Apps Script can finish writing the rows but lose the HTTP response
+        // during a cold start/redirect. Confirm the submission by reading the
+        // saved rows before telling the user that the save failed.
+        try {
+            if (await verifyDailyReportSavedOnBackend(payload)) {
+                return { status: "success", action: "submitDailyReport", recovered: true };
+            }
+        } catch (verifyError) {
+            console.warn("Unable to confirm daily report after submit error:", verifyError);
+        }
         throw err;
     } finally {
         activeSyncRequests = Math.max(0, activeSyncRequests - 1);
@@ -441,6 +452,51 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
     }
 
     return [];
+}
+
+async function verifyDailyReportSavedOnBackend(payload) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl || !payload) return false;
+
+    const date = String(payload.date || "").trim();
+    const query = new URLSearchParams({ action: "getDailyReportData" });
+    if (date) query.set("date", date);
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
+    const response = await fetch(url, {
+        method: "GET",
+        cache: "no-cache",
+        headers: { "Accept": "application/json" }
+    });
+    if (!response.ok) return false;
+
+    const result = await response.json();
+    const saved = Array.isArray(result) ? result : (result && Array.isArray(result.data) ? result.data : []);
+    const submissionId = String(payload.submissionId || "").trim();
+    if (submissionId && saved.some(record => String(record.submissionId || "").trim() === submissionId)) {
+        return true;
+    }
+
+    // Compatibility fallback for rows created before SubmissionId was added.
+    const expected = Array.isArray(payload.records) ? payload.records : [];
+    const candidates = saved.filter(record => {
+        const recordDate = String(record.date || record.Date || "").trim().slice(0, 10);
+        return (!date || recordDate === date) &&
+            (!payload.recorder || String(record.recorder || record.Recorder || "").trim() === String(payload.recorder).trim());
+    });
+    const used = new Set();
+    return expected.length > 0 && expected.every(item => {
+        const index = candidates.findIndex((record, i) => {
+            if (used.has(i)) return false;
+            const same = (a, b) => String(a ?? "").trim() === String(b ?? "").trim();
+            return same(record.model || record.Model, item.model) &&
+                same(record.timeSlot || record.TimeSlot, item.timeSlot) &&
+                Number(record.prodQty || record.ProdQty || 0) === Number(item.prodQty || 0) &&
+                Number(record.totalDefect || record.TotalDefect || 0) === Number(item.totalDefect || 0);
+        });
+        if (index < 0) return false;
+        used.add(index);
+        return true;
+    });
 }
 
 function generateSampleOutputDiaryData() {

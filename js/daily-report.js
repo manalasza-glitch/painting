@@ -513,9 +513,11 @@ function renderDailyReportList() {
 
     // 1. If draft session items exist before submission, display them with delete action
     if (Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
+        const draftDate = document.getElementById('reportDate')?.value || '';
+        const draftDateLabel = draftDate ? `${formatDailyReportDate(draftDate)} (ร่าง)` : 'วันนี้ (ร่าง)';
         tbody.innerHTML = dailyReportRecords.map((r, i) => `
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(30, 41, 59, 0.7)'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 0.95rem 1.1rem; font-size: 0.85rem; font-weight: 700; color: #38bdf8; white-space: nowrap;">วันนี้ (ร่าง)</td>
+                <td style="padding: 0.95rem 1.1rem; font-size: 0.85rem; font-weight: 700; color: #38bdf8; white-space: nowrap;">${escapeDailyReportHtml(draftDateLabel)}</td>
                 <td style="padding: 0.95rem 1.1rem; font-size: 0.92rem; font-weight: 700; color: #f8fafc;">${escapeDailyReportHtml(r.model || '-')}</td>
                 <td style="padding: 0.95rem 1.1rem;"><span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.82rem;">${escapeDailyReportHtml(r.timeSlot || '-')}</span></td>
                 <td style="padding: 0.95rem 1.1rem; font-weight: 800; color: #34d399; text-align: center; font-size: 1.05rem; text-shadow: 0 0 10px rgba(52, 211, 153, 0.25);">${Number(r.prodQty) || 0}</td>
