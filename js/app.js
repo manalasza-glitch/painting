@@ -566,7 +566,13 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
+                    position: 'top',
+                    labels: { 
+                        color: '#e2e8f0', 
+                        font: { family: 'Sarabun', size: window.innerWidth < 640 ? 10 : 12 },
+                        boxWidth: window.innerWidth < 640 ? 12 : 20,
+                        padding: window.innerWidth < 640 ? 6 : 10
+                    }
                 },
                 zoom: {
                     pan: { enabled: true, mode: 'x' },
