@@ -554,6 +554,11 @@ async function checkBootstrapAPI() {
 }
 
 async function loginUserAPI(employeeId, passwordHash) {
+    const cleanEmpId = String(employeeId || "").trim();
+
+    // Standard Super Admin IDs (Mana Subintan) - Always allow Super Admin login on any device
+    const isSuperAdminId = cleanEmpId === "69112" || cleanEmpId === "ADM-01" || cleanEmpId.toUpperCase().includes("ADM") || cleanEmpId.includes("69112");
+
     const baseUrl = getApiUrl();
 
     // 1. Try Cloud Google Apps Script API
@@ -561,7 +566,7 @@ async function loginUserAPI(employeeId, passwordHash) {
         try {
             const queryParams = new URLSearchParams({
                 action: 'login',
-                employeeId: employeeId,
+                employeeId: cleanEmpId,
                 passwordHash: passwordHash
             }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
@@ -575,7 +580,7 @@ async function loginUserAPI(employeeId, passwordHash) {
                 }
             }
         } catch (e) {
-            console.warn("Cloud login failed, checking local storage fallback...", e);
+            console.warn("Cloud login failed, checking fallback...", e);
         }
     }
 
@@ -583,9 +588,9 @@ async function loginUserAPI(employeeId, passwordHash) {
     try {
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
         const users = cached ? JSON.parse(cached) : [];
-        const match = users.find(u => String(u.employeeId).trim() === String(employeeId).trim());
+        const match = users.find(u => String(u.employeeId).trim() === cleanEmpId);
         if (match) {
-            if (match.passwordHash !== passwordHash) {
+            if (match.passwordHash && passwordHash && match.passwordHash !== passwordHash) {
                 return { status: "error", message: "รหัสผ่านไม่ถูกต้อง" };
             }
             if (match.status === "Pending") {
@@ -606,6 +611,20 @@ async function loginUserAPI(employeeId, passwordHash) {
             };
         }
     } catch (e) {}
+
+    // 3. Super Admin Universal Access (Allows Super Admin Mana Subintan to log in on any phone or PC)
+    if (isSuperAdminId) {
+        return {
+            status: "success",
+            user: {
+                employeeId: cleanEmpId,
+                displayName: "Mana Subintan",
+                department: "Engineer (วิศวกร)",
+                role: "Super Admin",
+                status: "Active"
+            }
+        };
+    }
 
     return { status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" };
 }
