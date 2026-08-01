@@ -436,15 +436,17 @@
 
     .auth-form input,
     .auth-form select {
-        padding: 0.32rem 0.6rem;
-        font-size: 0.78rem;
-        border-radius: 6px;
+        padding: 0.5rem 0.6rem;
+        font-size: 1rem; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
+        border-radius: 8px;
+        min-height: 42px;
     }
 
     .auth-submit {
-        margin-top: 0.25rem;
-        padding: 0.55rem 0.75rem;
-        font-size: 0.85rem;
-        border-radius: 8px;
+        margin-top: 0.35rem;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        min-height: 44px;
     }
 }

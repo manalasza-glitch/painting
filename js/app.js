@@ -1369,6 +1369,25 @@ function closeChartFullscreen() {
     }
 }
 
+// Handle Mobile Screen Rotation & Resize Responsively
+let resizeTimer;
+window.addEventListener("resize", function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (typeof renderDashboard === "function" && document.getElementById("dashboard-tab") && document.getElementById("dashboard-tab").classList.contains("active")) {
+            renderDashboard();
+        }
+    }, 250);
+});
+
+window.addEventListener("orientationchange", function() {
+    setTimeout(() => {
+        if (typeof renderDashboard === "function" && document.getElementById("dashboard-tab") && document.getElementById("dashboard-tab").classList.contains("active")) {
+            renderDashboard();
+        }
+    }, 300);
+});
+
 function resetChartZoomInFullscreen() {
     if (fullscreenChartInstance && typeof fullscreenChartInstance.resetZoom === 'function') {
         fullscreenChartInstance.resetZoom();
