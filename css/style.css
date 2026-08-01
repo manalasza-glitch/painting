@@ -1228,10 +1228,24 @@ button, input, textarea, select {
   }
 
   .content-body {
-    padding: 0.5rem 0.4rem !important;
+    padding: 0.5rem 0.5rem !important;
     gap: 0.75rem !important;
     width: 100% !important;
     max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  .kpi-grid,
+  .dashboard-grid,
+  .chart-card,
+  .table-card,
+  .card-custom,
+  .user-card,
+  .section-title-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     box-sizing: border-box !important;
   }
 
@@ -1239,9 +1253,6 @@ button, input, textarea, select {
     display: flex !important;
     flex-direction: column !important;
     gap: 0.75rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   .app-header {
@@ -1278,10 +1289,9 @@ button, input, textarea, select {
   }
 
   .kpi-grid {
+    display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.45rem !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   .kpi-card {
@@ -1317,13 +1327,8 @@ button, input, textarea, select {
   }
 
   .chart-card, .table-card, .card-custom, .user-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     padding: 0.75rem 0.6rem !important;
     border-radius: 14px !important;
-    box-sizing: border-box !important;
     overflow: hidden !important;
   }
 
