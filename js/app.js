@@ -391,6 +391,9 @@ async function handleFormSubmit(event) {
             showToast("แก้ไขบันทึกทับข้อมูลเดิมเรียบร้อยแล้ว!", "success");
         } else {
             await sendDataToAPI(data);
+            inspectionRecords = [{ ...data, rowIndex: null }, ...(Array.isArray(inspectionRecords) ? inspectionRecords : [])];
+            renderDashboard();
+            renderTables();
             showToast("บันทึกข้อมูลเรียบร้อยแล้ว!", "success");
         }
         

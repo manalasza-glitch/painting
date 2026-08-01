@@ -140,6 +140,9 @@ async function sendDataToAPI(data) {
 
         const response = await fetch(url, { method: "GET", cache: "no-cache" });
         const result = await requireJsonResponse(response, 'Create inspection');
+        if (!result || result.status !== "success" || result.action !== "create") {
+            throw new Error("Create inspection: backend did not confirm the save");
+        }
 
         const cache = getCachedOrSampleData();
         cache.unshift({
