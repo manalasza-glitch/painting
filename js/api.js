@@ -669,17 +669,18 @@ function saveUserLocallyFallback(userData) {
             try { users = JSON.parse(cached); } catch(e){}
         }
 
+        const isSuper69112 = String(userData.employeeId).trim() === "69112";
+
         let existingUser = users.find(u => String(u.employeeId).trim() === String(userData.employeeId).trim());
         if (existingUser) {
             existingUser.displayName = userData.displayName || existingUser.displayName;
             existingUser.department = userData.department || existingUser.department;
             if (userData.passwordHash) existingUser.passwordHash = userData.passwordHash;
-            if (userData.status) existingUser.status = userData.status;
-            if (userData.role) existingUser.role = userData.role;
+            existingUser.role = isSuper69112 ? "Super Admin" : (existingUser.role === "Super Admin" ? "Inspector" : existingUser.role);
             localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
             return {
                 status: "success",
-                isSuperAdmin: existingUser.role === "Super Admin",
+                isSuperAdmin: isSuper69112,
                 role: existingUser.role,
                 userStatus: existingUser.status
             };
@@ -690,8 +691,8 @@ function saveUserLocallyFallback(userData) {
             displayName: userData.displayName,
             department: userData.department,
             passwordHash: userData.passwordHash || "",
-            role: userData.role || "Inspector",
-            status: userData.status || "Pending",
+            role: isSuper69112 ? "Super Admin" : "Inspector",
+            status: isSuper69112 ? "Active" : "Pending",
             createdAt: new Date().toISOString()
         };
         users.push(newUser);
@@ -699,7 +700,7 @@ function saveUserLocallyFallback(userData) {
 
         return {
             status: "success",
-            isSuperAdmin: false,
+            isSuperAdmin: isSuper69112,
             role: newUser.role,
             userStatus: newUser.status
         };

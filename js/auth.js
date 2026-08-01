@@ -260,31 +260,35 @@ const PaintingAuth = {
             let users = await getUsersAPI();
             if (!Array.isArray(users)) users = [];
 
-            // Always preserve the current logged-in Super Admin (Mana Subintan) so your account never disappears
-            const activeUser = this.currentUser || {
+            // 1. Ensure 69112 (Mana Subintan) is ALWAYS present at the top as Super Admin
+            const adminUser = {
                 employeeId: "69112",
                 displayName: "Mana Subintan",
                 department: "Engineer (วิศวกร)",
                 role: "Super Admin",
-                status: "Active"
+                status: "Active",
+                lastLogin: new Date().toISOString()
             };
 
-            const hasSuperAdmin = users.some(u => String(u.employeeId).trim() === String(activeUser.employeeId).trim() || u.role === "Super Admin");
-            if (!hasSuperAdmin) {
-                users.unshift({
-                    employeeId: activeUser.employeeId || "69112",
-                    displayName: activeUser.displayName || "Mana Subintan",
-                    department: activeUser.department || "Engineer (วิศวกร)",
-                    role: "Super Admin",
-                    status: "Active",
-                    lastLogin: new Date().toISOString()
-                });
+            // Reset any non-69112 user back to Inspector so only 69112 is Super Admin
+            users = users.map(u => {
+                const is69112 = String(u.employeeId).trim() === "69112";
+                return {
+                    ...u,
+                    role: is69112 ? "Super Admin" : (u.role === "Super Admin" ? "Inspector" : (u.role || "Inspector")),
+                    displayName: is69112 ? "Mana Subintan" : u.displayName
+                };
+            });
+
+            const has69112 = users.some(u => String(u.employeeId).trim() === "69112");
+            if (!has69112) {
+                users.unshift(adminUser);
             }
 
-            // Sort: Super Admin first, then PENDING users directly below, then Active, then Disabled
+            // 2. Sort: Mana Subintan (69112) FIRST, then PENDING users directly below, then Active, then Disabled
             users.sort((a, b) => {
-                if (a.role === "Super Admin") return -1;
-                if (b.role === "Super Admin") return 1;
+                if (String(a.employeeId).trim() === "69112") return -1;
+                if (String(b.employeeId).trim() === "69112") return 1;
                 if (a.status === "Pending" && b.status !== "Pending") return -1;
                 if (b.status === "Pending" && a.status !== "Pending") return 1;
                 return 0;
@@ -304,7 +308,7 @@ const PaintingAuth = {
             container.innerHTML = users.map(u => {
                 const isPending = u.status === "Pending";
                 const isDisabled = u.status === "Disabled";
-                const isSuper = u.role === "Super Admin";
+                const isSuper = String(u.employeeId).trim() === "69112";
 
                 const roleBadgeClass = isSuper ? "badge-role-super" : "badge-role-inspector";
                 const statusBadgeClass = isPending ? "badge-status-pending" : (isDisabled ? "badge-status-disabled" : "badge-status-active");
