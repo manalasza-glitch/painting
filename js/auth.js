@@ -255,13 +255,36 @@ const PaintingAuth = {
         const disabledCountEl = document.getElementById("disabledUserCount");
 
         if (!container) return;
-        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: #64748b;">กำลังดึงรายชื่อผู้ใช้งานจากระบบ...</div>`;
 
         if (typeof getUsersAPI === "function") {
-            const users = await getUsersAPI();
+            let users = await getUsersAPI();
             if (Array.isArray(users)) {
-                let pending = 0, active = 0, disabled = 0;
+                // Filter out any lingering fake EMP-002 data
+                users = users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
 
+                // Merge users from local storage if any registered locally
+                try {
+                    const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+                    if (cached) {
+                        const localUsers = JSON.parse(cached);
+                        localUsers.forEach(lu => {
+                            if (lu.employeeId !== "EMP-002" && !users.some(u => String(u.employeeId).trim() === String(lu.employeeId).trim())) {
+                                users.push(lu);
+                            }
+                        });
+                    }
+                } catch(e) {}
+
+                // Sort: Super Admin first, then PENDING users directly below Super Admin, then Active, then Disabled
+                users.sort((a, b) => {
+                    if (a.role === "Super Admin") return -1;
+                    if (b.role === "Super Admin") return 1;
+                    if (a.status === "Pending" && b.status !== "Pending") return -1;
+                    if (b.status === "Pending" && a.status !== "Pending") return 1;
+                    return 0;
+                });
+
+                let pending = 0, active = 0, disabled = 0;
                 users.forEach(u => {
                     if (u.status === "Pending") pending++;
                     else if (u.status === "Disabled") disabled++;
@@ -284,32 +307,35 @@ const PaintingAuth = {
 
                     const roleBadgeClass = isSuper ? "badge-role-super" : "badge-role-inspector";
                     const statusBadgeClass = isPending ? "badge-status-pending" : (isDisabled ? "badge-status-disabled" : "badge-status-active");
-                    const statusText = isPending ? "รออนุมัติ" : (isDisabled ? "ระงับใช้งาน" : "ใช้งานได้");
+                    const statusText = isPending ? "⏳ รออนุมัติ" : (isDisabled ? "🔴 ระงับใช้งาน" : "🟢 ใช้งานได้");
 
                     return `
-                        <div class="user-card">
+                        <div class="user-card" style="${isPending ? 'border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.08); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);' : ''}">
                             <div class="user-card-info">
-                                <div class="user-avatar">${(u.displayName || u.employeeId || 'U').charAt(0).toUpperCase()}</div>
+                                <div class="user-avatar" style="${isPending ? 'background: linear-gradient(135deg, #f59e0b, #d97706);' : ''}">${(u.displayName || u.employeeId || 'U').charAt(0).toUpperCase()}</div>
                                 <div class="user-details">
-                                    <h4>${u.displayName || u.employeeId} <small style="color:#64748b;">(${u.employeeId})</small></h4>
-                                    <p>ตำแหน่ง: ${u.department || '-'} | ล่าสุด: ${u.lastLogin || '-'}</p>
-                                    <div style="display: flex; gap: 0.4rem; margin-top: 0.3rem;">
+                                    <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                                        ${u.displayName || u.employeeId} 
+                                        <small style="color:#94a3b8; font-weight: 600;">(รหัส: ${u.employeeId})</small>
+                                    </h4>
+                                    <p style="color: #cbd5e1; margin-top: 0.2rem;">ตำแหน่ง: ${u.department || '-'} | สมัครเมื่อ / ล่าสุด: ${u.createdAt || u.lastLogin || '-'}</p>
+                                    <div style="display: flex; gap: 0.4rem; margin-top: 0.4rem;">
                                         <span class="${roleBadgeClass}">${u.role || 'Inspector'}</span>
                                         <span class="${statusBadgeClass}">${statusText}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="user-card-actions">
+                            <div class="user-card-actions" style="display: flex; gap: 0.5rem; align-items: center;">
                                 ${isPending ? `
-                                    <button class="btn-primary-custom" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #10b981; border: none;" onclick="PaintingAuth.approveUser('${u.employeeId}')">✅ อนุมัติ</button>
-                                    <button class="btn-secondary-custom" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #ef4444; color: #fff; border: none;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">❌ ปฏิเสธ</button>
+                                    <button class="btn-primary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" onclick="PaintingAuth.approveUser('${u.employeeId}')">✅ อนุมัติ</button>
+                                    <button class="btn-secondary-custom" style="padding: 0.6rem 1.25rem; font-size: 0.88rem; font-weight: 800; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">❌ ปฏิเสธ</button>
                                 ` : (!isSuper ? `
                                     ${isDisabled ? `
-                                        <button class="btn-primary-custom" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #10b981; border: none;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Active')">🟢 เปิดใช้งาน</button>
+                                        <button class="btn-primary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #10b981; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Active')">🟢 เปิดใช้งาน</button>
                                     ` : `
-                                        <button class="btn-secondary-custom" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #f59e0b; color: #fff; border: none;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">🔴 ปิดใช้งาน</button>
+                                        <button class="btn-secondary-custom" style="padding: 0.5rem 1rem; font-size: 0.82rem; background: #ef4444; color: #fff; border: none; border-radius: 8px; cursor: pointer;" onclick="PaintingAuth.toggleUserStatus('${u.employeeId}', 'Disabled')">🔴 ปิดใช้งาน</button>
                                     `}
-                                ` : `<span style="font-size: 0.8rem; color: #8b5cf6; font-weight: 700;">👑 เจ้าของระบบ</span>`)}
+                                ` : `<span style="font-size: 0.85rem; color: #38bdf8; font-weight: 800; background: rgba(56, 189, 248, 0.15); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3);">👑 เจ้าของระบบ</span>`)}
                             </div>
                         </div>
                     `;
