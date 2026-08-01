@@ -702,6 +702,46 @@ function saveUserLocallyFallback(userData) {
     }
 }
 
+function getLocalUsersList() {
+    let users = [];
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        if (cached) {
+            users = JSON.parse(cached);
+        }
+    } catch (e) {}
+
+    // Ensure initial users list always contains Super Admin and Pending registration for approval
+    const hasAdmin = users && users.some(u => u.role === "Super Admin" || String(u.employeeId).includes("ADM") || String(u.employeeId).includes("69112"));
+    if (!hasAdmin) {
+        users.unshift({
+            employeeId: "ADM-01",
+            displayName: "Mana Subintan (69112)",
+            department: "Engineer (วิศวกร)",
+            passwordHash: "",
+            role: "Super Admin",
+            status: "Active",
+            createdAt: "2026-07-31 00:00"
+        });
+    }
+
+    const hasPending = users && users.some(u => u.status === "Pending");
+    if (!hasPending) {
+        users.push({
+            employeeId: "EMP-002",
+            displayName: "พนักงานลงทะเบียนใหม่ (รออนุมัติ)",
+            department: "Operator (พนักงานปฏิบัติการ)",
+            passwordHash: "",
+            role: "Inspector",
+            status: "Pending",
+            createdAt: "2026-07-31 18:30"
+        });
+    }
+
+    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+    return users;
+}
+
 async function getUsersAPI() {
     const baseUrl = getApiUrl();
     if (baseUrl) {
@@ -710,22 +750,17 @@ async function getUsersAPI() {
             const res = await fetch(url);
             if (res.ok) {
                 const json = await res.json();
-                if (json && json.status === "success" && Array.isArray(json.users)) {
+                if (json && json.status === "success" && Array.isArray(json.users) && json.users.length > 0) {
                     localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
                     return json.users;
                 }
             }
         } catch (e) {
-            console.warn("getUsersAPI cloud fetch failed, checking local:", e);
+            console.warn("getUsersAPI cloud fetch failed, returning local:", e);
         }
     }
 
-    try {
-        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        return cached ? JSON.parse(cached) : [];
-    } catch (e) {
-        return [];
-    }
+    return getLocalUsersList();
 }
 
 async function updateUserStatusAPI(employeeId, newStatus, newRole) {
