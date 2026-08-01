@@ -221,28 +221,37 @@ async function deleteDataFromAPI(data) {
     }).toString();
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
-    // 1. Remove from localStorage cache immediately
-    const cache = getCachedOrSampleData();
-    const filteredCache = cache.filter(item => {
-        if (data.rowIndex && item.rowIndex && Number(item.rowIndex) === Number(data.rowIndex)) {
-            return false;
-        }
-        const itemDate = String(item.date || item.timestamp || '').trim();
-        const targetDate = String(data.date || data.originalDate || '').trim();
-        if (itemDate && targetDate && itemDate === targetDate) {
-            return false;
-        }
-        return true;
-    });
-    localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(filteredCache));
-
-    // 2. Send POST delete request to Google Sheet API
+    // Delete on the Sheet first. Only update the browser cache after the
+    // backend confirms success, so a failed request cannot hide the record.
     try {
         activeSyncRequests++;
         updateSyncUI();
 
         const response = await fetch(url, { method: "GET", cache: "no-cache" });
-        return await requireJsonResponse(response, 'Delete inspection');
+        const result = await requireJsonResponse(response, 'Delete inspection');
+        if (!result || result.status !== "success" || result.action !== "delete") {
+            throw new Error("Delete inspection: backend did not confirm the deletion");
+        }
+
+        const cache = getCachedOrSampleData();
+        const targetRowIndex = Number(data.rowIndex || 0);
+        const targetDate = String(data.date || data.originalDate || '').trim();
+        const targetNote = String(data.note || '').trim();
+        const filteredCache = cache.filter(item => {
+            if (targetRowIndex && Number(item.rowIndex || 0) === targetRowIndex) return false;
+
+            // Newly-created records may not have a rowIndex yet. In that case,
+            // match the complete record identity instead of deleting every row
+            // from the same date.
+            const itemDate = String(item.date || item.timestamp || '').trim();
+            const itemNote = String(item.note || '').trim();
+            const sameValues = ["rust", "dent", "weld", "chemical", "oil"].every(key =>
+                Number(item[key] || 0) === Number(data[key] || 0)
+            );
+            return !(itemDate === targetDate && itemNote === targetNote && sameValues);
+        });
+        localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(filteredCache));
+        return result;
     } catch (err) {
         console.error("Delete Error:", err);
         throw err;

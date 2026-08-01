@@ -310,6 +310,11 @@ async function deleteInspectionRecord(index) {
     const record = inspectionRecords[index];
     if (!record) return;
 
+    if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests > 0) {
+        showToast("กำลังซิงค์ข้อมูล กรุณารอสักครู่แล้วลองใหม่", "info");
+        return;
+    }
+
     const confirmMsg = `คุณต้องการลบรายการตรวจเช็คของวันที่ "${formatDateForDisplay(record.date, record.timestamp)}" ใช่หรือไม่?`;
     if (!confirm(confirmMsg)) return;
 
