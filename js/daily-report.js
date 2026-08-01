@@ -773,10 +773,3 @@ async function generate1MonthMockData() {
     showToast("ระบบดึงข้อมูลจาก Google Sheets เท่านั้น", "info");
     return;
 }
-    
-    // Switch to Dashboard and re-render charts immediately!
-    switchTab('dashboard-tab');
-    if (typeof renderDailyReportCharts === 'function') {
-        renderDailyReportCharts();
-    }
-}

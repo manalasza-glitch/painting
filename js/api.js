@@ -1,13 +1,4 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwCGi9XE6U0RYliOgyyQZaWOazVOn5xXAo8RVF_AilQi6gy1mWr-sl5_L0Mhv4QjLRj/exec";
-
-// Automatically clear legacy sample mock data from browser localStorage
-(function purgeLegacyMockCaches() {
-    try {
-        localStorage.removeItem("PAINTING_INSPECTION_CACHE");
-        localStorage.removeItem("PAINTING_EVENTS_CACHE");
-        localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
-    } catch (e) {}
-})();
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyURU3_RckS258UNTKzcICiq-XymrmC-CbZitxaQQOynPxozONY7hOxQwEvFWAKTYv5/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
@@ -34,7 +25,7 @@ function updateSyncUI() {
 }
 
 // Force reset to active Anyone deployment URL
-if (!API_URL.includes("AKfycbwCGi9XE6U0RYliOgyyQZaWOazVOn5xXAo8RVF_AilQi6gy1mWr-sl5_L0Mhv4QjLRj")) {
+if (!API_URL.includes("AKfycbyURU3_RckS258UNTKzcICiq-XymrmC-CbZitxaQQOynPxozONY7hOxQwEvFWAKTYv5")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
@@ -48,6 +39,23 @@ function setApiUrl(url) {
 
 function getApiUrl() {
     return API_URL;
+}
+
+async function requireJsonResponse(response, operation) {
+    if (!response.ok) {
+        throw new Error(`${operation}: HTTP ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().includes('application/json')) {
+        throw new Error(`${operation}: Apps Script deployment did not return JSON`);
+    }
+
+    const result = await response.json();
+    if (result && result.status === 'error') {
+        throw new Error(result.message || `${operation}: backend rejected the request`);
+    }
+    return result;
 }
 
 // Fetch historical inspection records from Google Sheet API
@@ -118,25 +126,8 @@ async function sendDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        // 1. Primary delivery: POST request with URL parameters & JSON body (CORS-safe for PC browsers)
-        try {
-            await fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                cache: "no-cache",
-                body: JSON.stringify({
-                    action: "create",
-                    ...data
-                })
-            });
-        } catch (postErr) {
-            console.warn("POST method error, attempting GET fallback:", postErr);
-        }
-
-        // 2. Secondary delivery: GET beacon to guarantee execution on PC Chrome/Edge browsers
-        try {
-            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" }).catch(() => {});
-        } catch (getErr) {}
+        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        const result = await requireJsonResponse(response, 'Create inspection');
 
         const cache = getCachedOrSampleData();
         cache.unshift({
@@ -145,7 +136,7 @@ async function sendDataToAPI(data) {
         });
         localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(cache));
 
-        return { status: "success" };
+        return result || { status: "success" };
     } catch (err) {
         console.error("Post Error:", err);
         throw err;
@@ -193,23 +184,8 @@ async function updateDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        try {
-            await fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                cache: "no-cache",
-                body: JSON.stringify({
-                    action: "update",
-                    ...data
-                })
-            });
-        } catch (e) {}
-
-        try {
-            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" }).catch(() => {});
-        } catch (e) {}
-
-        return { status: "success" };
+        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        return await requireJsonResponse(response, 'Update inspection');
     } catch (err) {
         console.error("Update Error:", err);
         throw err;
@@ -250,23 +226,8 @@ async function deleteDataFromAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        try {
-            await fetch(url, {
-                method: "POST",
-                mode: "no-cors",
-                cache: "no-cache",
-                body: JSON.stringify({
-                    action: "delete",
-                    ...data
-                })
-            });
-        } catch (e) {}
-
-        try {
-            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" }).catch(() => {});
-        } catch (e) {}
-
-        return { status: "success" };
+        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        return await requireJsonResponse(response, 'Delete inspection');
     } catch (err) {
         console.error("Delete Error:", err);
         throw err;
@@ -285,22 +246,15 @@ async function sendDailyReportToAPI(payload) {
         activeSyncRequests++;
         updateSyncUI();
 
-        // 1. Try POST method
-        await fetch(url, {
+        const response = await fetch(url, {
             method: "POST",
-            mode: "no-cors",
             cache: "no-cache",
             headers: {
                 "Content-Type": "text/plain;charset=utf-8"
             },
             body: JSON.stringify(payload)
         });
-
-        // 2. Dual-send GET fallback for guaranteed delivery across mobile WebViews & browsers
-        const getUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitDailyReport&payload=' + encodeURIComponent(JSON.stringify(payload));
-        fetch(getUrl, { method: "GET", mode: "no-cors" }).catch(() => {});
-
-        return { status: "success" };
+        return await requireJsonResponse(response, 'Submit daily report');
     } catch (err) {
         console.error("Daily Report Submit Error:", err);
         throw err;

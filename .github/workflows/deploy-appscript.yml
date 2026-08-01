@@ -28,7 +28,17 @@ jobs:
           mkdir -p ~/.config/clasp
           echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
 
-      - name: Push and Deploy to Apps Script
+      - name: Configure Apps Script project
+        env:
+          APPS_SCRIPT_ID: ${{ secrets.APPS_SCRIPT_ID }}
         run: |
-          clasp push --force || true
-          clasp deploy --description "Auto-deployed via GitHub Actions" || true
+          test -n "$APPS_SCRIPT_ID"
+          printf '{"scriptId":"%s","rootDir":"./appscript"}\n' "$APPS_SCRIPT_ID" > .clasp.json
+
+      - name: Push and Deploy to Apps Script
+        env:
+          APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.APPS_SCRIPT_DEPLOYMENT_ID }}
+        run: |
+          test -n "$APPS_SCRIPT_DEPLOYMENT_ID"
+          clasp push --force
+          clasp deploy --deploymentId "$APPS_SCRIPT_DEPLOYMENT_ID" --description "Auto-deployed via GitHub Actions"

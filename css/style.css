@@ -718,6 +718,7 @@ button, input, textarea, select {
 
 .toast-msg {
   background: #ffffff;
+  color: #0f172a;
   padding: 0.9rem 1.35rem;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -731,6 +732,9 @@ button, input, textarea, select {
 }
 
 .toast-msg.error { border-left-color: var(--accent-rose); }
+.toast-msg.info { border-left-color: #38bdf8; }
+.toast-msg.warning { border-left-color: #f59e0b; }
+.toast-msg span { color: inherit; line-height: 1.4; }
 
 /* MOBILE BOTTOM NAVIGATION BAR (Android & iOS) */
 .mobile-bottom-nav {
