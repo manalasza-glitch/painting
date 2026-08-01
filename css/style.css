@@ -1680,6 +1680,33 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   transform: scale(1.15) !important;
 }
 
+/* Keep every chart action in the upper-right corner of its card. */
+.chart-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+}
+
+.chart-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.chart-title > span {
+  min-width: 0;
+}
+
+.chart-header > .btn-chart-expand,
+.chart-header > div:last-child {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
 /* Compact dashboard overview charts: keep the cards and plots visually balanced. */
 .dashboard-overview-chart-grid {
   align-items: stretch !important;
@@ -1717,6 +1744,11 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @media (max-width: 768px) {
+  .chart-header {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+  }
+
   .dashboard-overview-chart-card {
     height: auto !important;
   }
