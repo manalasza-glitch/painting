@@ -709,9 +709,11 @@ function saveUserLocallyFallback(userData) {
 async function getUsersAPI() {
     const baseUrl = getApiUrl();
     if (baseUrl) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
         try {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
-            const res = await fetch(url);
+            const res = await fetch(url, { cache: 'no-cache', signal: controller.signal });
             if (res.ok) {
                 const json = await res.json();
                 if (json && json.status === "success" && Array.isArray(json.users)) {
@@ -721,6 +723,8 @@ async function getUsersAPI() {
             }
         } catch (e) {
             console.warn("getUsersAPI cloud fetch failed:", e);
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 

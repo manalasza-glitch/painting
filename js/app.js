@@ -175,6 +175,13 @@ function switchTab(tabId, element) {
         if (typeof renderTables === 'function') {
             renderTables();
         }
+    } else if (tabId === "settings-tab") {
+        // Load the live user list whenever the management page is opened.
+        // The page starts with a loading placeholder, so without this call
+        // it stayed there until the manual refresh button was pressed.
+        if (window.PaintingAuth && typeof PaintingAuth.loadUsers === 'function') {
+            PaintingAuth.loadUsers();
+        }
     }
 }
 
