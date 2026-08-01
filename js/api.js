@@ -690,6 +690,18 @@ function saveUserLocallyFallback(userData) {
 }
 
 async function getUsersAPI() {
+    // Purge any old fake data from local storage cache
+    try {
+        const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
+        if (cached) {
+            let users = JSON.parse(cached);
+            let cleaned = users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
+            if (cleaned.length !== users.length) {
+                localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(cleaned));
+            }
+        }
+    } catch (e) {}
+
     const baseUrl = getApiUrl();
     if (baseUrl) {
         try {
@@ -698,8 +710,9 @@ async function getUsersAPI() {
             if (res.ok) {
                 const json = await res.json();
                 if (json && json.status === "success" && Array.isArray(json.users)) {
-                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(json.users));
-                    return json.users;
+                    const realUsers = json.users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
+                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(realUsers));
+                    return realUsers;
                 }
             }
         } catch (e) {
@@ -707,10 +720,14 @@ async function getUsersAPI() {
         }
     }
 
-    // Fallback: return only real locally-stored users
+    // Fallback: return real locally-stored users
     try {
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
-        return cached ? JSON.parse(cached) : [];
+        if (cached) {
+            let users = JSON.parse(cached);
+            return users.filter(u => u.employeeId !== "EMP-002" && !String(u.displayName).includes("พนักงานลงทะเบียนใหม่"));
+        }
+        return [];
     } catch (e) {
         return [];
     }
