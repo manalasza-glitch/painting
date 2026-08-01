@@ -1538,6 +1538,7 @@ button, input, textarea, select {
 #dashboard-tab.active > #dashboardInspectionCharts {
   order: 4 !important;
   width: 100% !important;
+  margin-bottom: 1.5rem !important;
 }
 
 #dashboard-tab.active > .table-card {
