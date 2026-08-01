@@ -335,8 +335,61 @@ const PaintingAuth = {
             if (typeof showToast === "function") showToast(`เปลี่ยนสถานะรหัสพนักงาน ${employeeId} เป็น ${newStatus} สำเร็จ`, "info");
             this.loadUsers();
         }
+    },
+
+    openAddUserModal() {
+        const modal = document.getElementById("addUserModal");
+        if (modal) modal.classList.add("active");
+    },
+
+    closeAddUserModal() {
+        const modal = document.getElementById("addUserModal");
+        if (modal) modal.classList.remove("active");
+    },
+
+    async handleAdminAddUser(event) {
+        if (event) event.preventDefault();
+        const empId = document.getElementById("adminAddEmpId")?.value.trim();
+        const name = document.getElementById("adminAddName")?.value.trim();
+        const dept = document.getElementById("adminAddDept")?.value.trim();
+        const status = document.getElementById("adminAddStatus")?.value || "Active";
+
+        if (!empId || !name) {
+            alert("กรุณากรอกรหัสพนักงานและชื่อ-นามสกุลให้ครบถ้วน");
+            return;
+        }
+
+        const userData = {
+            employeeId: empId,
+            displayName: name,
+            department: dept,
+            role: "Inspector",
+            status: status,
+            passwordHash: await this.hashPassword("123456")
+        };
+
+        if (typeof saveUserLocallyFallback === "function") {
+            saveUserLocallyFallback(userData);
+        }
+
+        if (typeof updateUserStatusAPI === "function") {
+            await updateUserStatusAPI(empId, status, userData.role);
+        }
+
+        if (typeof showToast === "function") {
+            showToast(`เพิ่ม/อนุมัติรหัสพนักงาน ${empId} (${name}) เรียบร้อยแล้ว`, "success");
+        }
+
+        this.closeAddUserModal();
+        this.loadUsers();
     }
 };
+
+window.addEventListener("storage", (e) => {
+    if (e.key === "PAINTING_LOCAL_USERS") {
+        PaintingAuth.loadUsers();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     PaintingAuth.init();
