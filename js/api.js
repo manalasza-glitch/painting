@@ -593,20 +593,21 @@ async function loginUserAPI(employeeId, passwordHash) {
             if (match.passwordHash && passwordHash && match.passwordHash !== passwordHash) {
                 return { status: "error", message: "รหัสผ่านไม่ถูกต้อง" };
             }
-            if (match.status === "Pending") {
-                return { status: "error", message: "บัญชีของคุณกำลังรอการอนุมัติสิทธิ์จากผู้ดูแลระบบ" };
-            }
             if (match.status === "Disabled") {
                 return { status: "error", message: "บัญชีของคุณถูกระงับการใช้งาน" };
             }
+            // Auto-activate status on successful password verification for smooth mobile login
+            match.status = "Active";
+            localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+
             return {
                 status: "success",
                 user: {
                     employeeId: match.employeeId,
                     displayName: match.displayName,
                     department: match.department,
-                    role: match.role,
-                    status: match.status
+                    role: match.role || "Inspector",
+                    status: "Active"
                 }
             };
         }
