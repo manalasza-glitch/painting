@@ -430,7 +430,6 @@ function initDailyReportForm() {
     }
 
     renderDailyReportList();
-    refreshDailyReportHistory();
 }
 
 function addDailyReportRecord({ silent = false } = {}) {

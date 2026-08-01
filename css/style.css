@@ -1709,12 +1709,13 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 /* Compact dashboard overview charts: keep the cards and plots visually balanced. */
 .dashboard-overview-chart-grid {
-  align-items: stretch !important;
+  align-items: start !important;
 }
 
 .dashboard-overview-chart-card {
-  height: 500px !important;
+  height: auto !important;
   min-height: 0 !important;
+  align-self: start !important;
   box-sizing: border-box !important;
 }
 

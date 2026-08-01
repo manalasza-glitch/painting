@@ -6,6 +6,7 @@ let topModelsChartInstance = null;
 let qualityYieldChartInstance = null;
 let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
+let inspectionDataScope = "today";
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
@@ -72,6 +73,10 @@ function setCurrentDateTimeDefaults() {
 window.onload = async () => {
     setCurrentDateTimeDefaults();
 
+    const dashboardDateInput = document.getElementById("dashboardDateFilter");
+    const todayDate = getStandardISODate(new Date().toISOString());
+    if (dashboardDateInput) dashboardDateInput.value = todayDate;
+
     const cacheVer = localStorage.getItem("PAINTING_INSPECTION_CACHE_VER");
     if (cacheVer !== "2.0.0") {
         localStorage.removeItem("PAINTING_INSPECTION_CACHE");
@@ -89,10 +94,7 @@ window.onload = async () => {
         settingInput.value = getApiUrl();
     }
 
-    await loadDataFromAPI();
-    if (typeof loadEventsData === 'function') {
-        loadEventsData();
-    }
+    await loadDataFromAPI(false, todayDate);
 
     // Poll data every 15 seconds only if there are no pending sync requests
     setInterval(() => {
@@ -108,7 +110,7 @@ window.onload = async () => {
     }, 15000);
 };
 
-async function loadDataFromAPI(silent = false) {
+async function loadDataFromAPI(silent = false, requestedDate = null) {
     if (!silent) showToast("กำลังโหลดข้อมูล...", "info");
     
     // Only fetch if not currently syncing to avoid race conditions overriding local cache
@@ -116,7 +118,13 @@ async function loadDataFromAPI(silent = false) {
         return;
     }
 
-    inspectionRecords = await fetchInspectionDataFromAPI();
+    const dashboardInput = document.getElementById("dashboardDateFilter");
+    const selectedDate = requestedDate === null
+        ? (inspectionDataScope === "all" ? "" : (dashboardInput ? dashboardInput.value : getStandardISODate(new Date().toISOString())))
+        : String(requestedDate || "").trim();
+
+    inspectionRecords = await fetchInspectionDataFromAPI(selectedDate);
+    inspectionDataScope = selectedDate ? selectedDate : "all";
     
     // Sort records by date descending
     inspectionRecords.sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
@@ -124,11 +132,6 @@ async function loadDataFromAPI(silent = false) {
     renderDashboard();
     renderTables();
 
-    // Pre-fetch Daily Report history from Google Sheets backend
-    if (typeof refreshDailyReportHistory === 'function') {
-        refreshDailyReportHistory();
-    }
-    
     if (!silent) showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
 }
 
@@ -171,15 +174,19 @@ function switchTab(tabId, element) {
         if (typeof renderDailyReportList === 'function') {
             renderDailyReportList();
         }
-        if (typeof refreshDailyReportHistory === 'function') {
-            refreshDailyReportHistory();
-        }
     } else if (tabId === "event-tab") {
+        if (typeof loadEventsData === 'function') {
+            loadEventsData();
+        }
         if (typeof renderEventsTab === 'function') {
             renderEventsTab();
         }
     } else if (tabId === "history-tab") {
-        if (typeof renderTables === 'function') {
+        if (inspectionDataScope !== "all") {
+            loadDataFromAPI(true, "").then(() => {
+                if (typeof renderTables === 'function') renderTables();
+            });
+        } else if (typeof renderTables === 'function') {
             renderTables();
         }
     } else if (tabId === "settings-tab") {
@@ -412,18 +419,26 @@ function getStandardISODate(raw) {
     return s.substring(0, 10);
 }
 
-function resetDashboardDateFilter() {
+async function changeDashboardDate(dateValue) {
+    const selectedDate = String(dateValue || "").trim();
+    await loadDataFromAPI(false, selectedDate || getStandardISODate(new Date().toISOString()));
+}
+
+async function showAllDashboardData() {
     const filterInput = document.getElementById("dashboardDateFilter");
-    if (filterInput) {
-        filterInput.value = "";
-    }
-    renderDashboard();
+    if (filterInput) filterInput.value = "";
+    await loadDataFromAPI(false, "");
+}
+
+function resetDashboardDateFilter() {
+    return showAllDashboardData();
 }
 
 function renderDashboard() {
-    renderDailyReportCharts();
-
-    if (!inspectionRecords || inspectionRecords.length === 0) return;
+    if (!inspectionRecords || inspectionRecords.length === 0) {
+        renderDailyReportCharts();
+        return;
+    }
 
     // Apply Date Filter
     const filterInput = document.getElementById("dashboardDateFilter");
@@ -845,7 +860,9 @@ function getModelWithGroupLabel(rawModel) {
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
-    const data = await fetchDailyReportDataFromAPI();
+    const filterInput = document.getElementById("dashboardDateFilter");
+    const filterDate = filterInput ? filterInput.value : "";
+    const data = await fetchDailyReportDataFromAPI(filterDate);
     
     if (!data || data.length === 0) {
         // Reset KPI Elements to 0
@@ -870,9 +887,6 @@ async function renderDailyReportCharts() {
         globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
         return;
     }
-
-    const filterInput = document.getElementById("dashboardDateFilter");
-    const filterDate = filterInput ? filterInput.value : "";
 
     let filteredData = data;
     if (filterDate) {

@@ -13,8 +13,7 @@ const EVENT_CATEGORY_CONFIG = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Initial fetch if event tab is rendered
-    loadEventsData();
+    // Event data is fetched when the Event tab is opened, not during dashboard startup.
 });
 
 async function loadEventsData() {

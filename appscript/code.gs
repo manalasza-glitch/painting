@@ -666,7 +666,12 @@ function doGet(e) {
         totalDefect: Number(r[18]) || 0
       }));
 
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: data })).setMimeType(ContentService.MimeType.JSON);
+      const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
+      const filteredData = requestedDate
+        ? data.filter(r => String(r.date || "").substring(0, 10) === requestedDate)
+        : data;
+
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: filteredData })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getPartModels action (PartModel sheet tab)
@@ -872,8 +877,13 @@ function doGet(e) {
       timestamp: formatDateStr(r[7] || r[0], true)
     }));
 
+    const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
+    const filteredResult = requestedDate
+      ? result.filter(r => String(r.date || r.timestamp || "").substring(0, 10) === requestedDate)
+      : result;
+
     return ContentService
-      .createTextOutput(JSON.stringify(result))
+      .createTextOutput(JSON.stringify(filteredResult))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService

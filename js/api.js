@@ -59,12 +59,15 @@ async function requireJsonResponse(response, operation) {
 }
 
 // Fetch historical inspection records from Google Sheet API
-async function fetchInspectionDataFromAPI() {
+async function fetchInspectionDataFromAPI(dateFilter = "") {
     const url = getApiUrl();
-    if (!url) return getCachedOrSampleData();
+    const requestedDate = String(dateFilter || "").trim();
+    const cacheKey = requestedDate ? `PAINTING_INSPECTION_CACHE_${requestedDate}` : "PAINTING_INSPECTION_CACHE";
+    if (!url) return requestedDate ? [] : getCachedOrSampleData();
 
     try {
-        const response = await fetch(url, {
+        const requestUrl = url + (url.includes('?') ? '&' : '?') + (requestedDate ? `date=${encodeURIComponent(requestedDate)}` : '');
+        const response = await fetch(requestUrl, {
             method: "GET",
             headers: { "Accept": "application/json" }
         });
@@ -95,14 +98,23 @@ async function fetchInspectionDataFromAPI() {
                    !note.includes("ทดสอบความหนาชั้นสี");
         });
 
-        if (records && records.length > 0) {
-            localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(records));
+        if (Array.isArray(records)) {
+            localStorage.setItem(cacheKey, JSON.stringify(records));
+            if (!requestedDate && records.length > 0) {
+                localStorage.setItem("PAINTING_INSPECTION_CACHE", JSON.stringify(records));
+            }
             return records;
         }
-        return getCachedOrSampleData();
+        return requestedDate ? [] : getCachedOrSampleData();
     } catch (err) {
         console.warn("Failed to fetch from Google Apps Script API. Using cached data:", err);
-        return getCachedOrSampleData();
+        if (requestedDate) {
+            try {
+                const cachedDay = localStorage.getItem(cacheKey);
+                if (cachedDay !== null) return JSON.parse(cachedDay) || [];
+            } catch (e) {}
+        }
+        return requestedDate ? [] : getCachedOrSampleData();
     }
 }
 
@@ -371,20 +383,22 @@ async function deleteRecorderFromAPI(name) {
 }
 
 // Fetch outputdiary daily production report data from Cloud Google Sheet
-async function fetchDailyReportDataFromAPI() {
+async function fetchDailyReportDataFromAPI(dateFilter = "") {
     const baseUrl = getApiUrl();
+    const requestedDate = String(dateFilter || "").trim();
+    const cacheKey = requestedDate ? `PAINTING_OUTPUTDIARY_CACHE_${requestedDate}` : "PAINTING_OUTPUTDIARY_CACHE";
     if (baseUrl) {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData';
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
 
         try {
             const res = await fetch(url);
             const json = await res.json();
             
             if (json && json.status === "success" && Array.isArray(json.data)) {
-                localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json.data));
+                localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
             } else if (Array.isArray(json)) {
-                localStorage.setItem("PAINTING_OUTPUTDIARY_CACHE", JSON.stringify(json));
+                localStorage.setItem(cacheKey, JSON.stringify(json));
                 return json;
             }
         } catch (e) {
@@ -392,10 +406,20 @@ async function fetchDailyReportDataFromAPI() {
         }
     }
 
-    const cached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+    const cached = localStorage.getItem(cacheKey);
     if (cached !== null) {
         try {
             const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) return parsed;
+        } catch (e) {}
+    }
+
+    if (requestedDate) return [];
+
+    const allCached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+    if (allCached !== null) {
+        try {
+            const parsed = JSON.parse(allCached);
             if (Array.isArray(parsed)) return parsed;
         } catch (e) {}
     }
