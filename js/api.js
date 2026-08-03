@@ -458,6 +458,41 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
     return [];
 }
 
+async function fetchParameterChecklistDataFromAPI(dateFilter = "") {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return [];
+    const requestedDate = String(dateFilter || "").trim();
+    const query = new URLSearchParams({ action: "getParameterChecklistData" });
+    if (requestedDate) query.set("date", requestedDate);
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
+    try {
+        const response = await fetch(url, { cache: "no-cache", headers: { "Accept": "application/json" } });
+        const result = await requireJsonResponse(response, "Get parameter checklist data");
+        if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
+        if (Array.isArray(result)) return result;
+    } catch (error) {
+        console.warn("Failed to fetch parameter checklist data:", error);
+    }
+    return [];
+}
+
+async function sendParameterChecklistToAPI(payload) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) throw new Error("ไม่พบ URL ของระบบหลังบ้าน");
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=submitParameterChecklist";
+    const response = await fetch(url, {
+        method: "POST",
+        cache: "no-cache",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    });
+    const result = await requireJsonResponse(response, "Submit parameter checklist");
+    if (!result || result.status !== "success" || result.action !== "submitParameterChecklist") {
+        throw new Error("ระบบหลังบ้านไม่ยืนยันการบันทึกแบบตรวจพารามิเตอร์");
+    }
+    return result;
+}
+
 async function verifyDailyReportSavedOnBackend(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl || !payload) return false;

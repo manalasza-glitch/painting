@@ -89,6 +89,9 @@ window.onload = async () => {
     if (typeof initDailyReportForm === 'function') {
         initDailyReportForm();
     }
+    if (typeof initParameterChecklist === 'function') {
+        initParameterChecklist();
+    }
 
     const settingInput = document.getElementById("settingApiUrl");
     if (settingInput) {
@@ -109,6 +112,9 @@ window.onload = async () => {
             }
             if (typeof refreshDailyReportHistory === 'function') {
                 refreshDailyReportHistory();
+            }
+            if (typeof refreshParameterChecklist === 'function') {
+                refreshParameterChecklist();
             }
         }
     }, 15000);
@@ -177,6 +183,10 @@ function switchTab(tabId, element) {
         }
         if (typeof renderDailyReportList === 'function') {
             renderDailyReportList();
+        }
+    } else if (tabId === "parameter-checklist-tab") {
+        if (typeof initParameterChecklist === 'function') {
+            initParameterChecklist();
         }
     } else if (tabId === "event-tab") {
         if (typeof loadEventsData === 'function') {
