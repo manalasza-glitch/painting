@@ -729,6 +729,10 @@ button, input, textarea, select {
   margin-top: 1.25rem;
 }
 
+#dashboard-tab #dashboardRecentInspectionCard {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .inspection-page {
     padding: 1rem;
