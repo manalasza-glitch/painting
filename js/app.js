@@ -190,6 +190,14 @@ function switchTab(tabId, element) {
         if (contentBody && !contentBody.contains(targetTab)) {
             contentBody.appendChild(targetTab);
         }
+
+        // The latest-records table belongs with the inspection entry workflow,
+        // so move the existing rendered table alongside the form once the page
+        // is opened. Its original id stays unchanged for table rendering.
+        const recentInspectionCard = document.getElementById("dashboardRecentInspectionCard");
+        if (recentInspectionCard && !targetTab.contains(recentInspectionCard)) {
+            targetTab.appendChild(recentInspectionCard);
+        }
     }
 
     document.querySelectorAll(".tab-page").forEach(page => {

@@ -725,6 +725,10 @@ button, input, textarea, select {
   overflow: visible;
 }
 
+.inspection-page > #dashboardRecentInspectionCard {
+  margin-top: 1.25rem;
+}
+
 @media (max-width: 768px) {
   .inspection-page {
     padding: 1rem;
