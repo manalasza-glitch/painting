@@ -242,8 +242,8 @@ function openInspectionModal() {
         if (typeof showToast === 'function') showToast("คุณไม่มีสิทธิ์บันทึกงานตรวจ", "error");
         return;
     }
-    const modal = document.getElementById("inspectionModal");
-    if (modal) {
+    const page = document.getElementById("inspection-tab");
+    if (page) {
         // Clear Edit Mode Flags
         document.getElementById("editRowIndex").value = "";
         document.getElementById("editOriginalDate").value = "";
@@ -254,7 +254,7 @@ function openInspectionModal() {
         document.getElementById("inspectionForm").reset();
         setCurrentDateTimeDefaults();
 
-        modal.classList.add("active");
+        switchTab("inspection-tab");
         calculateTotalDefects();
 
         setTimeout(setCurrentDateTimeDefaults, 50);
@@ -263,12 +263,12 @@ function openInspectionModal() {
 }
 
 function closeInspectionModal() {
-    const modal = document.getElementById("inspectionModal");
-    if (modal) {
-        modal.classList.remove("active");
+    const page = document.getElementById("inspection-tab");
+    if (page) {
         document.getElementById("editRowIndex").value = "";
         document.getElementById("editOriginalDate").value = "";
         document.getElementById("editIndexInArray").value = "";
+        switchTab("dashboard-tab");
     }
 }
 
@@ -289,8 +289,10 @@ function editInspectionRecord(index) {
     const record = inspectionRecords[index];
     if (!record) return;
 
-    const modal = document.getElementById("inspectionModal");
-    if (!modal) return;
+    const page = document.getElementById("inspection-tab");
+    if (!page) return;
+
+    switchTab("inspection-tab");
 
     // Set Edit Mode Title
     const titleEl = document.getElementById("modalTitleText");
@@ -339,7 +341,6 @@ function editInspectionRecord(index) {
     document.getElementById("oil").value = Number(record.oil) || 0;
     document.getElementById("note").value = record.note || "";
 
-    modal.classList.add("active");
     calculateTotalDefects();
 }
 

@@ -619,7 +619,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.1.0">
+    <link rel="stylesheet" href="css/style.css?v=96.2.0">
     <link rel="stylesheet" href="css/auth.css?v=83.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -1516,9 +1516,9 @@
         </div>
     </div>
 
-    <!-- NEW INSPECTION MODAL FORM -->
-    <div class="modal-overlay" id="inspectionModal">
-        <div class="modal-box">
+    <!-- INSPECTION ENTRY PAGE -->
+    <section id="inspection-tab" class="tab-page inspection-page" data-permission="inspection.create" style="display: none;">
+        <div class="modal-box inspection-page-box">
             <div class="modal-header">
                 <div class="modal-title">
                     <span id="modalTitleText">📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)</span>
@@ -1592,7 +1592,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- 5M1E Event Record Modal -->
     <div class="modal-overlay" id="eventModal">

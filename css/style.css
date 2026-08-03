@@ -700,6 +700,37 @@ button, input, textarea, select {
   max-height: calc(85vh - 60px);
 }
 
+/* Inspection entry is a regular navigation page, not a modal overlay. */
+.inspection-page {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+}
+
+.inspection-page-box {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  transform: none;
+  overflow: visible;
+}
+
+.inspection-page-box .modal-header {
+  border-radius: 16px 16px 0 0;
+}
+
+.inspection-page-box .modal-body,
+.inspection-page-box form {
+  max-height: none;
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .inspection-page {
+    padding: 1rem;
+  }
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
