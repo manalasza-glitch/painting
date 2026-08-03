@@ -438,6 +438,9 @@ function initDailyReportForm() {
     }
 
     renderDailyReportList();
+    // A previous save can finish on Google Sheets even when the browser loses
+    // the response. Reconcile that stale local draft silently on page load.
+    reconcileDailyReportDraft();
 }
 
 function addDailyReportRecord({ silent = false } = {}) {
@@ -505,6 +508,44 @@ function removeDailyReportRecord(index) {
     dailyReportRecords.splice(index, 1);
     localStorage.setItem("PAINTING_DAILY_REPORT_DRAFT", JSON.stringify(dailyReportRecords));
     renderDailyReportList();
+}
+
+async function reconcileDailyReportDraft() {
+    if (!Array.isArray(dailyReportRecords) || dailyReportRecords.length === 0) return;
+    if (typeof fetchDailyReportDataFromAPI !== 'function') return;
+
+    const date = String(document.getElementById('reportDate')?.value || '').trim();
+    if (!date) return;
+
+    try {
+        const saved = await fetchDailyReportDataFromAPI(date);
+        if (!Array.isArray(saved) || saved.length === 0) return;
+
+        const candidates = saved.filter(record => String(record.date || record.Date || '').trim().slice(0, 10) === date);
+        const used = new Set();
+        const same = (a, b) => String(a ?? '').trim() === String(b ?? '').trim();
+        const matched = dailyReportRecords.every(item => {
+            const index = candidates.findIndex((record, candidateIndex) => {
+                if (used.has(candidateIndex)) return false;
+                return same(record.model || record.Model, item.model) &&
+                    same(record.timeSlot || record.TimeSlot, item.timeSlot) &&
+                    Number(record.prodQty || record.ProdQty || 0) === Number(item.prodQty || 0) &&
+                    Number(record.totalDefect || record.TotalDefect || 0) === Number(item.totalDefect || 0);
+            });
+            if (index < 0) return false;
+            used.add(index);
+            return true;
+        });
+
+        if (matched) {
+            dailyReportRecords = [];
+            pendingDailyReportSubmissionId = null;
+            localStorage.removeItem('PAINTING_DAILY_REPORT_DRAFT');
+            renderDailyReportList();
+        }
+    } catch (error) {
+        console.warn('Unable to reconcile saved daily report draft:', error);
+    }
 }
 
 function renderDailyReportList() {
