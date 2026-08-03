@@ -619,7 +619,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.5.0">
+    <link rel="stylesheet" href="css/style.css?v=96.6.0">
     <link rel="stylesheet" href="css/auth.css?v=83.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -716,6 +716,10 @@
                 <a href="#" class="nav-link active" data-permission="dashboard.read" onclick="switchTab('dashboard-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     Dashboard
+                </a>
+                <a href="#" class="nav-link" data-permission="dashboard.read" onclick="openQC7Tools(event, this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-4"></path><path d="M12 16V8"></path><path d="M16 16v-7"></path></svg>
+                    QC 7 TOOL
                 </a>
                 <a href="#inspection-tab" class="nav-link" data-permission="inspection.create" onclick="openInspectionModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
@@ -1448,6 +1452,75 @@
                     </div>
                 </section>
 
+                <!-- TAB: QC 7 TOOLS -->
+                <section id="qc7-tools-tab" class="tab-page qc7-page" data-permission="dashboard.read" style="display: none;">
+                    <div class="qc7-page-header">
+                        <div>
+                            <h1 class="page-title">QC 7 TOOL</h1>
+                            <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ สำหรับวิเคราะห์ข้อมูลการตรวจงาน</p>
+                        </div>
+                        <div class="qc7-toolbar">
+                            <label for="qc7DateFilter">วันที่วิเคราะห์</label>
+                            <input type="date" id="qc7DateFilter" onchange="renderQC7Tools()" onclick="if(this.showPicker) this.showPicker();">
+                            <button type="button" class="btn-primary-custom" onclick="showAllQC7Data()">ดูข้อมูลทั้งหมด</button>
+                        </div>
+                    </div>
+
+                    <div class="qc7-summary-grid">
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">รายการตรวจ</span><strong id="qc7SummaryInspections">0</strong><small>Records</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">ของเสียรวม</span><strong id="qc7SummaryDefects">0</strong><small>Defects</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">ประเภทของเสียสูงสุด</span><strong id="qc7SummaryTopDefect">-</strong><small id="qc7SummaryTopDefectCount">0 ชิ้น</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">ค่าเฉลี่ยต่อรายการ</span><strong id="qc7SummaryAverage">0</strong><small>ชิ้น / รายการ</small></div>
+                    </div>
+
+                    <div class="qc7-tool-grid">
+                        <article class="qc7-card qc7-card-wide">
+                            <div class="qc7-card-heading"><span class="qc7-number">1</span><div><h2>Check Sheet (ใบตรวจสอบ)</h2><p>สรุปจำนวนข้อบกพร่องแต่ละประเภทจากรายการตรวจ</p></div></div>
+                            <div id="qc7CheckSheet" class="qc7-check-sheet"></div>
+                        </article>
+
+                        <article class="qc7-card">
+                            <div class="qc7-card-heading"><span class="qc7-number">2</span><div><h2>Histogram (ฮิสโตแกรม)</h2><p>การกระจายจำนวนของเสียต่อรายการตรวจ</p></div></div>
+                            <div class="qc7-chart-box"><canvas id="qc7HistogramChart"></canvas></div>
+                        </article>
+
+                        <article class="qc7-card qc7-card-wide">
+                            <div class="qc7-card-heading"><span class="qc7-number">3</span><div><h2>Pareto Chart (พาเรโต)</h2><p>จัดลำดับปัญหาจากมากไปน้อยพร้อมเส้นสะสม</p></div></div>
+                            <div class="qc7-chart-box qc7-chart-tall"><canvas id="qc7ParetoChart"></canvas></div>
+                        </article>
+
+                        <article class="qc7-card qc7-card-wide">
+                            <div class="qc7-card-heading"><span class="qc7-number">4</span><div><h2>Fishbone / Cause &amp; Effect (ก้างปลา)</h2><p>กรอบวิเคราะห์สาเหตุของปัญหาตามหมวด 6M</p></div></div>
+                            <div class="qc7-fishbone">
+                                <div class="qc7-fishbone-spine"><span>ปัญหาคุณภาพ<br><strong>ของเสียจากการตรวจ</strong></span></div>
+                                <div class="qc7-cause-grid">
+                                    <div class="qc7-cause-card"><b>Man (คน)</b><span>ทักษะ / การปฏิบัติงาน</span></div>
+                                    <div class="qc7-cause-card"><b>Machine (เครื่องจักร)</b><span>สภาพเครื่อง / อุปกรณ์</span></div>
+                                    <div class="qc7-cause-card"><b>Material (วัตถุดิบ)</b><span>สี / ชิ้นงาน / น้ำยา</span></div>
+                                    <div class="qc7-cause-card"><b>Method (วิธีการ)</b><span>ขั้นตอน / มาตรฐานงาน</span></div>
+                                    <div class="qc7-cause-card"><b>Measurement (การวัด)</b><span>เครื่องมือ / วิธีตรวจ</span></div>
+                                    <div class="qc7-cause-card"><b>Environment (สิ่งแวดล้อม)</b><span>อุณหภูมิ / ความชื้น / ฝุ่น</span></div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="qc7-card">
+                            <div class="qc7-card-heading"><span class="qc7-number">5</span><div><h2>Scatter Diagram (กระจาย)</h2><p>แนวโน้มของเสียตามลำดับการตรวจ</p></div></div>
+                            <div class="qc7-chart-box"><canvas id="qc7ScatterChart"></canvas></div>
+                        </article>
+
+                        <article class="qc7-card">
+                            <div class="qc7-card-heading"><span class="qc7-number">6</span><div><h2>Control Chart (แผนภูมิควบคุม)</h2><p>ค่าเฉลี่ยและขอบเขตควบคุม 3 ซิกมา</p></div></div>
+                            <div class="qc7-chart-box"><canvas id="qc7ControlChart"></canvas></div>
+                        </article>
+
+                        <article class="qc7-card qc7-card-wide">
+                            <div class="qc7-card-heading"><span class="qc7-number">7</span><div><h2>Stratification (การแยกชั้นข้อมูล)</h2><p>แยกข้อมูลตามวันเพื่อค้นหาช่วงที่มีปัญหาสูง</p></div></div>
+                            <div class="table-responsive"><table class="custom-table qc7-stratification-table"><thead><tr><th>วันที่</th><th>รายการตรวจ</th><th>ของเสียรวม</th><th>เฉลี่ย / รายการ</th><th>ประเภทสูงสุด</th></tr></thead><tbody id="qc7StratificationBody"></tbody></table></div>
+                        </article>
+                    </div>
+                </section>
+
             </main>
         </div>
     </div>
@@ -1458,6 +1531,10 @@
             <div class="mobile-nav-item active" data-permission="dashboard.read" onclick="switchTab('dashboard-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
                 <span>Dashboard</span>
+            </div>
+            <div class="mobile-nav-item" data-permission="dashboard.read" onclick="openQC7Tools(event, this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-7"/></svg>
+                <span>QC 7 TOOL</span>
             </div>
             <div class="mobile-nav-item" data-permission="inspection.create" onclick="openInspectionModal()">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
@@ -1794,7 +1871,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.0.0"></script>
     <script src="js/auth.js?v=85.0.0"></script>
-    <script src="js/app.js?v=96.4.0"></script>
+    <script src="js/app.js?v=96.5.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
     <script src="js/parameter-checklist.js?v=1.3.0"></script>
     <script src="js/equipment-checklist.js?v=1.1.0"></script>

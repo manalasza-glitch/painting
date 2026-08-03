@@ -219,12 +219,20 @@ function switchTab(tabId, element) {
     if (tabId === "inspection-tab") {
         document.querySelectorAll('[onclick*="openInspectionModal"]').forEach(el => el.classList.add("active"));
     }
+    if (tabId === "qc7-tools-tab") {
+        document.querySelectorAll('[onclick*="openQC7Tools"]').forEach(el => el.classList.add("active"));
+    }
 
     // Scroll window to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (tabId === "dashboard-tab") {
         renderDashboard();
+    } else if (tabId === "qc7-tools-tab") {
+        initQC7Tools();
+        if (inspectionDataScope !== "all" && typeof loadDataFromAPI === 'function') {
+            loadDataFromAPI(true, "").then(() => renderQC7Tools());
+        }
     } else if (tabId === "daily-report-tab") {
         if (typeof renderStaffDropdowns === 'function') {
             renderStaffDropdowns();
@@ -1541,3 +1549,223 @@ window.changeDashboardDate = changeDashboardDate;
 window.showAllDashboardData = showAllDashboardData;
 window.resetDashboardDateFilter = resetDashboardDateFilter;
 window.loadDataFromAPI = loadDataFromAPI;
+
+// ---------------------------------------------------------------------------
+// QC 7 TOOLS
+// ---------------------------------------------------------------------------
+let qc7HistogramChartInstance = null;
+let qc7ParetoChartInstance = null;
+let qc7ScatterChartInstance = null;
+let qc7ControlChartInstance = null;
+
+const qc7DefectTypes = [
+    { key: 'rust', label: 'สนิม', color: '#f59e0b' },
+    { key: 'dent', label: 'รอยบุบ', color: '#3b82f6' },
+    { key: 'weld', label: 'สะเก็ดเชื่อม', color: '#ef4444' },
+    { key: 'chemical', label: 'คราบน้ำยา', color: '#06b6d4' },
+    { key: 'oil', label: 'คราบน้ำมัน', color: '#8b5cf6' }
+];
+
+function openQC7Tools(event, element) {
+    if (event) event.preventDefault();
+    switchTab('qc7-tools-tab', element);
+}
+
+function qc7RecordDate(record) {
+    return getStandardISODate(record && (record.date || record.timestamp));
+}
+
+function qc7RecordDefects(record) {
+    return qc7DefectTypes.reduce((sum, type) => sum + (Number(record && record[type.key]) || 0), 0);
+}
+
+function qc7FilteredRecords() {
+    const input = document.getElementById('qc7DateFilter');
+    const filterDate = input ? String(input.value || '').trim() : '';
+    const rows = Array.isArray(inspectionRecords) ? inspectionRecords : [];
+    return filterDate ? rows.filter(record => qc7RecordDate(record) === filterDate) : rows;
+}
+
+function showAllQC7Data() {
+    const input = document.getElementById('qc7DateFilter');
+    if (input) input.value = '';
+    if (typeof loadDataFromAPI === 'function') {
+        loadDataFromAPI(true, '').then(() => renderQC7Tools());
+    } else {
+        renderQC7Tools();
+    }
+}
+
+function initQC7Tools() {
+    const input = document.getElementById('qc7DateFilter');
+    if (input && !input.value) input.value = getStandardISODate(new Date().toISOString());
+    renderQC7Tools();
+}
+
+function qc7DestroyCharts() {
+    [qc7HistogramChartInstance, qc7ParetoChartInstance, qc7ScatterChartInstance, qc7ControlChartInstance].forEach(chart => {
+        if (chart && typeof chart.destroy === 'function') chart.destroy();
+    });
+    qc7HistogramChartInstance = null;
+    qc7ParetoChartInstance = null;
+    qc7ScatterChartInstance = null;
+    qc7ControlChartInstance = null;
+}
+
+function qc7ChartOptions(scales = {}) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350 },
+        plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { family: 'Sarabun', weight: '600' } } },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        scales: Object.assign({
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } },
+            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } }
+        }, scales)
+    };
+}
+
+function renderQC7Tools() {
+    const records = qc7FilteredRecords();
+    const totals = qc7DefectTypes.map(type => ({ ...type, value: records.reduce((sum, record) => sum + (Number(record[type.key]) || 0), 0) }));
+    const totalDefects = totals.reduce((sum, item) => sum + item.value, 0);
+    const average = records.length ? (totalDefects / records.length).toFixed(1) : '0';
+    const top = [...totals].sort((a, b) => b.value - a.value)[0];
+
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    };
+    setText('qc7SummaryInspections', records.length);
+    setText('qc7SummaryDefects', totalDefects);
+    setText('qc7SummaryTopDefect', top && top.value > 0 ? top.label : '-');
+    setText('qc7SummaryTopDefectCount', `${top && top.value ? top.value : 0} ชิ้น`);
+    setText('qc7SummaryAverage', average);
+
+    const checkSheet = document.getElementById('qc7CheckSheet');
+    if (checkSheet) {
+        if (!records.length) {
+            checkSheet.innerHTML = '<div class="qc7-empty-state">ไม่พบข้อมูลสำหรับช่วงที่เลือก</div>';
+        } else {
+            const maxValue = Math.max(...totals.map(item => item.value), 1);
+            checkSheet.innerHTML = totals.map(item => `
+                <div class="qc7-check-row">
+                    <div class="qc7-check-label"><span class="qc7-dot" style="background:${item.color}"></span><span>${item.label}</span><strong>${item.value}</strong></div>
+                    <div class="qc7-check-track"><span style="width:${Math.round(item.value / maxValue * 100)}%; background:${item.color}"></span></div>
+                </div>
+            `).join('');
+        }
+    }
+
+    qc7DestroyCharts();
+    if (typeof Chart === 'undefined') return;
+    renderQC7Histogram(records);
+    renderQC7Pareto(totals);
+    renderQC7Scatter(records);
+    renderQC7Control(records);
+    renderQC7Stratification(records);
+}
+
+function renderQC7Histogram(records) {
+    const canvas = document.getElementById('qc7HistogramChart');
+    if (!canvas) return;
+    const bins = [0, 0, 0, 0, 0];
+    records.forEach(record => {
+        const total = qc7RecordDefects(record);
+        if (total === 0) bins[0]++;
+        else if (total <= 2) bins[1]++;
+        else if (total <= 5) bins[2]++;
+        else if (total <= 10) bins[3]++;
+        else bins[4]++;
+    });
+    qc7HistogramChartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: ['0', '1–2', '3–5', '6–10', '11+'], datasets: [{ label: 'รายการตรวจ', data: bins, backgroundColor: '#38bdf8', borderRadius: 6 }] },
+        options: qc7ChartOptions()
+    });
+}
+
+function renderQC7Pareto(totals) {
+    const canvas = document.getElementById('qc7ParetoChart');
+    if (!canvas) return;
+    const sorted = [...totals].sort((a, b) => b.value - a.value);
+    const total = sorted.reduce((sum, item) => sum + item.value, 0);
+    let running = 0;
+    const cumulative = sorted.map(item => {
+        running += item.value;
+        return total ? Math.round(running / total * 100) : 0;
+    });
+    qc7ParetoChartInstance = new Chart(canvas, {
+        data: {
+            labels: sorted.map(item => item.label),
+            datasets: [
+                { type: 'bar', label: 'จำนวนของเสีย', data: sorted.map(item => item.value), backgroundColor: sorted.map(item => item.color), borderRadius: 6, yAxisID: 'y' },
+                { type: 'line', label: 'สะสม %', data: cumulative, borderColor: '#f8fafc', backgroundColor: '#f8fafc', pointBackgroundColor: '#f8fafc', tension: 0.25, yAxisID: 'y1' }
+            ]
+        },
+        options: qc7ChartOptions({
+            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } },
+            y1: { beginAtZero: true, max: 100, position: 'right', ticks: { color: '#f8fafc', callback: value => `${value}%` }, grid: { drawOnChartArea: false } }
+        })
+    });
+}
+
+function renderQC7Scatter(records) {
+    const canvas = document.getElementById('qc7ScatterChart');
+    if (!canvas) return;
+    const points = records.map((record, index) => ({ x: index + 1, y: qc7RecordDefects(record) }));
+    qc7ScatterChartInstance = new Chart(canvas, {
+        type: 'scatter',
+        data: { datasets: [{ label: 'ของเสียต่อรายการตรวจ', data: points, backgroundColor: '#10b981', borderColor: '#34d399', pointRadius: 5 }] },
+        options: qc7ChartOptions({ x: { title: { display: true, text: 'ลำดับการตรวจ', color: '#cbd5e1' }, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } }, y: { title: { display: true, text: 'ของเสีย (ชิ้น)', color: '#cbd5e1' }, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } } })
+    });
+}
+
+function renderQC7Control(records) {
+    const canvas = document.getElementById('qc7ControlChart');
+    if (!canvas) return;
+    const values = records.slice().reverse().map(record => qc7RecordDefects(record));
+    const labels = records.slice().reverse().map(record => formatDateForDisplay(record.date, record.timestamp).slice(0, 10));
+    const mean = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+    const variance = values.length ? values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length : 0;
+    const sigma = Math.sqrt(variance);
+    const upper = mean + (3 * sigma);
+    const lower = Math.max(0, mean - (3 * sigma));
+    qc7ControlChartInstance = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets: [
+            { label: 'ของเสีย', data: values, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.12)', fill: true, tension: 0.25, pointRadius: 4 },
+            { label: 'ค่าเฉลี่ย', data: values.map(() => mean), borderColor: '#f59e0b', borderDash: [6, 4], pointRadius: 0 },
+            { label: 'UCL +3σ', data: values.map(() => upper), borderColor: '#ef4444', borderDash: [3, 3], pointRadius: 0 },
+            { label: 'LCL -3σ', data: values.map(() => lower), borderColor: '#10b981', borderDash: [3, 3], pointRadius: 0 }
+        ] },
+        options: qc7ChartOptions()
+    });
+}
+
+function renderQC7Stratification(records) {
+    const body = document.getElementById('qc7StratificationBody');
+    if (!body) return;
+    const groups = {};
+    records.forEach(record => {
+        const date = qc7RecordDate(record) || '-';
+        if (!groups[date]) groups[date] = { count: 0, defects: 0, types: qc7DefectTypes.map(type => ({ ...type, value: 0 })) };
+        groups[date].count++;
+        groups[date].defects += qc7RecordDefects(record);
+        qc7DefectTypes.forEach((type, index) => { groups[date].types[index].value += Number(record[type.key]) || 0; });
+    });
+    const dates = Object.keys(groups).sort().reverse();
+    body.innerHTML = dates.length ? dates.map(date => {
+        const group = groups[date];
+        const top = [...group.types].sort((a, b) => b.value - a.value)[0];
+        return `<tr><td>${date}</td><td>${group.count}</td><td>${group.defects}</td><td>${(group.defects / group.count).toFixed(1)}</td><td>${top.value ? `${top.label} (${top.value})` : '-'}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="qc7-empty-state">ไม่พบข้อมูลสำหรับช่วงที่เลือก</td></tr>';
+}
+
+window.openQC7Tools = openQC7Tools;
+window.initQC7Tools = initQC7Tools;
+window.renderQC7Tools = renderQC7Tools;
+window.showAllQC7Data = showAllQC7Data;

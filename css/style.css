@@ -733,6 +733,305 @@ button, input, textarea, select {
   display: none !important;
 }
 
+/* QC 7 Tools workspace */
+.qc7-page {
+  display: block;
+}
+
+.qc7-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.qc7-subtitle {
+  margin: 0.25rem 0 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.qc7-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.qc7-toolbar label {
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.qc7-toolbar input {
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  color-scheme: dark;
+  color: #f8fafc;
+  background: #0b1329;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.qc7-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.qc7-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 14px;
+}
+
+.qc7-summary-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.qc7-summary-card strong {
+  color: #38bdf8;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.qc7-summary-card small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.qc7-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.qc7-card {
+  min-width: 0;
+  padding: 1.15rem 1.25rem;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88));
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.qc7-card-wide {
+  grid-column: 1 / -1;
+}
+
+.qc7-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.qc7-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  color: #fff;
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.qc7-card h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.qc7-card-heading p {
+  margin: 0.18rem 0 0;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.qc7-check-sheet {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.qc7-check-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.qc7-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.qc7-check-label strong {
+  margin-left: auto;
+  color: #38bdf8;
+}
+
+.qc7-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.qc7-check-track {
+  height: 9px;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 99px;
+}
+
+.qc7-check-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.qc7-chart-box {
+  position: relative;
+  height: 260px;
+}
+
+.qc7-chart-tall {
+  height: 290px;
+}
+
+.qc7-empty-state {
+  padding: 1.5rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.qc7-fishbone {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.qc7-fishbone-spine {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  color: #f8fafc;
+  text-align: center;
+  background: linear-gradient(90deg, rgba(2, 132, 199, 0.16), rgba(37, 99, 235, 0.22));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+}
+
+.qc7-fishbone-spine::before {
+  position: absolute;
+  right: 8%;
+  left: 8%;
+  height: 2px;
+  background: rgba(56, 189, 248, 0.55);
+  content: "";
+}
+
+.qc7-fishbone-spine span {
+  position: relative;
+  z-index: 1;
+  padding: 0.35rem 0.8rem;
+  background: #17233a;
+  border-radius: 8px;
+}
+
+.qc7-fishbone-spine strong {
+  color: #38bdf8;
+}
+
+.qc7-cause-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.qc7-cause-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-height: 70px;
+  padding: 0.7rem;
+  background: rgba(11, 19, 41, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+}
+
+.qc7-cause-card b {
+  color: #f8fafc;
+  font-size: 0.78rem;
+}
+
+.qc7-cause-card span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.qc7-stratification-table th,
+.qc7-stratification-table td {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .qc7-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .qc7-cause-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .qc7-tool-grid {
+    grid-template-columns: 1fr;
+  }
+  .qc7-card-wide {
+    grid-column: auto;
+  }
+  .qc7-summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .qc7-page-header {
+    align-items: stretch;
+  }
+  .qc7-toolbar {
+    width: 100%;
+  }
+  .qc7-toolbar input {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .qc7-cause-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .qc7-chart-box,
+  .qc7-chart-tall {
+    height: 230px;
+  }
+}
+
 @media (max-width: 768px) {
   .inspection-page {
     padding: 1rem;
