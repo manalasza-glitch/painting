@@ -72,6 +72,12 @@ function setCurrentDateTimeDefaults() {
 }
 
 window.onload = async () => {
+    // Keep the authentication layer from blocking the app after a restored
+    // session (for example when the site is opened from a fresh cache-busted URL).
+    if (window.PaintingAuth && PaintingAuth.currentUser && typeof PaintingAuth.hideAuthModal === 'function') {
+        PaintingAuth.hideAuthModal();
+    }
+
     setCurrentDateTimeDefaults();
 
     const dashboardDateInput = document.getElementById("dashboardDateFilter");
@@ -251,6 +257,10 @@ function switchTab(tabId, element) {
 }
 
 function openInspectionModal() {
+    if (window.PaintingAuth && PaintingAuth.currentUser && typeof PaintingAuth.hideAuthModal === 'function') {
+        PaintingAuth.hideAuthModal();
+    }
+
     if (window.PaintingAuth && typeof PaintingAuth.hasPermission === 'function' && !PaintingAuth.hasPermission('inspection.create')) {
         if (typeof showToast === 'function') showToast("คุณไม่มีสิทธิ์บันทึกงานตรวจ", "error");
         return;
