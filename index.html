@@ -730,9 +730,13 @@
                     <span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
                 </a>
                 <div id="checklist-submenu" class="sidebar-submenu" hidden>
-                    <a href="#" class="nav-link submenu-item" data-permission="daily_report.read" onclick="switchTab('parameter-checklist-tab', this)">
+                    <a href="#" class="nav-link submenu-item" data-permission="daily_report.read" onclick="openParameterChecklistMode('full', event, this)">
                         <span style="width:20px; text-align:center;">•</span>
                         รายการตรวจเช็กพารามิเตอร์
+                    </a>
+                    <a href="#" class="nav-link submenu-item" data-permission="daily_report.read" onclick="openParameterChecklistMode('water', event, this)">
+                        <span style="width:20px; text-align:center;">•</span>
+                        วัดค่าน้ำ
                     </a>
                 </div>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
@@ -1740,11 +1744,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=95.0.0"></script>
+    <script src="js/api.js?v=96.0.0"></script>
     <script src="js/auth.js?v=85.0.0"></script>
-    <script src="js/app.js?v=95.0.0"></script>
+    <script src="js/app.js?v=96.0.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
-    <script src="js/parameter-checklist.js?v=1.0.2"></script>
+    <script src="js/parameter-checklist.js?v=1.1.0"></script>
     <script src="js/events.js?v=89.0.0"></script>
 </body>
 

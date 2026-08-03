@@ -154,6 +154,12 @@ function toggleChecklistMenu(event, element) {
     if (element) element.setAttribute('aria-expanded', String(!isOpen));
 }
 
+function openParameterChecklistMode(mode, event, element) {
+    if (event) event.preventDefault();
+    if (typeof setParameterChecklistMode === 'function') setParameterChecklistMode(mode);
+    switchTab('parameter-checklist-tab', element);
+}
+
 function switchTab(tabId, element) {
     const targetForPermission = document.getElementById(tabId);
     const requiredPermission = targetForPermission ? targetForPermission.dataset.permission : "";

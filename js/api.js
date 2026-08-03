@@ -458,12 +458,14 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
     return [];
 }
 
-async function fetchParameterChecklistDataFromAPI(dateFilter = "") {
+async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = "") {
     const baseUrl = getApiUrl();
     if (!baseUrl) return [];
     const requestedDate = String(dateFilter || "").trim();
+    const requestedType = String(typeFilter || "").trim();
     const query = new URLSearchParams({ action: "getParameterChecklistData" });
     if (requestedDate) query.set("date", requestedDate);
+    if (requestedType) query.set("type", requestedType);
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
         const response = await fetch(url, { cache: "no-cache", headers: { "Accept": "application/json" } });

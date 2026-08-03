@@ -1,6 +1,7 @@
 const SHEET_NAME = "Inspection";
 const DAILY_REPORT_ID_HEADER = "SubmissionId";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
+const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read"];
@@ -44,20 +45,25 @@ function hasDailyReportSubmission(sheet, submissionId, idColumn) {
   return values.some(row => String(row[0] || "").trim() === submissionId);
 }
 
-function ensureParameterChecklistSheet(ss) {
-  let sheet = ss.getSheetByName(PARAMETER_CHECKLIST_SHEET_NAME);
+function ensureParameterChecklistSheet(ss, checklistType) {
+  const sheetName = String(checklistType || "full").toLowerCase() === "water"
+    ? WATER_PARAMETER_CHECKLIST_SHEET_NAME
+    : PARAMETER_CHECKLIST_SHEET_NAME;
+  let sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
-    sheet = ss.insertSheet(PARAMETER_CHECKLIST_SHEET_NAME);
+    sheet = ss.insertSheet(sheetName);
     sheet.appendRow([
       "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "Process",
-      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
+      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
     ]);
     sheet.setFrozenRows(1);
   } else if (sheet.getLastRow() === 0) {
     sheet.appendRow([
       "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "Process",
-      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
+      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
     ]);
+  } else if (sheet.getLastColumn() < 13) {
+    sheet.getRange(1, 13).setValue("ChecklistType");
   }
   return sheet;
 }
@@ -475,7 +481,8 @@ function doPost(e) {
 
     // Handle parameter checklist submission
     if (action === "submitParameterChecklist") {
-      const checklistSheet = ensureParameterChecklistSheet(ss);
+      const checklistType = String(data.checklistType || "full").toLowerCase() === "water" ? "water" : "full";
+      const checklistSheet = ensureParameterChecklistSheet(ss, checklistType);
       const submissionId = String(data.submissionId || "").trim();
       if (hasParameterChecklistSubmission(checklistSheet, submissionId)) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitParameterChecklist", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
@@ -499,7 +506,8 @@ function doPost(e) {
           String(item.actualValue || ""),
           String(item.status || ""),
           String(item.note || ""),
-          submissionId
+          submissionId,
+          checklistType
         ]);
       });
       SpreadsheetApp.flush();
@@ -810,13 +818,15 @@ function doGet(e) {
 
     // Handle parameter checklist submission via GET fallback
     if (action === "submitParameterChecklist") {
-      const checklistSheet = ensureParameterChecklistSheet(ss);
       let payload = {};
       if (e && e.parameter && e.parameter.payload) {
         try { payload = JSON.parse(e.parameter.payload); } catch (parseErr) {}
       } else {
         payload = e.parameter || {};
       }
+
+      const checklistType = String(payload.checklistType || "full").toLowerCase() === "water" ? "water" : "full";
+      const checklistSheet = ensureParameterChecklistSheet(ss, checklistType);
 
       const submissionId = String(payload.submissionId || "").trim();
       if (hasParameterChecklistSubmission(checklistSheet, submissionId)) {
@@ -838,7 +848,8 @@ function doGet(e) {
           String(item.actualValue || ""),
           String(item.status || ""),
           String(item.note || ""),
-          submissionId
+          submissionId,
+          checklistType
         ]);
       });
       SpreadsheetApp.flush();
@@ -891,7 +902,8 @@ function doGet(e) {
 
     // Handle parameter checklist history and create its sheet on first access
     if (action === "getParameterChecklistData") {
-      const checklistSheet = ensureParameterChecklistSheet(ss);
+      const requestedType = String((e && e.parameter && e.parameter.type) || "full").toLowerCase() === "water" ? "water" : "full";
+      const checklistSheet = ensureParameterChecklistSheet(ss, requestedType);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -911,7 +923,8 @@ function doGet(e) {
         actualValue: String(r[8] || ""),
         status: String(r[9] || ""),
         note: String(r[10] || ""),
-        submissionId: String(r[11] || "")
+        submissionId: String(r[11] || ""),
+        checklistType: String(r[12] || requestedType)
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();

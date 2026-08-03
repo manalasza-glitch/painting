@@ -32,6 +32,21 @@ const PARAMETER_CHECKLIST_ITEMS = [
     { itemNo: 35, process: "อบคิวริ่ง", checkItem: "ตรวจวัดความหนาฟิล์มโดยหน่วยงานภายนอก", standard: "ทุก 2 สัปดาห์" }
 ];
 
+const WATER_PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_ITEMS.filter(item => item.itemNo >= 5 && item.itemNo <= 21);
+let parameterChecklistMode = "full";
+
+function getActiveParameterChecklistItems() {
+    return parameterChecklistMode === "water" ? WATER_PARAMETER_CHECKLIST_ITEMS : PARAMETER_CHECKLIST_ITEMS;
+}
+
+function setParameterChecklistMode(mode) {
+    parameterChecklistMode = mode === "water" ? "water" : "full";
+}
+
+function parameterChecklistTitle() {
+    return parameterChecklistMode === "water" ? "วัดค่าน้ำ" : "รายการตรวจเช็กพารามิเตอร์";
+}
+
 let parameterChecklistHistory = [];
 let parameterChecklistRefreshInFlight = null;
 
@@ -44,6 +59,13 @@ function parameterChecklistEscape(value) {
 function initParameterChecklist() {
     const dateInput = document.getElementById("parameterChecklistDate");
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
+    const title = parameterChecklistTitle();
+    const pageTitle = document.querySelector("#parameter-checklist-tab .page-title");
+    const listTitle = document.querySelector("#parameterChecklistItemsBody")?.closest(".dr-card")?.querySelector("h3");
+    const saveButton = document.getElementById("submitParameterChecklistBtn");
+    if (pageTitle) pageTitle.textContent = title;
+    if (listTitle) listTitle.textContent = parameterChecklistMode === "water" ? "รายการวัดค่าน้ำ (ข้อ 5-21)" : "รายการตรวจเช็กพารามิเตอร์";
+    if (saveButton) saveButton.textContent = `บันทึก${title}`;
     renderParameterChecklistItems();
     refreshParameterChecklist();
 }
@@ -51,7 +73,7 @@ function initParameterChecklist() {
 function renderParameterChecklistItems() {
     const body = document.getElementById("parameterChecklistItemsBody");
     if (!body) return;
-    body.innerHTML = PARAMETER_CHECKLIST_ITEMS.map(item => `
+    body.innerHTML = getActiveParameterChecklistItems().map(item => `
         <tr>
             <td style="text-align:center; font-weight:800; color:#38bdf8;">${item.itemNo}</td>
             <td>${parameterChecklistEscape(item.process)}</td>
@@ -78,7 +100,8 @@ function collectParameterChecklistPayload() {
         date,
         operator,
         teamLeader,
-        records: PARAMETER_CHECKLIST_ITEMS.map(item => ({
+        checklistType: parameterChecklistMode,
+        records: getActiveParameterChecklistItems().map(item => ({
             itemNo: item.itemNo,
             process: item.process,
             checkItem: item.checkItem,
@@ -93,24 +116,25 @@ function collectParameterChecklistPayload() {
 async function submitParameterChecklist() {
     const button = document.getElementById("submitParameterChecklistBtn");
     const payload = collectParameterChecklistPayload();
+    const title = parameterChecklistTitle();
     if (!payload.date || !payload.operator) {
         showToast("กรุณาระบุวันที่และชื่อผู้ตรวจให้ครบถ้วน", "error");
         return;
     }
     if (button) {
         button.disabled = true;
-        button.textContent = "กำลังบันทึกรายการตรวจเช็กพารามิเตอร์...";
+        button.textContent = `กำลังบันทึก${title}...`;
     }
     try {
         await sendParameterChecklistToAPI(payload);
-        showToast("บันทึกรายการตรวจเช็กพารามิเตอร์ลง Google Sheets เรียบร้อยแล้ว", "success");
+        showToast(`บันทึก${title}ลง Google Sheets เรียบร้อยแล้ว`, "success");
         await refreshParameterChecklist();
     } catch (error) {
-        showToast(`บันทึกรายการตรวจเช็กพารามิเตอร์ไม่สำเร็จ: ${error.message}`, "error");
+        showToast(`บันทึก${title}ไม่สำเร็จ: ${error.message}`, "error");
     } finally {
         if (button) {
             button.disabled = false;
-            button.textContent = "บันทึกรายการตรวจเช็กพารามิเตอร์";
+            button.textContent = `บันทึก${title}`;
         }
     }
 }
@@ -152,8 +176,12 @@ async function refreshParameterChecklist() {
     parameterChecklistRefreshInFlight = (async () => {
         try {
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
-                const records = await fetchParameterChecklistDataFromAPI();
-                parameterChecklistHistory = Array.isArray(records) ? records : [];
+                const records = await fetchParameterChecklistDataFromAPI("", parameterChecklistMode === "water" ? "water" : "");
+                parameterChecklistHistory = Array.isArray(records)
+                    ? records.filter(record => parameterChecklistMode === "water"
+                        ? String(record.checklistType || "") === "water"
+                        : !record.checklistType || String(record.checklistType) === "full")
+                    : [];
                 renderParameterChecklistHistory();
             }
         } finally {
