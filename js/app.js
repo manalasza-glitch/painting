@@ -107,6 +107,9 @@ window.onload = async () => {
             if (typeof loadEventsData === 'function') {
                 loadEventsData();
             }
+            if (typeof refreshDailyReportHistory === 'function') {
+                refreshDailyReportHistory();
+            }
         }
     }, 15000);
 };

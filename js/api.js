@@ -3,6 +3,7 @@ const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyURU3_RckS258U
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
 let activeSyncRequests = 0;
+let lastDailyReportFetchSucceeded = false;
 
 function updateSyncUI() {
     const statusText = document.getElementById("statusText");
@@ -413,6 +414,7 @@ async function deleteRecorderFromAPI(name) {
 async function fetchDailyReportDataFromAPI(dateFilter = "") {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
+    lastDailyReportFetchSucceeded = false;
     const cacheKey = requestedDate ? `PAINTING_OUTPUTDIARY_CACHE_${requestedDate}` : "PAINTING_OUTPUTDIARY_CACHE";
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
@@ -422,9 +424,11 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
             const json = await res.json();
             
             if (json && json.status === "success" && Array.isArray(json.data)) {
+                lastDailyReportFetchSucceeded = true;
                 localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
             } else if (Array.isArray(json)) {
+                lastDailyReportFetchSucceeded = true;
                 localStorage.setItem(cacheKey, JSON.stringify(json));
                 return json;
             }

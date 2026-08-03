@@ -394,6 +394,7 @@ function deleteStaffName(index) {
 
 let dailyReportRecords = [];
 let dailyReportHistoryRecords = [];
+let dailyReportHistoryLoaded = false;
 let pendingDailyReportSubmissionId = null;
 
 function createDailyReportSubmissionId() {
@@ -441,6 +442,7 @@ function initDailyReportForm() {
     // A previous save can finish on Google Sheets even when the browser loses
     // the response. Reconcile that stale local draft silently on page load.
     reconcileDailyReportDraft();
+    refreshDailyReportHistory();
 }
 
 function addDailyReportRecord({ silent = false } = {}) {
@@ -589,9 +591,9 @@ function renderDailyReportList() {
 }
 
 function getSavedDailyReportRecords() {
-    let records = dailyReportHistoryRecords;
+    let records = dailyReportHistoryLoaded ? dailyReportHistoryRecords : [];
 
-    if (!Array.isArray(records) || records.length === 0) {
+    if (!dailyReportHistoryLoaded && (!Array.isArray(records) || records.length === 0)) {
         try {
             records = JSON.parse(localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE") || "[]");
         } catch (e) {
@@ -646,7 +648,13 @@ function escapeDailyReportHtml(value) {
 async function refreshDailyReportHistory() {
     try {
         if (typeof fetchDailyReportDataFromAPI === "function") {
-            dailyReportHistoryRecords = await fetchDailyReportDataFromAPI();
+            const records = await fetchDailyReportDataFromAPI();
+            if (typeof lastDailyReportFetchSucceeded === "undefined" || lastDailyReportFetchSucceeded) {
+                dailyReportHistoryRecords = Array.isArray(records) ? records : [];
+                dailyReportHistoryLoaded = true;
+            } else if (!dailyReportHistoryLoaded) {
+                dailyReportHistoryRecords = Array.isArray(records) ? records : [];
+            }
         }
     } catch (error) {
         console.warn("Unable to refresh daily report history:", error);
