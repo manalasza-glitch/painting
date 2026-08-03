@@ -486,7 +486,10 @@ button, input, textarea, select {
 
 .equipment-check-image-wrap {
   position: relative;
-  min-height: 150px;
+  width: 100%;
+  height: 150px;
+  min-height: 0;
+  align-self: start;
   overflow: hidden;
   border-radius: 12px;
   background: rgba(2, 8, 23, 0.8);
@@ -496,7 +499,7 @@ button, input, textarea, select {
 .equipment-check-image-wrap img {
   display: block;
   width: 100%;
-  height: 150px;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -579,7 +582,7 @@ button, input, textarea, select {
 
 @media (max-width: 600px) {
   .equipment-check-card { grid-template-columns: 105px minmax(0, 1fr); gap: .7rem; padding: .7rem; }
-  .equipment-check-image-wrap, .equipment-check-image-wrap img { height: 115px; min-height: 115px; }
+  .equipment-check-image-wrap, .equipment-check-image-wrap img { height: 115px; min-height: 0; }
   .equipment-check-inputs { grid-template-columns: 1fr; }
   .equipment-check-content h3 { font-size: .9rem; }
 }
