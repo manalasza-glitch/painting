@@ -145,6 +145,15 @@ async function loadDataFromAPI(silent = false, requestedDate = null) {
     if (!silent) showToast("โหลดข้อมูลสำเร็จ (" + inspectionRecords.length + " รายการ)", "success");
 }
 
+function toggleChecklistMenu(event, element) {
+    if (event) event.preventDefault();
+    const submenu = document.getElementById('checklist-submenu');
+    if (!submenu) return;
+    const isOpen = !submenu.hidden;
+    submenu.hidden = isOpen;
+    if (element) element.setAttribute('aria-expanded', String(!isOpen));
+}
+
 function switchTab(tabId, element) {
     const targetForPermission = document.getElementById(tabId);
     const requiredPermission = targetForPermission ? targetForPermission.dataset.permission : "";
