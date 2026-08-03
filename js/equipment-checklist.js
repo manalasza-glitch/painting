@@ -1,13 +1,13 @@
 const EQUIPMENT_CHECKLIST_ITEMS = [
-    { itemNo: 1, image: "assets/equipment-checklist/image8.jpeg", checkItem: "มีสิ่งสกปรกลอยอยู่บนผิวของเหลวเป็นบริเวณกว้างหรือไม่", method: "ตรวจด้วยสายตา", standard: "ผิวของเหลวสะอาด ไม่มีสิ่งสกปรก" },
-    { itemNo: 2, image: "assets/equipment-checklist/image1.jpeg", checkItem: "การเปิดเครื่องเป็นปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "มีน้ำไหลออกจากช่องระบายน้ำ" },
-    { itemNo: 3, image: "assets/equipment-checklist/image2.jpeg", checkItem: "มาตรวัดแรงดันทำงานปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "ค่าแรงดันอยู่ในช่วงสีน้ำเงิน" },
-    { itemNo: 4, image: "assets/equipment-checklist/image3.jpeg", checkItem: "วาล์วน้ำเข้าหมายเลข 5, 6, 9 และ 10 เปิดอยู่หรือไม่", method: "ตรวจด้วยสายตา", standard: "วาล์วน้ำเข้าอยู่ในสถานะเปิดครึ่งหนึ่ง" },
-    { itemNo: 5, image: "assets/equipment-checklist/image4.jpeg", checkItem: "ช่องน้ำล้นของถังหมายเลข 5, 6, 9 และ 10 มีน้ำล้นออกมาหรือไม่", method: "ตรวจด้วยสายตา", standard: "มีน้ำและฟองล้นออกมา" },
-    { itemNo: 6, image: "assets/equipment-checklist/image5.jpeg", checkItem: "ตรวจสอบว่าระดับน้ำท่วมถึงหัวปั๊มหรือไม่", method: "ตรวจด้วยสายตา", standard: "ระดับน้ำท่วมหัวปั๊ม" },
-    { itemNo: 7, image: "assets/equipment-checklist/image6.jpeg", checkItem: "มอเตอร์มีเสียงผิดปกติหรือไม่", method: "ตรวจด้วยสายตาและการฟัง", standard: "มอเตอร์ทำงานปกติ ไม่มีเสียงผิดปกติ" },
-    { itemNo: 8, image: "assets/equipment-checklist/image7.jpeg", checkItem: "พื้นผิวอุปกรณ์สะอาดและเป็นระเบียบหรือไม่", method: "ตรวจด้วยสายตา", standard: "อุปกรณ์ปราศจากฝุ่นและคราบน้ำมัน" },
-    { itemNo: 9, image: "assets/equipment-checklist/image9.jpeg", checkItem: "อุปกรณ์บำบัดน้ำ RO ทำงานเป็นปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "สวิตช์การทำงานทั้งหมดบนหน้าจอแสดงผลเป็นสีเขียว" }
+    { itemNo: 1, image: "assets/equipment-checklist/image8.webp", checkItem: "มีสิ่งสกปรกลอยอยู่บนผิวของเหลวเป็นบริเวณกว้างหรือไม่", method: "ตรวจด้วยสายตา", standard: "ผิวของเหลวสะอาด ไม่มีสิ่งสกปรก" },
+    { itemNo: 2, image: "assets/equipment-checklist/image1.webp", checkItem: "การเปิดเครื่องเป็นปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "มีน้ำไหลออกจากช่องระบายน้ำ" },
+    { itemNo: 3, image: "assets/equipment-checklist/image2.webp", checkItem: "มาตรวัดแรงดันทำงานปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "ค่าแรงดันอยู่ในช่วงสีน้ำเงิน" },
+    { itemNo: 4, image: "assets/equipment-checklist/image3.webp", checkItem: "วาล์วน้ำเข้าหมายเลข 5, 6, 9 และ 10 เปิดอยู่หรือไม่", method: "ตรวจด้วยสายตา", standard: "วาล์วน้ำเข้าอยู่ในสถานะเปิดครึ่งหนึ่ง" },
+    { itemNo: 5, image: "assets/equipment-checklist/image4.webp", checkItem: "ช่องน้ำล้นของถังหมายเลข 5, 6, 9 และ 10 มีน้ำล้นออกมาหรือไม่", method: "ตรวจด้วยสายตา", standard: "มีน้ำและฟองล้นออกมา" },
+    { itemNo: 6, image: "assets/equipment-checklist/image5.webp", checkItem: "ตรวจสอบว่าระดับน้ำท่วมถึงหัวปั๊มหรือไม่", method: "ตรวจด้วยสายตา", standard: "ระดับน้ำท่วมหัวปั๊ม" },
+    { itemNo: 7, image: "assets/equipment-checklist/image6.webp", checkItem: "มอเตอร์มีเสียงผิดปกติหรือไม่", method: "ตรวจด้วยสายตาและการฟัง", standard: "มอเตอร์ทำงานปกติ ไม่มีเสียงผิดปกติ" },
+    { itemNo: 8, image: "assets/equipment-checklist/image7.webp", checkItem: "พื้นผิวอุปกรณ์สะอาดและเป็นระเบียบหรือไม่", method: "ตรวจด้วยสายตา", standard: "อุปกรณ์ปราศจากฝุ่นและคราบน้ำมัน" },
+    { itemNo: 9, image: "assets/equipment-checklist/image9.webp", checkItem: "อุปกรณ์บำบัดน้ำ RO ทำงานเป็นปกติหรือไม่", method: "ตรวจด้วยสายตา", standard: "สวิตช์การทำงานทั้งหมดบนหน้าจอแสดงผลเป็นสีเขียว" }
 ];
 
 let equipmentChecklistHistory = [];
