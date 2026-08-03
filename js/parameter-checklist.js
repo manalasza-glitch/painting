@@ -80,21 +80,24 @@ function initParameterChecklist() {
 function renderParameterChecklistItems() {
     const body = document.getElementById("parameterChecklistItemsBody");
     if (!body) return;
-    body.innerHTML = getActiveParameterChecklistItems().map(item => `
+    body.innerHTML = getActiveParameterChecklistItems().map((item, index) => {
+        const displayItemNo = index + 1;
+        return `
         <tr>
-            <td style="text-align:center; font-weight:800; color:#38bdf8;">${item.itemNo}</td>
+            <td style="text-align:center; font-weight:800; color:#38bdf8;">${displayItemNo}</td>
             <td>${parameterChecklistEscape(item.process)}</td>
             <td>${parameterChecklistEscape(item.checkItem)}</td>
             <td style="color:#a5f3fc; white-space:nowrap;">${parameterChecklistEscape(item.standard)}</td>
-            <td><input class="form-control parameter-actual-input" id="parameterActual_${item.itemNo}" placeholder="ค่าที่ตรวจได้"></td>
-            <td><select class="form-control parameter-status-input" id="parameterStatus_${item.itemNo}">
+            <td><input class="form-control parameter-actual-input" id="parameterActual_${displayItemNo}" placeholder="ค่าที่ตรวจได้"></td>
+            <td><select class="form-control parameter-status-input" id="parameterStatus_${displayItemNo}">
                 <option value="OK" selected>ปกติ (OK)</option>
                 <option value="NG">ผิดปกติ (NG)</option>
                 <option value="N/A">ไม่เกี่ยวข้อง (N/A)</option>
             </select></td>
-            <td><input class="form-control parameter-note-input" id="parameterNote_${item.itemNo}" placeholder="หมายเหตุ"></td>
+            <td><input class="form-control parameter-note-input" id="parameterNote_${displayItemNo}" placeholder="หมายเหตุ"></td>
         </tr>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function collectParameterChecklistPayload() {
@@ -108,14 +111,14 @@ function collectParameterChecklistPayload() {
         operator,
         teamLeader,
         checklistType: parameterChecklistMode,
-        records: getActiveParameterChecklistItems().map(item => ({
-            itemNo: item.itemNo,
+        records: getActiveParameterChecklistItems().map((item, index) => ({
+            itemNo: index + 1,
             process: item.process,
             checkItem: item.checkItem,
             standard: item.standard,
-            actualValue: document.getElementById(`parameterActual_${item.itemNo}`)?.value.trim() || "",
-            status: document.getElementById(`parameterStatus_${item.itemNo}`)?.value || "OK",
-            note: document.getElementById(`parameterNote_${item.itemNo}`)?.value.trim() || ""
+            actualValue: document.getElementById(`parameterActual_${index + 1}`)?.value.trim() || "",
+            status: document.getElementById(`parameterStatus_${index + 1}`)?.value || "OK",
+            note: document.getElementById(`parameterNote_${index + 1}`)?.value.trim() || ""
         }))
     };
 }
