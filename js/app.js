@@ -174,6 +174,16 @@ function switchTab(tabId, element) {
     }
 
     // Hide all tab pages & remove active class
+    // The inspection form lives with the legacy modal markup at the end of
+    // the document. Move it into the regular content area before displaying
+    // it so it receives the same header/sidebar layout as every other page.
+    if (tabId === "inspection-tab" && targetTab) {
+        const contentBody = document.querySelector(".content-body");
+        if (contentBody && !contentBody.contains(targetTab)) {
+            contentBody.appendChild(targetTab);
+        }
+    }
+
     document.querySelectorAll(".tab-page").forEach(page => {
         page.classList.remove("active");
         page.style.display = "none";
@@ -191,6 +201,9 @@ function switchTab(tabId, element) {
 
     // Highlight all matching navigation items (both desktop & mobile)
     document.querySelectorAll(`[onclick*="${tabId}"]`).forEach(el => el.classList.add("active"));
+    if (tabId === "inspection-tab") {
+        document.querySelectorAll('[onclick*="openInspectionModal"]').forEach(el => el.classList.add("active"));
+    }
 
     // Scroll window to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -702,7 +702,7 @@ button, input, textarea, select {
 
 /* Inspection entry is a regular navigation page, not a modal overlay. */
 .inspection-page {
-  padding: 1.5rem 2rem;
+  padding: 0;
   overflow-y: auto;
 }
 
