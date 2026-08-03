@@ -495,6 +495,40 @@ async function sendParameterChecklistToAPI(payload) {
     return result;
 }
 
+async function fetchEquipmentChecklistDataFromAPI(dateFilter = "") {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return [];
+    const query = new URLSearchParams({ action: "getEquipmentChecklistData" });
+    if (String(dateFilter || "").trim()) query.set("date", String(dateFilter).trim());
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
+    try {
+        const response = await fetch(url, { cache: "no-cache", headers: { "Accept": "application/json" } });
+        const result = await requireJsonResponse(response, "Get equipment checklist data");
+        if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
+        if (Array.isArray(result)) return result;
+    } catch (error) {
+        console.warn("Failed to fetch equipment checklist data:", error);
+    }
+    return [];
+}
+
+async function sendEquipmentChecklistToAPI(payload) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) throw new Error("ไม่พบ URL ของระบบหลังบ้าน");
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=submitEquipmentChecklist";
+    const response = await fetch(url, {
+        method: "POST",
+        cache: "no-cache",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    });
+    const result = await requireJsonResponse(response, "Submit equipment checklist");
+    if (!result || result.status !== "success" || result.action !== "submitEquipmentChecklist") {
+        throw new Error("ระบบหลังบ้านไม่ยืนยันการบันทึกเช็กลิสอุปกรณ์");
+    }
+    return result;
+}
+
 async function verifyDailyReportSavedOnBackend(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl || !payload) return false;

@@ -2,6 +2,7 @@ const SHEET_NAME = "Inspection";
 const DAILY_REPORT_ID_HEADER = "SubmissionId";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
+const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "inspection.create", "daily_report.read", "events.read", "history.read"];
@@ -69,6 +70,34 @@ function ensureParameterChecklistSheet(ss, checklistType) {
 }
 
 function hasParameterChecklistSubmission(sheet, submissionId) {
+  if (!submissionId || sheet.getLastRow() < 2) return false;
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  const idIndex = headers.indexOf(PARAMETER_CHECKLIST_ID_HEADER);
+  if (idIndex < 0) return false;
+  const values = sheet.getRange(2, idIndex + 1, sheet.getLastRow() - 1, 1).getValues();
+  return values.some(row => String(row[0] || "").trim() === submissionId);
+}
+
+function ensureEquipmentChecklistSheet(ss) {
+  let sheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME);
+    sheet.appendRow([
+      "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "CheckItem",
+      "Method", "Standard", "ImageUrl", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
+    ]);
+    sheet.setFrozenRows(1);
+  } else if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "CheckItem",
+      "Method", "Standard", "ImageUrl", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
+    ]);
+  }
+  return sheet;
+}
+
+function hasEquipmentChecklistSubmission(sheet, submissionId) {
   if (!submissionId || sheet.getLastRow() < 2) return false;
   const lastColumn = Math.max(1, sheet.getLastColumn());
   const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
@@ -514,6 +543,39 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitParameterChecklist" })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Handle equipment checklist submission
+    if (action === "submitEquipmentChecklist") {
+      const checklistSheet = ensureEquipmentChecklistSheet(ss);
+      const submissionId = String(data.submissionId || "").trim();
+      if (hasEquipmentChecklistSubmission(checklistSheet, submissionId)) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitEquipmentChecklist", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const now = new Date();
+      const dateVal = String(data.date || formatDateStr(now, false));
+      const operatorVal = String(data.operator || "");
+      const leaderVal = String(data.teamLeader || "");
+      const records = Array.isArray(data.records) ? data.records : [];
+      records.forEach(item => {
+        checklistSheet.appendRow([
+          now,
+          dateVal,
+          operatorVal,
+          leaderVal,
+          Number(item.itemNo) || 0,
+          String(item.checkItem || ""),
+          String(item.method || ""),
+          String(item.standard || ""),
+          String(item.imageUrl || ""),
+          String(item.status || ""),
+          String(item.note || ""),
+          submissionId
+        ]);
+      });
+      SpreadsheetApp.flush();
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitEquipmentChecklist" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle addRecorder action
     if (action === "addRecorder") {
       let recSheet = ss.getSheetByName("Recorders");
@@ -856,6 +918,43 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitParameterChecklist" })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Handle equipment checklist submission via GET fallback
+    if (action === "submitEquipmentChecklist") {
+      let payload = {};
+      if (e && e.parameter && e.parameter.payload) {
+        try { payload = JSON.parse(e.parameter.payload); } catch (parseErr) {}
+      } else {
+        payload = e.parameter || {};
+      }
+
+      const checklistSheet = ensureEquipmentChecklistSheet(ss);
+      const submissionId = String(payload.submissionId || "").trim();
+      if (hasEquipmentChecklistSubmission(checklistSheet, submissionId)) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitEquipmentChecklist", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const now = new Date();
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      records.forEach(item => {
+        checklistSheet.appendRow([
+          now,
+          String(payload.date || formatDateStr(now, false)),
+          String(payload.operator || ""),
+          String(payload.teamLeader || ""),
+          Number(item.itemNo) || 0,
+          String(item.checkItem || ""),
+          String(item.method || ""),
+          String(item.standard || ""),
+          String(item.imageUrl || ""),
+          String(item.status || ""),
+          String(item.note || ""),
+          submissionId
+        ]);
+      });
+      SpreadsheetApp.flush();
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitEquipmentChecklist" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle getDailyReportData action (outputdiary sheet tab)
     if (action === "getDailyReportData") {
       let prodSheet = ss.getSheetByName("outputdiary");
@@ -925,6 +1024,38 @@ function doGet(e) {
         note: String(r[10] || ""),
         submissionId: String(r[11] || ""),
         checklistType: String(r[12] || requestedType)
+      }));
+
+      const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
+      const filteredData = requestedDate
+        ? data.filter(r => String(r.date || "").substring(0, 10) === requestedDate)
+        : data;
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: filteredData })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle equipment checklist history and create its sheet on first access
+    if (action === "getEquipmentChecklistData") {
+      const checklistSheet = ensureEquipmentChecklistSheet(ss);
+      if (checklistSheet.getLastRow() <= 1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const values = checklistSheet.getDataRange().getValues();
+      values.shift();
+      const data = values.map((r, i) => ({
+        rowIndex: i + 2,
+        timestamp: formatDateStr(r[0], true),
+        date: formatDateStr(r[1], false),
+        operator: String(r[2] || ""),
+        teamLeader: String(r[3] || ""),
+        itemNo: Number(r[4]) || 0,
+        checkItem: String(r[5] || ""),
+        method: String(r[6] || ""),
+        standard: String(r[7] || ""),
+        imageUrl: String(r[8] || ""),
+        status: String(r[9] || ""),
+        note: String(r[10] || ""),
+        submissionId: String(r[11] || "")
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();

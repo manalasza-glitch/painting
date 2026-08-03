@@ -160,6 +160,11 @@ function openParameterChecklistMode(mode, event, element) {
     switchTab('parameter-checklist-tab', element);
 }
 
+function openEquipmentChecklist(event, element) {
+    if (event) event.preventDefault();
+    switchTab('equipment-checklist-tab', element);
+}
+
 function switchTab(tabId, element) {
     const targetForPermission = document.getElementById(tabId);
     const requiredPermission = targetForPermission ? targetForPermission.dataset.permission : "";
@@ -202,6 +207,10 @@ function switchTab(tabId, element) {
     } else if (tabId === "parameter-checklist-tab") {
         if (typeof initParameterChecklist === 'function') {
             initParameterChecklist();
+        }
+    } else if (tabId === "equipment-checklist-tab") {
+        if (typeof initEquipmentChecklist === 'function') {
+            initEquipmentChecklist();
         }
     } else if (tabId === "event-tab") {
         if (typeof loadEventsData === 'function') {

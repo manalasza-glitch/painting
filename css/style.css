@@ -466,6 +466,124 @@ button, input, textarea, select {
   background-color: rgba(56, 189, 248, 0.08) !important;
 }
 
+.equipment-checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.equipment-check-card {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+}
+
+.equipment-check-image-wrap {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(2, 8, 23, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.equipment-check-image-wrap img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.equipment-check-image-wrap.image-missing::after {
+  content: "ไม่พบรูปภาพ";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: .8rem;
+}
+
+.equipment-check-number {
+  position: absolute;
+  top: .5rem;
+  left: .5rem;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 .4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #0284c7;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, .4);
+}
+
+.equipment-check-content h3 {
+  margin: .2rem 0 .7rem;
+  color: #f8fafc;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.equipment-check-label {
+  color: #38bdf8;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.equipment-check-meta {
+  margin-top: .35rem;
+  color: #cbd5e1;
+  font-size: .8rem;
+  line-height: 1.35;
+}
+
+.equipment-check-meta span {
+  display: inline-block;
+  min-width: 58px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.equipment-check-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: .6rem;
+  margin-top: .8rem;
+}
+
+.equipment-check-inputs label {
+  color: #cbd5e1;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.equipment-check-inputs .form-control {
+  width: 100%;
+  margin-top: .25rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .equipment-checklist-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .equipment-check-card { grid-template-columns: 105px minmax(0, 1fr); gap: .7rem; padding: .7rem; }
+  .equipment-check-image-wrap, .equipment-check-image-wrap img { height: 115px; min-height: 115px; }
+  .equipment-check-inputs { grid-template-columns: 1fr; }
+  .equipment-check-content h3 { font-size: .9rem; }
+}
+
 .badge-defect {
   padding: 0.3rem 0.7rem;
   border-radius: 12px;

@@ -738,6 +738,10 @@
                         <span style="width:20px; text-align:center;">•</span>
                         วัดค่าน้ำ
                     </a>
+                    <a href="#" class="nav-link submenu-item" data-permission="daily_report.read" onclick="openEquipmentChecklist(event, this)">
+                        <span style="width:20px; text-align:center;">•</span>
+                        ตรวจเช็กอุปกรณ์
+                    </a>
                 </div>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
@@ -1097,6 +1101,50 @@
                             <table class="data-table" style="width:100%; border-collapse:collapse;">
                                 <thead><tr><th>วันที่</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
                                 <tbody id="parameterChecklistHistoryBody"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: EQUIPMENT CHECKLIST -->
+                <section id="equipment-checklist-tab" class="tab-page" data-permission="daily_report.read" style="display: none;">
+                    <div class="section-title-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                        <div>
+                            <h1 class="page-title" style="font-size:1.2rem; margin:0;">ตรวจเช็กอุปกรณ์</h1>
+                            <span style="color:#94a3b8; font-size:.82rem;">ตรวจสอบอุปกรณ์ก่อนเริ่มการผลิตสายการพ่นสี</span>
+                        </div>
+                        <button type="button" id="submitEquipmentChecklistBtn" class="btn-primary-custom" onclick="submitEquipmentChecklist()" style="background:linear-gradient(135deg,#0284c7,#2563eb)!important; color:#fff!important; border:none!important; padding:.7rem 1.4rem!important; border-radius:12px!important; font-weight:800!important; cursor:pointer;">บันทึกเช็กลิสอุปกรณ์</button>
+                    </div>
+
+                    <div class="dr-card">
+                        <h3 class="dr-section-title">ข้อมูลการตรวจ</h3>
+                        <div class="dr-grid-3">
+                            <div class="form-group">
+                                <label>วันที่ตรวจ</label>
+                                <input type="date" id="equipmentChecklistDate" class="form-control" style="color-scheme:dark;" required>
+                            </div>
+                            <div class="form-group">
+                                <label>ผู้ตรวจ</label>
+                                <input type="text" id="equipmentChecklistOperator" class="form-control" placeholder="ระบุชื่อผู้ตรวจ" required>
+                            </div>
+                            <div class="form-group">
+                                <label>หัวหน้ากะ</label>
+                                <input type="text" id="equipmentChecklistLeader" class="form-control" placeholder="ระบุชื่อหัวหน้ากะ">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="equipment-checklist-grid" id="equipmentChecklistItemsBody"></div>
+
+                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem;">
+                            <h3 class="dr-section-title" style="margin:0;">ประวัติเช็กลิสอุปกรณ์จาก Google Sheets</h3>
+                            <button type="button" class="btn-secondary-custom" onclick="refreshEquipmentChecklist()" style="padding:.55rem 1rem; border-radius:10px; cursor:pointer;">รีเฟรชข้อมูล</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" style="width:100%; border-collapse:collapse;">
+                                <thead><tr><th>วันที่</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
+                                <tbody id="equipmentChecklistHistoryBody"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -1749,6 +1797,7 @@
     <script src="js/app.js?v=96.0.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
     <script src="js/parameter-checklist.js?v=1.3.0"></script>
+    <script src="js/equipment-checklist.js?v=1.0.0"></script>
     <script src="js/events.js?v=89.0.0"></script>
 </body>
 
