@@ -1,4 +1,4 @@
-const PARAMETER_CHECKLIST_ITEMS = [
+const PARAMETER_CHECKLIST_SOURCE_ITEMS = [
     { itemNo: 1, process: "แขวนชิ้นงาน", checkItem: "ความเร็วโซ่ลำเลียง", standard: "2-4 m/min" },
     { itemNo: 2, process: "แขวนชิ้นงาน", checkItem: "ตรวจสอบอุปกรณ์แขวน", standard: "อุปกรณ์ถูกต้อง" },
     { itemNo: 3, process: "แขวนชิ้นงาน", checkItem: "จุดแขวนไม่มีสี และตะขอไม่เสียรูป", standard: "ไม่มีสี / ไม่เสียรูป" },
@@ -32,7 +32,14 @@ const PARAMETER_CHECKLIST_ITEMS = [
     { itemNo: 35, process: "อบคิวริ่ง", checkItem: "ตรวจวัดความหนาฟิล์มโดยหน่วยงานภายนอก", standard: "ทุก 2 สัปดาห์" }
 ];
 
-const WATER_PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_ITEMS.filter(item => item.itemNo >= 5 && item.itemNo <= 21);
+// แยกรายการข้อ 5-21 ไปอยู่ในเมนู "วัดค่าน้ำ" และเริ่มเลขใหม่ที่ 1
+// ส่วนเมนูเช็กพารามิเตอร์จะเหลือรายการก่อนข้อ 5 และหลังข้อ 21 แล้วเรียงเลขใหม่เช่นกัน
+const WATER_PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
+    .filter(item => item.itemNo >= 5 && item.itemNo <= 21)
+    .map((item, index) => ({ ...item, itemNo: index + 1 }));
+const PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
+    .filter(item => item.itemNo < 5 || item.itemNo > 21)
+    .map((item, index) => ({ ...item, itemNo: index + 1 }));
 let parameterChecklistMode = "full";
 
 function getActiveParameterChecklistItems() {
@@ -64,7 +71,7 @@ function initParameterChecklist() {
     const listTitle = document.querySelector("#parameterChecklistItemsBody")?.closest(".dr-card")?.querySelector("h3");
     const saveButton = document.getElementById("submitParameterChecklistBtn");
     if (pageTitle) pageTitle.textContent = title;
-    if (listTitle) listTitle.textContent = parameterChecklistMode === "water" ? "รายการวัดค่าน้ำ (ข้อ 5-21)" : "รายการตรวจเช็กพารามิเตอร์";
+    if (listTitle) listTitle.textContent = parameterChecklistMode === "water" ? "รายการวัดค่าน้ำ" : "รายการตรวจเช็กพารามิเตอร์";
     if (saveButton) saveButton.textContent = `บันทึก${title}`;
     renderParameterChecklistItems();
     refreshParameterChecklist();
