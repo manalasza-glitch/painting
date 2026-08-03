@@ -698,7 +698,7 @@
                 </a>
                 <a href="#" class="nav-link" data-permission="daily_report.read" onclick="switchTab('parameter-checklist-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path><path d="m16 16 1.5 1.5L21 14"></path></svg>
-                    ตรวจเช็คพารามิเตอร์
+                    เช็คลิสก่อนเริ่มงาน
                 </a>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
@@ -1004,8 +1004,8 @@
                 <!-- TAB: PARAMETER CHECKLIST -->
                 <section id="parameter-checklist-tab" class="tab-page" data-permission="daily_report.read" style="display: none;">
                     <div class="section-title-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-                        <h1 class="page-title" style="font-size:1.2rem; margin:0;">ตรวจเช็คพารามิเตอร์การพ่นสี</h1>
-                        <span style="color:#94a3b8; font-size:.82rem;">แบบฟอร์มอ้างอิงจาก Parameter Checklist</span>
+                        <h1 class="page-title" style="font-size:1.2rem; margin:0;">เช็คลิสก่อนเริ่มงาน</h1>
+                        <span style="color:#94a3b8; font-size:.82rem;">ตรวจสอบความพร้อมก่อนเริ่มงานพ่นสี</span>
                     </div>
 
                     <div class="dr-card">
@@ -1028,8 +1028,8 @@
 
                     <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
-                            <h3 class="dr-section-title" style="margin:0;">รายการตรวจพารามิเตอร์</h3>
-                            <button type="button" id="submitParameterChecklistBtn" class="btn-primary-custom" onclick="submitParameterChecklist()" style="background:linear-gradient(135deg,#0284c7,#2563eb)!important; color:#fff!important; border:none!important; padding:.7rem 1.4rem!important; border-radius:12px!important; font-weight:800!important; cursor:pointer;">บันทึกแบบตรวจพารามิเตอร์</button>
+                            <h3 class="dr-section-title" style="margin:0;">รายการเช็คลิสก่อนเริ่มงาน</h3>
+                            <button type="button" id="submitParameterChecklistBtn" class="btn-primary-custom" onclick="submitParameterChecklist()" style="background:linear-gradient(135deg,#0284c7,#2563eb)!important; color:#fff!important; border:none!important; padding:.7rem 1.4rem!important; border-radius:12px!important; font-weight:800!important; cursor:pointer;">บันทึกเช็คลิสก่อนเริ่มงาน</button>
                         </div>
                         <div class="table-responsive">
                             <table class="data-table" style="min-width:1180px; width:100%; border-collapse:collapse;">
@@ -1382,7 +1382,7 @@
             </div>
             <div class="mobile-nav-item" data-permission="daily_report.read" onclick="switchTab('parameter-checklist-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m16 16 1.5 1.5L21 14"/></svg>
-                <span>เช็คพารามิเตอร์</span>
+                <span>เช็คลิสก่อนเริ่มงาน</span>
             </div>
             <div class="mobile-nav-item" data-permission="events.read" onclick="switchTab('event-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -1709,7 +1709,7 @@
     <script src="js/auth.js?v=85.0.0"></script>
     <script src="js/app.js?v=94.0.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
-    <script src="js/parameter-checklist.js?v=1.0.0"></script>
+    <script src="js/parameter-checklist.js?v=1.0.1"></script>
     <script src="js/events.js?v=89.0.0"></script>
 </body>
 

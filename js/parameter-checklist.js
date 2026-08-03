@@ -99,18 +99,18 @@ async function submitParameterChecklist() {
     }
     if (button) {
         button.disabled = true;
-        button.textContent = "กำลังบันทึกแบบตรวจพารามิเตอร์...";
+        button.textContent = "กำลังบันทึกเช็คลิสก่อนเริ่มงาน...";
     }
     try {
         await sendParameterChecklistToAPI(payload);
-        showToast("บันทึกแบบตรวจพารามิเตอร์ลง Google Sheets เรียบร้อยแล้ว", "success");
+        showToast("บันทึกเช็คลิสก่อนเริ่มงานลง Google Sheets เรียบร้อยแล้ว", "success");
         await refreshParameterChecklist();
     } catch (error) {
-        showToast(`บันทึกแบบตรวจพารามิเตอร์ไม่สำเร็จ: ${error.message}`, "error");
+        showToast(`บันทึกเช็คลิสก่อนเริ่มงานไม่สำเร็จ: ${error.message}`, "error");
     } finally {
         if (button) {
             button.disabled = false;
-            button.textContent = "บันทึกแบบตรวจพารามิเตอร์";
+            button.textContent = "บันทึกเช็คลิสก่อนเริ่มงาน";
         }
     }
 }
