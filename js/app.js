@@ -179,6 +179,8 @@ function switchTab(tabId, element) {
         return;
     }
 
+    const targetTab = document.getElementById(tabId);
+
     // Hide all tab pages & remove active class
     // The inspection form lives with the legacy modal markup at the end of
     // the document. Move it into the regular content area before displaying
@@ -199,7 +201,6 @@ function switchTab(tabId, element) {
     document.querySelectorAll(".nav-link, .mobile-nav-item").forEach(link => link.classList.remove("active"));
 
     // Show target tab page
-    const targetTab = document.getElementById(tabId);
     if (targetTab) {
         targetTab.classList.add("active");
         targetTab.style.display = "block";
