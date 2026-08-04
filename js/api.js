@@ -59,6 +59,43 @@ async function requireJsonResponse(response, operation) {
     return result;
 }
 
+function waitBeforeApiRetry(delayMs) {
+    return new Promise(resolve => setTimeout(resolve, delayMs));
+}
+
+async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
+    const attempts = Math.max(1, Number(retryOptions.attempts) || 3);
+    const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 20000);
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+        const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+        const separator = url.includes("?") ? "&" : "?";
+        const requestUrl = `${url}${separator}_request=${Date.now()}-${attempt}`;
+
+        try {
+            const response = await fetch(requestUrl, {
+                cache: "no-store",
+                headers: { "Accept": "application/json" },
+                signal: controller ? controller.signal : undefined
+            });
+            return await requireJsonResponse(response, operation);
+        } catch (error) {
+            lastError = error && error.name === "AbortError"
+                ? new Error(`${operation}: หมดเวลารอการตอบกลับจาก Apps Script`)
+                : error;
+            if (attempt < attempts) {
+                await waitBeforeApiRetry(350 * attempt);
+            }
+        } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+        }
+    }
+
+    throw lastError || new Error(`${operation}: ไม่สามารถโหลดข้อมูลได้`);
+}
+
 // Fetch historical inspection records from Google Sheet API
 async function fetchInspectionDataFromAPI(dateFilter = "") {
     const url = getApiUrl();
@@ -454,7 +491,7 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
     return [];
 }
 
-async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = "") {
+async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     if (!baseUrl) return [];
     const requestedDate = String(dateFilter || "").trim();
@@ -464,12 +501,12 @@ async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = 
     if (requestedType) query.set("type", requestedType);
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
-        const response = await fetch(url, { cache: "no-cache", headers: { "Accept": "application/json" } });
-        const result = await requireJsonResponse(response, "Get parameter checklist data");
+        const result = await fetchAppsScriptJsonWithRetry(url, "Get parameter checklist data");
         if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
         if (Array.isArray(result)) return result;
     } catch (error) {
         console.warn("Failed to fetch parameter checklist data:", error);
+        if (options && options.throwOnError) throw error;
     }
     return [];
 }
@@ -491,19 +528,19 @@ async function sendParameterChecklistToAPI(payload) {
     return result;
 }
 
-async function fetchEquipmentChecklistDataFromAPI(dateFilter = "") {
+async function fetchEquipmentChecklistDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     if (!baseUrl) return [];
     const query = new URLSearchParams({ action: "getEquipmentChecklistData" });
     if (String(dateFilter || "").trim()) query.set("date", String(dateFilter).trim());
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
-        const response = await fetch(url, { cache: "no-cache", headers: { "Accept": "application/json" } });
-        const result = await requireJsonResponse(response, "Get equipment checklist data");
+        const result = await fetchAppsScriptJsonWithRetry(url, "Get equipment checklist data");
         if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
         if (Array.isArray(result)) return result;
     } catch (error) {
         console.warn("Failed to fetch equipment checklist data:", error);
+        if (options && options.throwOnError) throw error;
     }
     return [];
 }

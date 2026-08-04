@@ -232,6 +232,20 @@ function renderQCChecklistHistories() {
     renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
 }
 
+function renderQCChecklistHistoryMessage(bodyId, message, isError = false) {
+    const body = document.getElementById(bodyId);
+    if (!body) return;
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:${isError ? "#fb7185" : "#94a3b8"}; padding:1.5rem;">${parameterChecklistEscape(message)}</td></tr>`;
+}
+
+function setQCChecklistRefreshButtonLoading(isLoading) {
+    const button = document.getElementById("qcHistoryRefreshBtn");
+    if (!button) return;
+    button.disabled = isLoading;
+    button.style.opacity = isLoading ? "0.7" : "1";
+    button.textContent = isLoading ? "กำลังโหลดข้อมูล..." : "รีเฟรชข้อมูล";
+}
+
 async function refreshParameterChecklist() {
     if (parameterChecklistRefreshInFlight) return parameterChecklistRefreshInFlight;
     parameterChecklistRefreshInFlight = (async () => {
@@ -252,29 +266,61 @@ async function refreshParameterChecklist() {
     return parameterChecklistRefreshInFlight;
 }
 
-async function refreshQCChecklistHistory() {
-    if (qcChecklistRefreshInFlight) return qcChecklistRefreshInFlight;
+async function refreshQCChecklistHistory(showFeedback = false) {
+    if (qcChecklistRefreshInFlight) {
+        if (showFeedback && typeof showToast === "function") showToast("กำลังโหลดข้อมูลอยู่ กรุณารอสักครู่", "info");
+        return qcChecklistRefreshInFlight;
+    }
     qcChecklistRefreshInFlight = (async () => {
+        const failures = [];
+        setQCChecklistRefreshButtonLoading(true);
+        renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
+        renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
+        renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "กำลังโหลดประวัติเช็กลิสอุปกรณ์...");
         try {
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
-                // The Apps Script endpoint defaults to the full parameter sheet
-                // when no type is supplied, so request both sheets explicitly.
-                const [parameterRecords, waterRecords] = await Promise.all([
-                    fetchParameterChecklistDataFromAPI("", "full"),
-                    fetchParameterChecklistDataFromAPI("", "water")
-                ]);
-                parameterChecklistHistory = Array.isArray(parameterRecords)
-                    ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
-                    : [];
-                waterParameterChecklistHistory = Array.isArray(waterRecords)
-                    ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
-                    : [];
-                renderQCChecklistHistories();
+                try {
+                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { throwOnError: true });
+                    parameterChecklistHistory = Array.isArray(parameterRecords)
+                        ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
+                        : [];
+                    renderParameterChecklistHistory("qcParameterChecklistHistoryBody", parameterChecklistHistory, "ยังไม่มีประวัติการตรวจพารามิเตอร์");
+                } catch (error) {
+                    failures.push("พารามิเตอร์");
+                    renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "โหลดประวัติการตรวจพารามิเตอร์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+                }
+
+                try {
+                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { throwOnError: true });
+                    waterParameterChecklistHistory = Array.isArray(waterRecords)
+                        ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
+                        : [];
+                    renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
+                } catch (error) {
+                    failures.push("ตรวจน้ำ");
+                    renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "โหลดประวัติการตรวจน้ำไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+                }
             }
-            if (typeof refreshEquipmentChecklist === "function") {
-                await refreshEquipmentChecklist();
+
+            if (typeof fetchEquipmentChecklistDataFromAPI === "function") {
+                try {
+                    equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { throwOnError: true });
+                    renderEquipmentChecklistHistory();
+                } catch (error) {
+                    failures.push("เช็กอุปกรณ์");
+                    renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "โหลดประวัติเช็กลิสอุปกรณ์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+                }
+            }
+
+            if (showFeedback && typeof showToast === "function") {
+                if (failures.length) {
+                    showToast(`โหลดข้อมูลไม่สำเร็จบางส่วน: ${failures.join(", ")}`, "error");
+                } else {
+                    showToast("รีเฟรชข้อมูล QC เรียบร้อยแล้ว", "success");
+                }
             }
         } finally {
+            setQCChecklistRefreshButtonLoading(false);
             qcChecklistRefreshInFlight = null;
         }
     })();
