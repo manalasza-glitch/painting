@@ -75,7 +75,7 @@ function renderEventsTab() {
     if (filtered.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                <td colspan="9" style="text-align: center; padding: 2rem; color: #94a3b8;">
                     🚫 ไม่พบข้อมูลบันทึกเหตุการณ์ 5M1E ที่ตรงตามเงื่อนไข
                 </td>
             </tr>
@@ -111,6 +111,7 @@ function renderEventsTab() {
                 <td style="font-size: 0.85rem; color: #166534; background: rgba(240, 253, 244, 0.6); padding: 0.5rem; border-radius: 6px;">
                     🛡️ ${evt.action || '-'}
                 </td>
+                <td style="text-align:center; font-weight:800; color:#0ea5e9; white-space:nowrap;">${Number(evt.quantity) || 0}</td>
                 <td style="white-space: nowrap; font-size: 0.85rem; color: #475569;">
                     👤 ${evt.recorder || '-'}
                 </td>
@@ -134,6 +135,7 @@ function openEventModal() {
     const now = new Date();
     const dateInput = document.getElementById("eventDate");
     const timeInput = document.getElementById("eventTime");
+    const quantityInput = document.getElementById("eventQuantity");
     
     if (dateInput) dateInput.value = now.toISOString().substring(0, 10);
     if (timeInput) {
@@ -141,6 +143,7 @@ function openEventModal() {
         const mm = ('0' + now.getMinutes()).slice(-2);
         timeInput.value = `${hh}:${mm}`;
     }
+    if (quantityInput) quantityInput.value = "0";
 
     // Populate Recorder Dropdown from global recorders list
     populateEventRecorderDropdown();
@@ -177,6 +180,7 @@ async function handleEventFormSubmit(event) {
     const shift = document.getElementById("eventShift").value;
     const category = document.getElementById("eventCategory").value;
     const process = document.getElementById("eventProcess").value.trim();
+    const quantity = Math.max(0, Number(document.getElementById("eventQuantity")?.value || 0) || 0);
     const title = document.getElementById("eventTitle").value.trim();
     const detail = document.getElementById("eventDetail").value.trim();
     const actionTaken = document.getElementById("eventActionTaken").value.trim();
@@ -193,6 +197,7 @@ async function handleEventFormSubmit(event) {
         shift,
         category,
         process,
+        quantity,
         title,
         detail,
         actionTaken,

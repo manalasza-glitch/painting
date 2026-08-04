@@ -50,6 +50,11 @@ function setParameterChecklistMode(mode) {
     parameterChecklistMode = mode === "water" ? "water" : "full";
     const page = document.getElementById("parameter-checklist-tab");
     if (page) page.classList.toggle("water-mode", parameterChecklistMode === "water");
+    const timeGroup = document.getElementById("parameterChecklistTimeGroup");
+    const timeInput = document.getElementById("parameterChecklistTime");
+    const isWater = parameterChecklistMode === "water";
+    if (timeGroup) timeGroup.style.display = isWater ? "" : "none";
+    if (timeInput) timeInput.required = isWater;
 }
 
 function parameterChecklistTitle() {
@@ -70,6 +75,17 @@ function initParameterChecklist() {
     if (page) page.classList.toggle("water-mode", parameterChecklistMode === "water");
     const dateInput = document.getElementById("parameterChecklistDate");
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
+    const timeGroup = document.getElementById("parameterChecklistTimeGroup");
+    const timeInput = document.getElementById("parameterChecklistTime");
+    const isWater = parameterChecklistMode === "water";
+    if (timeGroup) timeGroup.style.display = isWater ? "" : "none";
+    if (timeInput) {
+        timeInput.required = isWater;
+        if (!timeInput.value) {
+            const now = new Date();
+            timeInput.value = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        }
+    }
     const title = parameterChecklistTitle();
     const pageTitle = document.querySelector("#parameter-checklist-tab .page-title");
     const listTitle = document.querySelector("#parameterChecklistItemsBody")?.closest(".dr-card")?.querySelector("h3");
@@ -106,12 +122,14 @@ function renderParameterChecklistItems() {
 
 function collectParameterChecklistPayload() {
     const date = document.getElementById("parameterChecklistDate")?.value || "";
+    const time = parameterChecklistMode === "water" ? (document.getElementById("parameterChecklistTime")?.value || "") : "";
     const operator = document.getElementById("parameterChecklistOperator")?.value.trim() || "";
     const teamLeader = document.getElementById("parameterChecklistLeader")?.value.trim() || "";
     return {
         action: "submitParameterChecklist",
         submissionId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `parameter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         date,
+        time,
         operator,
         teamLeader,
         checklistType: parameterChecklistMode,

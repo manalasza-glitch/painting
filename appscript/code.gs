@@ -47,24 +47,31 @@ function hasDailyReportSubmission(sheet, submissionId, idColumn) {
 }
 
 function ensureParameterChecklistSheet(ss, checklistType) {
-  const sheetName = String(checklistType || "full").toLowerCase() === "water"
+  const isWater = String(checklistType || "full").toLowerCase() === "water";
+  const sheetName = isWater
     ? WATER_PARAMETER_CHECKLIST_SHEET_NAME
     : PARAMETER_CHECKLIST_SHEET_NAME;
+  const baseHeaders = [
+    "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "Process",
+    "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
+  ];
+  const headers = isWater ? baseHeaders.concat(["Time"]) : baseHeaders;
   let sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    sheet.appendRow([
-      "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "Process",
-      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
-    ]);
+    sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   } else if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "Process",
-      "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
-    ]);
+    sheet.appendRow(headers);
   } else if (sheet.getLastColumn() < 13) {
     sheet.getRange(1, 13).setValue("ChecklistType");
+  }
+  if (isWater) {
+    const lastColumn = Math.max(1, sheet.getLastColumn());
+    const currentHeaders = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+    if (currentHeaders.indexOf("Time") < 0) {
+      sheet.getRange(1, lastColumn + 1).setValue("Time");
+    }
   }
   return sheet;
 }
@@ -521,9 +528,10 @@ function doPost(e) {
       const dateVal = String(data.date || formatDateStr(now, false));
       const operatorVal = String(data.operator || "");
       const leaderVal = String(data.teamLeader || "");
+      const timeVal = checklistType === "water" ? String(data.time || "") : "";
       const records = Array.isArray(data.records) ? data.records : [];
       records.forEach(item => {
-        checklistSheet.appendRow([
+        const row = [
           now,
           dateVal,
           operatorVal,
@@ -537,7 +545,9 @@ function doPost(e) {
           String(item.note || ""),
           submissionId,
           checklistType
-        ]);
+        ];
+        if (checklistType === "water") row.push(timeVal);
+        checklistSheet.appendRow(row);
       });
       SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitParameterChecklist" })).setMimeType(ContentService.MimeType.JSON);
@@ -896,9 +906,10 @@ function doGet(e) {
       }
 
       const now = new Date();
+      const timeVal = checklistType === "water" ? String(payload.time || "") : "";
       const records = Array.isArray(payload.records) ? payload.records : [];
       records.forEach(item => {
-        checklistSheet.appendRow([
+        const row = [
           now,
           String(payload.date || formatDateStr(now, false)),
           String(payload.operator || ""),
@@ -912,7 +923,9 @@ function doGet(e) {
           String(item.note || ""),
           submissionId,
           checklistType
-        ]);
+        ];
+        if (checklistType === "water") row.push(timeVal);
+        checklistSheet.appendRow(row);
       });
       SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitParameterChecklist" })).setMimeType(ContentService.MimeType.JSON);
@@ -1023,7 +1036,8 @@ function doGet(e) {
         status: String(r[9] || ""),
         note: String(r[10] || ""),
         submissionId: String(r[11] || ""),
-        checklistType: String(r[12] || requestedType)
+        checklistType: String(r[12] || requestedType),
+        time: requestedType === "water" ? String(r[13] || "") : ""
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
@@ -1189,7 +1203,8 @@ function doGet(e) {
         action: String(r[7] || ""),
         recorder: String(r[8] || ""),
         timestamp: formatDateStr(r[9] || r[0], true),
-        id: String(r[10] || ("evt_" + (i + 1)))
+        id: String(r[10] || ("evt_" + (i + 1))),
+        quantity: Number(r[11]) || 0
       }));
 
       return ContentService.createTextOutput(JSON.stringify({ status: "success", data: eventsData })).setMimeType(ContentService.MimeType.JSON);
@@ -1207,10 +1222,11 @@ function doGet(e) {
       const eDetail = String((e && e.parameter && e.parameter.detail) || "").trim();
       const eAct = String((e && e.parameter && e.parameter.actionTaken) || (e && e.parameter && e.parameter.action) || "").trim();
       const eRec = String((e && e.parameter && e.parameter.recorder) || "").trim();
+      const eQuantity = Math.max(0, Number((e && e.parameter && e.parameter.quantity) || 0) || 0);
       const eId = "evt_" + new Date().getTime();
       const nowStr = formatDateStr(new Date(), true);
 
-      evtSheet.appendRow([eDate, eTime, eShift, eCat, eProc, eTitle, eDetail, eAct, eRec, nowStr, eId]);
+      evtSheet.appendRow([eDate, eTime, eShift, eCat, eProc, eTitle, eDetail, eAct, eRec, nowStr, eId, eQuantity]);
       SpreadsheetApp.flush();
 
       return ContentService.createTextOutput(JSON.stringify({ status: "success", id: eId })).setMimeType(ContentService.MimeType.JSON);
@@ -1355,12 +1371,17 @@ function getOrCreateEventsSheet(ss) {
   let evtSheet = ss.getSheetByName("5M1E_Events") || ss.getSheetByName("events");
   if (!evtSheet) {
     evtSheet = ss.insertSheet("5M1E_Events");
-    evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID"]);
+    evtSheet.appendRow(["Date", "Time", "Shift", "Category", "Process", "Title", "Detail", "Action", "Recorder", "Timestamp", "ID", "Quantity"]);
     SpreadsheetApp.flush();
   } else if (evtSheet.getName() === "events" && !ss.getSheetByName("5M1E_Events")) {
     try {
       evtSheet.setName("5M1E_Events");
     } catch(e) {}
+  }
+  const lastColumn = Math.max(1, evtSheet.getLastColumn());
+  const headers = evtSheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  if (headers.indexOf("Quantity") < 0) {
+    evtSheet.getRange(1, lastColumn + 1).setValue("Quantity");
   }
   return evtSheet;
 }

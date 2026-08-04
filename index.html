@@ -1062,6 +1062,10 @@
                                 <label>วันที่ตรวจ</label>
                                 <input type="date" id="parameterChecklistDate" class="form-control" style="color-scheme:dark;" required>
                             </div>
+                            <div class="form-group" id="parameterChecklistTimeGroup" style="display:none;">
+                                <label>เวลาที่ตรวจ</label>
+                                <input type="time" id="parameterChecklistTime" class="form-control" style="color-scheme:dark;" required>
+                            </div>
                             <div class="form-group">
                                 <label>ผู้ตรวจ</label>
                                 <input type="text" id="parameterChecklistOperator" class="form-control" placeholder="ระบุชื่อผู้ตรวจ" required>
@@ -1258,13 +1262,14 @@
                                         <th>ขั้นตอน / สายงาน</th>
                                         <th>รายละเอียดการเปลี่ยนแปลง</th>
                                         <th>การรับมือ / แก้ไข</th>
+                                        <th>จำนวน</th>
                                         <th>ผู้บันทึก</th>
                                         <th style="text-align: center;">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="eventsTableBody">
                                     <tr>
-                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล 5M1E...</td>
+                                        <td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล 5M1E...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1730,6 +1735,10 @@
                         <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">ขั้นตอน / สายการผลิต (Process)</label>
                         <input type="text" id="eventProcess" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" placeholder="เช่น เตาอบสี, ห้องพ่นสีผง" required>
                     </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">จำนวน</label>
+                        <input type="number" id="eventQuantity" class="form-control" min="0" step="1" value="0" style="padding: 0.4rem 0.6rem; min-height: 38px;" inputmode="numeric">
+                    </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0.75rem;">
@@ -1887,9 +1896,9 @@
     <script src="js/auth.js?v=86.2.0"></script>
     <script src="js/app.js?v=96.8.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
-    <script src="js/parameter-checklist.js?v=1.4.0"></script>
+    <script src="js/parameter-checklist.js?v=1.5.0"></script>
     <script src="js/equipment-checklist.js?v=1.1.0"></script>
-    <script src="js/events.js?v=89.0.0"></script>
+    <script src="js/events.js?v=89.1.0"></script>
 </body>
 
 </html>
