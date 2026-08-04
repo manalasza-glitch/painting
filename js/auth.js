@@ -23,8 +23,14 @@ const PaintingAuth = {
 
     applyPermissions() {
         document.querySelectorAll('.nav-link[data-permission], .mobile-nav-item[data-permission]').forEach(item => {
-            if (this.hasPermission(item.dataset.permission)) item.style.removeProperty('display');
-            else item.style.display = 'none';
+            if (this.hasPermission(item.dataset.permission)) {
+                item.style.removeProperty('display');
+            } else {
+                // The navigation CSS uses display:flex !important, so a normal
+                // inline display:none is ignored. Use an important inline rule
+                // to make denied items actually disappear.
+                item.style.setProperty('display', 'none', 'important');
+            }
         });
 
         // Hide whole pages as well as their navigation controls. Without this,
@@ -35,7 +41,9 @@ const PaintingAuth = {
             const allowed = this.hasPermission(page.dataset.permission);
             if (!allowed) {
                 page.classList.remove('active');
-                page.style.display = 'none';
+                page.style.setProperty('display', 'none', 'important');
+            } else {
+                page.style.removeProperty('display');
             }
         });
 
