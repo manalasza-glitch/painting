@@ -109,9 +109,11 @@ function initParameterChecklist() {
     const title = parameterChecklistTitle();
     const pageTitle = document.querySelector("#parameter-checklist-tab .page-title");
     const listTitle = document.querySelector("#parameterChecklistItemsBody")?.closest(".dr-card")?.querySelector("h3");
+    const historyTitle = document.getElementById("parameterChecklistHistoryTitle");
     const saveButton = document.getElementById("submitParameterChecklistBtn");
     if (pageTitle) pageTitle.textContent = title;
     if (listTitle) listTitle.textContent = parameterChecklistMode === "water" ? "รายการวัดค่าน้ำ" : "รายการตรวจเช็กพารามิเตอร์";
+    if (historyTitle) historyTitle.textContent = parameterChecklistMode === "water" ? "ประวัติการตรวจน้ำ" : "ประวัติการตรวจพารามิเตอร์";
     if (saveButton) saveButton.textContent = `บันทึก${title}`;
     renderParameterChecklistItems();
     refreshParameterChecklist();
