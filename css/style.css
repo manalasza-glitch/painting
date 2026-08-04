@@ -697,7 +697,20 @@ button, input, textarea, select {
   padding: 1.25rem 1.5rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   max-height: calc(85vh - 60px);
+}
+
+/* Long 5M1E forms must scroll inside the modal on desktop and mobile. */
+#eventModal .modal-box {
+  min-height: 0;
+}
+
+#eventModal .modal-box form {
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Inspection entry is a regular navigation page, not a modal overlay. */
@@ -1959,6 +1972,30 @@ button, input, textarea, select {
     border-radius: 20px 20px 0 0 !important;
     position: fixed;
     bottom: 0;
+  }
+
+  /* Keep long event forms inside the modal while allowing the form itself to scroll. */
+  #eventModal.modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    padding: 0.5rem 0 !important;
+  }
+
+  #eventModal .modal-box {
+    height: calc(100vh - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    top: 0.5rem !important;
+    bottom: auto !important;
+  }
+
+  #eventModal .modal-box form {
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .toast-container {
