@@ -3,6 +3,7 @@
 const PaintingAuth = {
     currentUser: null,
     users: [],
+    permissionRefreshTimer: null,
     permissionOptions: [
         { key: "dashboard.read", label: "ดู Dashboard" },
         { key: "qc7.read", label: "ดู QC 7 TOOL" },
@@ -25,6 +26,45 @@ const PaintingAuth = {
             if (this.hasPermission(item.dataset.permission)) item.style.removeProperty('display');
             else item.style.display = 'none';
         });
+
+        // Hide whole pages as well as their navigation controls. Without this,
+        // a user who opened Dashboard before permissions changed could keep
+        // seeing its data even after the menu item was removed.
+        const pages = Array.from(document.querySelectorAll('.tab-page[data-permission]'));
+        pages.forEach(page => {
+            const allowed = this.hasPermission(page.dataset.permission);
+            if (!allowed) {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            }
+        });
+
+        const activePage = document.querySelector('.tab-page.active');
+        if ((!activePage || !this.hasPermission(activePage.dataset.permission)) && typeof switchTab === 'function') {
+            const firstAllowedPage = pages.find(page => this.hasPermission(page.dataset.permission));
+            if (firstAllowedPage) switchTab(firstAllowedPage.id);
+        }
+    },
+
+    async refreshCurrentUserPermissions() {
+        if (!this.currentUser || typeof getUsersAPI !== 'function') return;
+        try {
+            const liveUsers = await getUsersAPI();
+            const liveUser = Array.isArray(liveUsers)
+                ? liveUsers.find(user => String(user.employeeId || '').trim() === String(this.currentUser.employeeId || '').trim())
+                : null;
+            if (!liveUser) return;
+
+            this.currentUser = {
+                ...this.currentUser,
+                ...liveUser,
+                permissions: normalizeUserPermissions(liveUser.permissions, liveUser.role, liveUser.employeeId)
+            };
+            localStorage.setItem('PAINTING_CURRENT_USER', JSON.stringify(this.currentUser));
+            this.updateUserHeaderUI();
+        } catch (e) {
+            console.warn('Unable to refresh live permissions:', e);
+        }
     },
 
     async hashPassword(password) {
@@ -47,6 +87,7 @@ const PaintingAuth = {
             try {
                 this.currentUser = JSON.parse(storedUser);
                 this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
+                await this.refreshCurrentUserPermissions();
                 this.updateUserHeaderUI();
                 this.hideAuthModal();
                 return;
@@ -263,6 +304,9 @@ const PaintingAuth = {
                 }
             }
             this.applyPermissions();
+            if (!this.permissionRefreshTimer) {
+                this.permissionRefreshTimer = setInterval(() => this.refreshCurrentUserPermissions(), 30000);
+            }
         }
     },
 
