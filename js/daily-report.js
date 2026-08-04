@@ -319,6 +319,8 @@ function openAddStaffModal(targetType = "recorder") {
             }
             const sel = document.getElementById('recorderName');
             if (sel) sel.value = newName.trim();
+            const eventSel = document.getElementById('eventRecorderSelect');
+            if (eventSel) eventSel.value = newName.trim();
         }
     }
 }
@@ -374,6 +376,8 @@ function saveNewStaff() {
 
     const recorderSelect = document.getElementById('recorderName');
     if (recorderSelect) recorderSelect.value = newName;
+    const eventRecorderSelect = document.getElementById('eventRecorderSelect');
+    if (eventRecorderSelect) eventRecorderSelect.value = newName;
 
     input.value = "";
     showToast(`เพิ่มรายชื่อ "${newName}" เรียบร้อยแล้ว`, "success");
