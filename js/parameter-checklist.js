@@ -39,9 +39,9 @@ const WATER_PARAMETER_SOURCE_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
     .filter(item => item.itemNo >= 5 && item.itemNo <= 21);
 const WATER_PARAMETER_INSERT_ITEM = PARAMETER_CHECKLIST_SOURCE_ITEMS.find(item => item.itemNo === 21);
 const WATER_PARAMETER_CHECKLIST_ITEMS = [
-    ...WATER_PARAMETER_SOURCE_ITEMS.slice(0, 4),
+    ...WATER_PARAMETER_SOURCE_ITEMS.slice(0, 8),
     ...(WATER_PARAMETER_INSERT_ITEM ? [{ ...WATER_PARAMETER_INSERT_ITEM, process: "ล้างน้ำ 2" }] : []),
-    ...WATER_PARAMETER_SOURCE_ITEMS.slice(4)
+    ...WATER_PARAMETER_SOURCE_ITEMS.slice(8)
 ].map((item, index) => ({ ...item, itemNo: index + 1 }));
 const PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
     .filter(item => item.itemNo < 5 || item.itemNo > 21)
