@@ -19,6 +19,20 @@ function equipmentChecklistEscape(value) {
     })[char]);
 }
 
+function formatEquipmentChecklistTime(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "-";
+
+    const match = raw.match(/(?:^|\s|T)(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (match) return `${String(match[1]).padStart(2, "0")}:${match[2]}`;
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+        return `${String(parsed.getHours()).padStart(2, "0")}:${String(parsed.getMinutes()).padStart(2, "0")}`;
+    }
+    return "-";
+}
+
 function initEquipmentChecklist() {
     const dateInput = document.getElementById("equipmentChecklistDate");
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
@@ -116,14 +130,15 @@ function renderEquipmentChecklistHistory() {
     if (!body) return;
     const groups = groupEquipmentChecklistRows(equipmentChecklistHistory).slice(0, 10);
     if (!groups.length) {
-        body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:1.5rem;">ยังไม่มีประวัติเช็กลิสอุปกรณ์</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">ยังไม่มีประวัติเช็กลิสอุปกรณ์</td></tr>`;
         return;
     }
     body.innerHTML = groups.map(group => {
         const ng = group.rows.filter(row => String(row.status).toUpperCase() === "NG").length;
         const ok = group.rows.filter(row => String(row.status).toUpperCase() === "OK").length;
         return `<tr>
-            <td>${equipmentChecklistEscape(formatDailyReportDate(group.date, group.timestamp))}</td>
+            <td class="equipment-history-date">${equipmentChecklistEscape(formatDailyReportDate(group.date, group.timestamp))}</td>
+            <td class="equipment-history-time">${equipmentChecklistEscape(formatEquipmentChecklistTime(group.timestamp))}</td>
             <td>${equipmentChecklistEscape(group.operator || "-")}</td>
             <td>${equipmentChecklistEscape(group.teamLeader || "-")}</td>
             <td style="text-align:center;">${group.rows.length}</td>

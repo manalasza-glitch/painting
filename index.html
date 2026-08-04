@@ -619,7 +619,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.14.0">
+    <link rel="stylesheet" href="css/style.css?v=96.15.0">
     <link rel="stylesheet" href="css/auth.css?v=83.1.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -1151,9 +1151,9 @@
                             <button type="button" class="btn-secondary-custom" onclick="refreshEquipmentChecklist()" style="padding:.55rem 1rem; border-radius:10px; cursor:pointer;">รีเฟรชข้อมูล</button>
                         </div>
                         <div class="table-responsive">
-                            <table class="data-table" style="width:100%; border-collapse:collapse;">
-                                <thead><tr><th>วันที่</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
-                                <tbody id="equipmentChecklistHistoryBody"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
+                            <table class="data-table equipment-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
+                                <tbody id="equipmentChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -1898,7 +1898,7 @@
     <script src="js/app.js?v=96.8.0"></script>
     <script src="js/daily-report.js?v=93.3.0"></script>
     <script src="js/parameter-checklist.js?v=1.5.3"></script>
-    <script src="js/equipment-checklist.js?v=1.1.0"></script>
+    <script src="js/equipment-checklist.js?v=1.1.1"></script>
     <script src="js/events.js?v=89.4.0"></script>
 </body>
 

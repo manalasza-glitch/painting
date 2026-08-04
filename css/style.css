@@ -676,6 +676,32 @@ button, input, textarea, select {
   word-break: normal;
 }
 
+.equipment-history-table th,
+.equipment-history-table td {
+  padding: 0.7rem 0.6rem;
+  vertical-align: middle;
+}
+
+.equipment-history-table th:nth-child(1),
+.equipment-history-table td:nth-child(1) { width: 15%; }
+.equipment-history-table th:nth-child(2),
+.equipment-history-table td:nth-child(2) { width: 12%; }
+.equipment-history-table th:nth-child(3),
+.equipment-history-table td:nth-child(3) { width: 16%; }
+.equipment-history-table th:nth-child(4),
+.equipment-history-table td:nth-child(4) { width: 16%; }
+.equipment-history-table th:nth-child(5),
+.equipment-history-table td:nth-child(5) { width: 16%; }
+.equipment-history-table th:nth-child(6),
+.equipment-history-table td:nth-child(6) { width: 12%; }
+.equipment-history-table th:nth-child(7),
+.equipment-history-table td:nth-child(7) { width: 13%; }
+
+.equipment-history-date,
+.equipment-history-time {
+  white-space: nowrap;
+}
+
 .btn-add-staff {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
