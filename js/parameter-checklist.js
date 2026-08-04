@@ -257,10 +257,18 @@ async function refreshQCChecklistHistory() {
     qcChecklistRefreshInFlight = (async () => {
         try {
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
-                const records = await fetchParameterChecklistDataFromAPI("", "");
-                const allRecords = Array.isArray(records) ? records : [];
-                parameterChecklistHistory = allRecords.filter(record => !record.checklistType || String(record.checklistType) === "full");
-                waterParameterChecklistHistory = allRecords.filter(record => String(record.checklistType || "") === "water");
+                // The Apps Script endpoint defaults to the full parameter sheet
+                // when no type is supplied, so request both sheets explicitly.
+                const [parameterRecords, waterRecords] = await Promise.all([
+                    fetchParameterChecklistDataFromAPI("", "full"),
+                    fetchParameterChecklistDataFromAPI("", "water")
+                ]);
+                parameterChecklistHistory = Array.isArray(parameterRecords)
+                    ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
+                    : [];
+                waterParameterChecklistHistory = Array.isArray(waterRecords)
+                    ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
+                    : [];
                 renderQCChecklistHistories();
             }
             if (typeof refreshEquipmentChecklist === "function") {
