@@ -37,7 +37,6 @@ function initEquipmentChecklist() {
     const dateInput = document.getElementById("equipmentChecklistDate");
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
     renderEquipmentChecklistItems();
-    refreshEquipmentChecklist();
 }
 
 function renderEquipmentChecklistItems() {
@@ -104,7 +103,9 @@ async function submitEquipmentChecklist() {
     try {
         await sendEquipmentChecklistToAPI(payload);
         showToast("บันทึกเช็กลิสอุปกรณ์ลง Google Sheets เรียบร้อยแล้ว", "success");
-        await refreshEquipmentChecklist();
+        if ((typeof hasAppPermission !== "function" || hasAppPermission("qc.read")) && typeof refreshQCChecklistHistory === "function") {
+            await refreshQCChecklistHistory();
+        }
     } catch (error) {
         showToast(`บันทึกเช็กลิสอุปกรณ์ไม่สำเร็จ: ${error.message}`, "error");
     } finally {
@@ -126,7 +127,7 @@ function groupEquipmentChecklistRows(rows) {
 }
 
 function renderEquipmentChecklistHistory() {
-    const body = document.getElementById("equipmentChecklistHistoryBody");
+    const body = document.getElementById("qcEquipmentChecklistHistoryBody") || document.getElementById("equipmentChecklistHistoryBody");
     if (!body) return;
     const groups = groupEquipmentChecklistRows(equipmentChecklistHistory).slice(0, 10);
     if (!groups.length) {

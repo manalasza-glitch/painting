@@ -68,7 +68,9 @@ function parameterChecklistTitle() {
 }
 
 let parameterChecklistHistory = [];
+let waterParameterChecklistHistory = [];
 let parameterChecklistRefreshInFlight = null;
+let qcChecklistRefreshInFlight = null;
 
 function parameterChecklistEscape(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -109,14 +111,11 @@ function initParameterChecklist() {
     const title = parameterChecklistTitle();
     const pageTitle = document.querySelector("#parameter-checklist-tab .page-title");
     const listTitle = document.querySelector("#parameterChecklistItemsBody")?.closest(".dr-card")?.querySelector("h3");
-    const historyTitle = document.getElementById("parameterChecklistHistoryTitle");
     const saveButton = document.getElementById("submitParameterChecklistBtn");
     if (pageTitle) pageTitle.textContent = title;
     if (listTitle) listTitle.textContent = parameterChecklistMode === "water" ? "รายการวัดค่าน้ำ" : "รายการตรวจเช็กพารามิเตอร์";
-    if (historyTitle) historyTitle.textContent = parameterChecklistMode === "water" ? "ประวัติการตรวจน้ำ" : "ประวัติการตรวจพารามิเตอร์";
     if (saveButton) saveButton.textContent = `บันทึก${title}`;
     renderParameterChecklistItems();
-    refreshParameterChecklist();
 }
 
 function renderParameterChecklistItems() {
@@ -182,7 +181,9 @@ async function submitParameterChecklist() {
     try {
         await sendParameterChecklistToAPI(payload);
         showToast(`บันทึก${title}ลง Google Sheets เรียบร้อยแล้ว`, "success");
-        await refreshParameterChecklist();
+        if ((typeof hasAppPermission !== "function" || hasAppPermission("qc.read")) && typeof refreshQCChecklistHistory === "function") {
+            await refreshQCChecklistHistory();
+        }
     } catch (error) {
         showToast(`บันทึก${title}ไม่สำเร็จ: ${error.message}`, "error");
     } finally {
@@ -203,12 +204,12 @@ function groupParameterChecklistRows(rows) {
     return Array.from(groups.values()).sort((a, b) => String(b.timestamp || b.date).localeCompare(String(a.timestamp || a.date)));
 }
 
-function renderParameterChecklistHistory() {
-    const body = document.getElementById("parameterChecklistHistoryBody");
+function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody", rows = parameterChecklistHistory, emptyText = "ยังไม่มีประวัติการตรวจพารามิเตอร์") {
+    const body = document.getElementById(bodyId);
     if (!body) return;
-    const groups = groupParameterChecklistRows(parameterChecklistHistory).slice(0, 10);
+    const groups = groupParameterChecklistRows(rows).slice(0, 10);
     if (!groups.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">ยังไม่มีประวัติการตรวจพารามิเตอร์</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">${parameterChecklistEscape(emptyText)}</td></tr>`;
         return;
     }
     body.innerHTML = groups.map(group => {
@@ -224,6 +225,11 @@ function renderParameterChecklistHistory() {
             <td style="color:${ng ? "#fb7185" : "#94a3b8"}; text-align:center; font-weight:800;">${ng}</td>
         </tr>`;
     }).join("");
+}
+
+function renderQCChecklistHistories() {
+    renderParameterChecklistHistory("qcParameterChecklistHistoryBody", parameterChecklistHistory, "ยังไม่มีประวัติการตรวจพารามิเตอร์");
+    renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
 }
 
 async function refreshParameterChecklist() {
@@ -244,4 +250,25 @@ async function refreshParameterChecklist() {
         }
     })();
     return parameterChecklistRefreshInFlight;
+}
+
+async function refreshQCChecklistHistory() {
+    if (qcChecklistRefreshInFlight) return qcChecklistRefreshInFlight;
+    qcChecklistRefreshInFlight = (async () => {
+        try {
+            if (typeof fetchParameterChecklistDataFromAPI === "function") {
+                const records = await fetchParameterChecklistDataFromAPI("", "");
+                const allRecords = Array.isArray(records) ? records : [];
+                parameterChecklistHistory = allRecords.filter(record => !record.checklistType || String(record.checklistType) === "full");
+                waterParameterChecklistHistory = allRecords.filter(record => String(record.checklistType || "") === "water");
+                renderQCChecklistHistories();
+            }
+            if (typeof refreshEquipmentChecklist === "function") {
+                await refreshEquipmentChecklist();
+            }
+        } finally {
+            qcChecklistRefreshInFlight = null;
+        }
+    })();
+    return qcChecklistRefreshInFlight;
 }

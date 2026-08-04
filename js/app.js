@@ -168,8 +168,8 @@ async function initializePaintingApp() {
                 if (hasAppPermission('daily_report.read') && typeof refreshDailyReportHistory === 'function') {
                     refreshDailyReportHistory();
                 }
-                if (hasAppPermission('checklist.read') && typeof refreshParameterChecklist === 'function') {
-                    refreshParameterChecklist();
+                if (hasAppPermission('qc.read') && typeof refreshQCChecklistHistory === 'function') {
+                    refreshQCChecklistHistory();
                 }
             }, 15000);
         }
@@ -335,6 +335,10 @@ function switchTab(tabId, element) {
     } else if (tabId === "equipment-checklist-tab") {
         if (typeof initEquipmentChecklist === 'function') {
             initEquipmentChecklist();
+        }
+    } else if (tabId === "qc-history-tab") {
+        if (typeof refreshQCChecklistHistory === 'function') {
+            refreshQCChecklistHistory();
         }
     } else if (tabId === "event-tab") {
         if (typeof loadEventsData === 'function') {

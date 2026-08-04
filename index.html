@@ -722,6 +722,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-4"></path><path d="M12 16V8"></path><path d="M16 16v-7"></path></svg>
                     QC 7 TOOL
                 </a>
+                <a href="#" class="nav-link" data-permission="qc.read" onclick="switchTab('qc-history-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h10M7 16h6"></path></svg>
+                    QC
+                </a>
                 <a href="#inspection-tab" class="nav-link" data-permission="inspection.create" onclick="openInspectionModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
                     บันทึกงานตรวจ
@@ -1048,6 +1052,47 @@
 
                 </section>
 
+                <!-- TAB: QC HISTORY (รวมประวัติจากเช็กลิสก่อนเริ่มงาน) -->
+                <section id="qc-history-tab" class="tab-page" data-permission="qc.read" style="display: none;">
+                    <div class="section-title-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                        <div>
+                            <h1 class="page-title" style="font-size:1.2rem; margin:0;">QC</h1>
+                            <span style="color:#94a3b8; font-size:.82rem;">ประวัติผลการตรวจเช็กก่อนเริ่มงาน</span>
+                        </div>
+                        <button type="button" class="btn-secondary-custom" onclick="refreshQCChecklistHistory()" style="padding:.65rem 1.1rem; border-radius:10px; cursor:pointer;">รีเฟรชข้อมูล</button>
+                    </div>
+
+                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
+                        <h3 class="dr-section-title" style="margin:0 0 1rem;">ประวัติการตรวจพารามิเตอร์</h3>
+                        <div class="table-responsive">
+                            <table class="data-table parameter-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
+                                <tbody id="qcParameterChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูล...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
+                        <h3 class="dr-section-title" style="margin:0 0 1rem;">ประวัติการตรวจน้ำ</h3>
+                        <div class="table-responsive">
+                            <table class="data-table parameter-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
+                                <tbody id="qcWaterChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูล...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
+                        <h3 class="dr-section-title" style="margin:0 0 1rem;">ประวัติเช็กลิสอุปกรณ์</h3>
+                        <div class="table-responsive">
+                            <table class="data-table equipment-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
+                                <tbody id="qcEquipmentChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูล...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- TAB: EVENT 5M1E (บันทึกการเปลี่ยนแปลง 5M1E) -->
                 <!-- TAB: PARAMETER CHECKLIST -->
                 <section id="parameter-checklist-tab" class="tab-page" data-permission="checklist.read" style="display: none;">
@@ -1101,18 +1146,6 @@
                         </div>
                     </div>
 
-                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem;">
-                            <h3 id="parameterChecklistHistoryTitle" class="dr-section-title" style="margin:0;">ประวัติการตรวจพารามิเตอร์</h3>
-                            <button type="button" class="btn-secondary-custom" onclick="refreshParameterChecklist()" style="padding:.55rem 1rem; border-radius:10px; cursor:pointer;">รีเฟรชข้อมูล</button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table parameter-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
-                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
-                                <tbody id="parameterChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- TAB: EQUIPMENT CHECKLIST -->
@@ -1145,18 +1178,6 @@
 
                     <div class="equipment-checklist-grid" id="equipmentChecklistItemsBody"></div>
 
-                    <div class="dr-card" style="padding:1.25rem; overflow:hidden;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem;">
-                            <h3 class="dr-section-title" style="margin:0;">ประวัติเช็กลิสอุปกรณ์</h3>
-                            <button type="button" class="btn-secondary-custom" onclick="refreshEquipmentChecklist()" style="padding:.55rem 1rem; border-radius:10px; cursor:pointer;">รีเฟรชข้อมูล</button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table equipment-history-table" style="width:100%; border-collapse:collapse; table-layout:fixed;">
-                                <thead><tr><th>วันที่</th><th>เวลาที่ตรวจ</th><th>ผู้ตรวจ</th><th>หัวหน้ากะ</th><th style="text-align:center;">จำนวนรายการ</th><th style="text-align:center;">ปกติ</th><th style="text-align:center;">ผิดปกติ</th></tr></thead>
-                                <tbody id="equipmentChecklistHistoryBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </section>
 
                 <section id="event-tab" class="tab-page" data-permission="events.read" style="display: none;">
@@ -1556,6 +1577,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-7"/></svg>
                 <span>QC 7 TOOL</span>
             </div>
+            <div class="mobile-nav-item" data-permission="qc.read" onclick="switchTab('qc-history-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+                <span>QC</span>
+            </div>
             <div class="mobile-nav-item" data-permission="inspection.create" onclick="openInspectionModal()">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
                 <span>บันทึกงาน</span>
@@ -1893,12 +1918,12 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=96.3.0"></script>
-    <script src="js/auth.js?v=86.3.0"></script>
-    <script src="js/app.js?v=96.9.0"></script>
+    <script src="js/api.js?v=96.4.0"></script>
+    <script src="js/auth.js?v=86.4.0"></script>
+    <script src="js/app.js?v=96.10.0"></script>
     <script src="js/daily-report.js?v=93.3.0"></script>
-    <script src="js/parameter-checklist.js?v=1.5.5"></script>
-    <script src="js/equipment-checklist.js?v=1.1.1"></script>
+    <script src="js/parameter-checklist.js?v=1.6.0"></script>
+    <script src="js/equipment-checklist.js?v=1.2.0"></script>
     <script src="js/events.js?v=89.4.0"></script>
 </body>
 

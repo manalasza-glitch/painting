@@ -715,6 +715,7 @@ async function deleteEventFromAPI(id, rowIndex, title) {
 const USER_PERMISSION_KEYS = [
     "dashboard.read",
     "qc7.read",
+    "qc.read",
     "inspection.create",
     "daily_report.read",
     "checklist.read",
