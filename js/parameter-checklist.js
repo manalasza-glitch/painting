@@ -48,6 +48,8 @@ function getActiveParameterChecklistItems() {
 
 function setParameterChecklistMode(mode) {
     parameterChecklistMode = mode === "water" ? "water" : "full";
+    const page = document.getElementById("parameter-checklist-tab");
+    if (page) page.classList.toggle("water-mode", parameterChecklistMode === "water");
 }
 
 function parameterChecklistTitle() {
@@ -64,6 +66,8 @@ function parameterChecklistEscape(value) {
 }
 
 function initParameterChecklist() {
+    const page = document.getElementById("parameter-checklist-tab");
+    if (page) page.classList.toggle("water-mode", parameterChecklistMode === "water");
     const dateInput = document.getElementById("parameterChecklistDate");
     if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
     const title = parameterChecklistTitle();

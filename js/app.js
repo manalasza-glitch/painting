@@ -198,6 +198,8 @@ function switchTab(tabId, element) {
         return;
     }
 
+    if (typeof closeMobileChecklistMenu === 'function') closeMobileChecklistMenu();
+
     const targetTab = document.getElementById(tabId);
 
     // Hide all tab pages & remove active class
