@@ -721,6 +721,7 @@ const USER_PERMISSION_KEYS = [
     "qc7.read",
     "inspection.create",
     "daily_report.read",
+    "checklist.read",
     "events.read",
     "history.read",
     "users.manage"

@@ -4,8 +4,8 @@ const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
-const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "events.read", "history.read", "users.manage"];
-const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "events.read", "history.read"];
+const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read", "users.manage"];
+const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read"];
 
 function getDefaultPermissions(role) {
   return String(role || "").trim() === "Super Admin" ? ALL_PERMISSIONS.slice() : DEFAULT_USER_PERMISSIONS.slice();
