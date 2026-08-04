@@ -607,6 +607,17 @@ button, input, textarea, select {
   border-radius: 8px;
 }
 
+.event-log-table {
+  width: 100%;
+  min-width: 1180px;
+  table-layout: auto;
+}
+
+.event-log-table th,
+.event-log-table td {
+  padding: 0.75rem 1rem;
+}
+
 .btn-add-staff {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
