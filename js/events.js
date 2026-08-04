@@ -2,6 +2,24 @@
 
 let currentEvents = [];
 
+function formatEventTime(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '08:00';
+
+    // Google Sheets may return a time cell as a full Date string. Keep only HH:mm.
+    const match = raw.match(/(?:^|\D)(\d{1,2}):(\d{2})(?::\d{2})?(?:\D|$)/);
+    if (match) {
+        return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+    }
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+        return `${String(parsed.getHours()).padStart(2, '0')}:${String(parsed.getMinutes()).padStart(2, '0')}`;
+    }
+
+    return raw;
+}
+
 // Color map and icons for 5M1E Categories
 const EVENT_CATEGORY_CONFIG = {
     "Man": { label: "Man (คน / พนักงาน)", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)", icon: "👨‍🌾" },
@@ -85,12 +103,13 @@ function renderEventsTab() {
 
     tableBody.innerHTML = filtered.map((evt, idx) => {
         const cfg = EVENT_CATEGORY_CONFIG[evt.category] || { label: evt.category, color: '#64748b', bg: '#f1f5f9', icon: '📝' };
+        const displayTime = formatEventTime(evt.time);
         
         return `
             <tr>
                 <td style="white-space: nowrap; font-weight: 600;">
                     <div>${evt.date || '-'}</div>
-                    <div style="font-size: 0.75rem; color: #64748b;">⏱️ ${evt.time || '08:00'}</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;">⏱️ ${displayTime}</div>
                 </td>
                 <td style="white-space: nowrap;">
                     <span style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
@@ -104,9 +123,9 @@ function renderEventsTab() {
                     </span>
                 </td>
                 <td style="font-weight: 700; color: #1e3a8a;">${evt.process || '-'}</td>
-                <td>
-                    <div style="font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">${evt.title || '-'}</div>
-                    <div style="font-size: 0.85rem; color: #475569;">${evt.detail || '-'}</div>
+                <td class="event-detail-cell">
+                    <div style="font-weight: 700; color: #f8fafc; margin-bottom: 0.2rem;">${evt.title || '-'}</div>
+                    <div style="font-size: 0.85rem; color: #cbd5e1;">${evt.detail || '-'}</div>
                 </td>
                 <td style="font-size: 0.85rem; color: #166534; background: rgba(240, 253, 244, 0.6); padding: 0.5rem; border-radius: 6px;">
                     🛡️ ${evt.action || '-'}
