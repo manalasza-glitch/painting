@@ -33,10 +33,16 @@ const PARAMETER_CHECKLIST_SOURCE_ITEMS = [
 ];
 
 // แยกรายการข้อ 5-21 ไปอยู่ในเมนู "วัดค่าน้ำ" และเริ่มเลขใหม่ที่ 1
+// เพิ่มรายการข้อ 9 โดยใช้รายละเอียดเดียวกับรายการเดิมข้อ 16 แต่ให้กระบวนการเป็น "ล้างน้ำ 2"
 // ส่วนเมนูเช็กพารามิเตอร์จะเหลือรายการก่อนข้อ 5 และหลังข้อ 21 แล้วเรียงเลขใหม่เช่นกัน
-const WATER_PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
-    .filter(item => item.itemNo >= 5 && item.itemNo <= 21)
-    .map((item, index) => ({ ...item, itemNo: index + 1 }));
+const WATER_PARAMETER_SOURCE_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
+    .filter(item => item.itemNo >= 5 && item.itemNo <= 21);
+const WATER_PARAMETER_INSERT_ITEM = PARAMETER_CHECKLIST_SOURCE_ITEMS.find(item => item.itemNo === 21);
+const WATER_PARAMETER_CHECKLIST_ITEMS = [
+    ...WATER_PARAMETER_SOURCE_ITEMS.slice(0, 4),
+    ...(WATER_PARAMETER_INSERT_ITEM ? [{ ...WATER_PARAMETER_INSERT_ITEM, process: "ล้างน้ำ 2" }] : []),
+    ...WATER_PARAMETER_SOURCE_ITEMS.slice(4)
+].map((item, index) => ({ ...item, itemNo: index + 1 }));
 const PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
     .filter(item => item.itemNo < 5 || item.itemNo > 21)
     .map((item, index) => ({ ...item, itemNo: index + 1 }));
