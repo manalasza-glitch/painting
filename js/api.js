@@ -501,7 +501,7 @@ async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = 
     if (requestedType) query.set("type", requestedType);
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
-        const result = await fetchAppsScriptJsonWithRetry(url, "Get parameter checklist data");
+        const result = await fetchAppsScriptJsonWithRetry(url, "Get parameter checklist data", options.retryOptions || {});
         if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
         if (Array.isArray(result)) return result;
     } catch (error) {
@@ -535,7 +535,7 @@ async function fetchEquipmentChecklistDataFromAPI(dateFilter = "", options = {})
     if (String(dateFilter || "").trim()) query.set("date", String(dateFilter).trim());
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
-        const result = await fetchAppsScriptJsonWithRetry(url, "Get equipment checklist data");
+        const result = await fetchAppsScriptJsonWithRetry(url, "Get equipment checklist data", options.retryOptions || {});
         if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
         if (Array.isArray(result)) return result;
     } catch (error) {

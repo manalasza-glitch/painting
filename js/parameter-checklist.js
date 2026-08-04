@@ -273,14 +273,38 @@ async function refreshQCChecklistHistory(showFeedback = false) {
     }
     qcChecklistRefreshInFlight = (async () => {
         const failures = [];
+        const retryOptions = { attempts: 2, timeoutMs: 9000 };
         setQCChecklistRefreshButtonLoading(true);
         renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
         renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "กำลังโหลดประวัติเช็กลิสอุปกรณ์...");
         try {
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
+                // Load the two populated history sheets first. The parameter
+                // sheet may be empty, and must never block the other tables.
                 try {
-                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { throwOnError: true });
+                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { throwOnError: true, retryOptions });
+                    waterParameterChecklistHistory = Array.isArray(waterRecords)
+                        ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
+                        : [];
+                    renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
+                } catch (error) {
+                    failures.push("ตรวจน้ำ");
+                    renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "โหลดประวัติการตรวจน้ำไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+                }
+
+                if (typeof fetchEquipmentChecklistDataFromAPI === "function") {
+                    try {
+                        equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { throwOnError: true, retryOptions });
+                        renderEquipmentChecklistHistory();
+                    } catch (error) {
+                        failures.push("เช็กอุปกรณ์");
+                        renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "โหลดประวัติเช็กลิสอุปกรณ์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+                    }
+                }
+
+                try {
+                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { throwOnError: true, retryOptions });
                     parameterChecklistHistory = Array.isArray(parameterRecords)
                         ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
                         : [];
@@ -290,26 +314,6 @@ async function refreshQCChecklistHistory(showFeedback = false) {
                     renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "โหลดประวัติการตรวจพารามิเตอร์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
                 }
 
-                try {
-                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { throwOnError: true });
-                    waterParameterChecklistHistory = Array.isArray(waterRecords)
-                        ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
-                        : [];
-                    renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
-                } catch (error) {
-                    failures.push("ตรวจน้ำ");
-                    renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "โหลดประวัติการตรวจน้ำไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-                }
-            }
-
-            if (typeof fetchEquipmentChecklistDataFromAPI === "function") {
-                try {
-                    equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { throwOnError: true });
-                    renderEquipmentChecklistHistory();
-                } catch (error) {
-                    failures.push("เช็กอุปกรณ์");
-                    renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "โหลดประวัติเช็กลิสอุปกรณ์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-                }
             }
 
             if (showFeedback && typeof showToast === "function") {
