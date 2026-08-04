@@ -609,13 +609,71 @@ button, input, textarea, select {
 
 .event-log-table {
   width: 100%;
-  min-width: 1180px;
-  table-layout: auto;
+  min-width: 0;
+  table-layout: fixed;
 }
 
 .event-log-table th,
 .event-log-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 0.55rem;
+  vertical-align: top;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.event-log-table th:nth-child(1),
+.event-log-table td:nth-child(1) {
+  width: 12%;
+  white-space: nowrap !important;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.event-log-table th:nth-child(2),
+.event-log-table td:nth-child(2) {
+  width: 8%;
+}
+
+.event-log-table th:nth-child(3),
+.event-log-table td:nth-child(3) {
+  width: 12%;
+}
+
+.event-log-table th:nth-child(4),
+.event-log-table td:nth-child(4) {
+  width: 11%;
+}
+
+.event-log-table th:nth-child(5),
+.event-log-table td:nth-child(5) {
+  width: 19%;
+}
+
+.event-log-table th:nth-child(6),
+.event-log-table td:nth-child(6) {
+  width: 16%;
+}
+
+.event-log-table th:nth-child(7),
+.event-log-table td:nth-child(7) {
+  width: 7%;
+  white-space: nowrap !important;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.event-log-table th:nth-child(8),
+.event-log-table td:nth-child(8) {
+  width: 8%;
+}
+
+.event-log-table th:nth-child(9),
+.event-log-table td:nth-child(9) {
+  width: 7%;
+  white-space: nowrap !important;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .btn-add-staff {
@@ -765,7 +823,11 @@ button, input, textarea, select {
 
 /* QC 7 Tools workspace */
 .qc7-page {
-  display: block;
+  display: none;
+}
+
+.qc7-page.active {
+  display: block !important;
 }
 
 .qc7-page-header {
