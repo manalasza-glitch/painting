@@ -2489,12 +2489,19 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 /* Mobile-only page treatment for inspection entry: it should read as a
    normal page, not as a modal dialog. */
 @media (max-width: 768px) {
+  #inspection-tab.active {
+    overflow: visible !important;
+  }
+
   #inspection-tab.active .inspection-page-box {
+    position: static !important;
+    max-height: none !important;
     background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     overflow: visible !important;
+    transform: none !important;
   }
 
   #inspection-tab.active .inspection-page-box .modal-header {
@@ -2509,6 +2516,8 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   }
 
   #inspection-tab.active .inspection-page-box .modal-body {
+    max-height: none !important;
+    overflow: visible !important;
     padding: 0.9rem 0 0 !important;
   }
 
