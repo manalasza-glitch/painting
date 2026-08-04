@@ -386,67 +386,80 @@
 /* Mobile Responsiveness - Ensure Register Form Fits Completely on Screen without Scrolling */
 @media (max-width: 640px) {
     .auth-shell {
-        padding: 0.25rem;
+        align-items: flex-start;
+        justify-content: center;
+        padding: clamp(1.25rem, 8vh, 5rem) 0.75rem 1.25rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .auth-card {
-        padding: 0.65rem 0.85rem;
-        max-height: 98vh;
-        border-radius: 14px;
+        width: min(100%, 430px);
+        padding: 1.15rem 1rem;
+        max-height: calc(100vh - 2.5rem);
+        border-radius: 16px;
     }
 
     .auth-brand {
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.8rem;
     }
 
     .auth-brand img {
-        width: 28px;
-        height: 28px;
-        margin-bottom: 0.1rem;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 0.35rem;
     }
 
     .auth-brand h1 {
-        font-size: 0.98rem;
-        line-height: 1.1;
+        font-size: 1.3rem;
+        line-height: 1.2;
     }
 
     .auth-brand p {
-        font-size: 0.65rem;
-        margin: 0;
+        font-size: 0.78rem;
+        margin-top: 0.15rem;
     }
 
     .auth-tabs {
-        margin-bottom: 0.35rem;
+        margin-bottom: 0.85rem;
         padding: 2px;
     }
 
     .auth-tabs button {
-        padding: 0.3rem 0;
-        font-size: 0.78rem;
+        padding: 0.55rem 0;
+        font-size: 0.95rem;
     }
 
     .auth-form {
-        gap: 0.22rem;
+        gap: 0.7rem;
     }
 
     .auth-form label {
-        font-size: 0.68rem;
-        margin-bottom: -0.2rem;
+        display: block;
+        font-size: 0.82rem;
+        line-height: 1.25;
+        margin-bottom: 0.25rem;
+    }
+
+    .auth-form label span {
+        font-size: 0.76rem;
     }
 
     .auth-form input,
     .auth-form select {
-        padding: 0.5rem 0.6rem;
-        font-size: 1rem; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
-        border-radius: 8px;
-        min-height: 42px;
+        padding: 0.6rem 0.75rem;
+        font-size: 1rem; /* Keep controls at 16px or larger to prevent iOS auto-zoom. */
+        line-height: 1.25;
+        border-radius: 10px;
+        min-height: 46px;
     }
 
     .auth-submit {
-        margin-top: 0.35rem;
-        padding: 0.65rem 0.85rem;
-        font-size: 0.92rem;
-        border-radius: 10px;
-        min-height: 44px;
+        margin-top: 0.25rem;
+        padding: 0.7rem 0.85rem;
+        font-size: 1rem;
+        line-height: 1.25;
+        border-radius: 11px;
+        min-height: 48px;
     }
 }
