@@ -380,8 +380,10 @@ async function addRecorderToAPI(name) {
     try {
         // The Apps Script endpoint handles recorder mutations through GET parameters.
         await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+        return true;
     } catch (e) {
         console.warn("Failed to sync new recorder to cloud:", e);
+        return false;
     }
 }
 
@@ -397,8 +399,10 @@ async function deleteRecorderFromAPI(name) {
     try {
         // The Apps Script endpoint handles recorder mutations through GET parameters.
         await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+        return true;
     } catch (e) {
         console.warn("Failed to delete recorder from cloud:", e);
+        return false;
     }
 }
 

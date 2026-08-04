@@ -271,6 +271,11 @@ function renderStaffDropdownsUI() {
             recorderSelect.value = currentRecorder;
         }
     }
+
+    // Keep the 5M1E recorder select synchronized with the same list.
+    if (typeof populateEventRecorderDropdown === 'function') {
+        populateEventRecorderDropdown();
+    }
 }
 
 function renderStaffDropdowns() {
@@ -349,7 +354,7 @@ function renderStaffListInModal() {
     `).join('');
 }
 
-function saveNewStaff() {
+async function saveNewStaff() {
     const input = document.getElementById('newStaffInput');
     if (!input) return;
 
@@ -371,7 +376,9 @@ function saveNewStaff() {
 
     // Sync new recorder to Cloud Google Sheet
     if (typeof addRecorderToAPI === 'function') {
-        addRecorderToAPI(newName);
+        await addRecorderToAPI(newName);
+        // Read back from the sheet so every open form uses the same list.
+        await loadStaffList();
     }
 
     const recorderSelect = document.getElementById('recorderName');
@@ -383,7 +390,7 @@ function saveNewStaff() {
     showToast(`เพิ่มรายชื่อ "${newName}" เรียบร้อยแล้ว`, "success");
 }
 
-function deleteStaffName(index) {
+async function deleteStaffName(index) {
     if (index >= 0 && index < PAINTING_RECORDERS_LIST.length) {
         const removedName = PAINTING_RECORDERS_LIST[index];
         PAINTING_RECORDERS_LIST.splice(index, 1);
@@ -393,7 +400,8 @@ function deleteStaffName(index) {
 
         // Sync deletion to Cloud Google Sheet
         if (typeof deleteRecorderFromAPI === 'function') {
-            deleteRecorderFromAPI(removedName);
+            await deleteRecorderFromAPI(removedName);
+            await loadStaffList();
         }
 
         showToast(`ลบรายชื่อ "${removedName}" แล้ว`, "info");
