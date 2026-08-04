@@ -717,7 +717,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     Dashboard
                 </a>
-                <a href="#" class="nav-link" data-permission="dashboard.read" onclick="openQC7Tools(event, this)">
+                <a href="#" class="nav-link" data-permission="qc7.read" onclick="openQC7Tools(event, this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-4"></path><path d="M12 16V8"></path><path d="M16 16v-7"></path></svg>
                     QC 7 TOOL
                 </a>
@@ -1453,7 +1453,7 @@
                 </section>
 
                 <!-- TAB: QC 7 TOOLS -->
-                <section id="qc7-tools-tab" class="tab-page qc7-page" data-permission="dashboard.read" style="display: none;">
+                <section id="qc7-tools-tab" class="tab-page qc7-page" data-permission="qc7.read" style="display: none;">
                     <div class="qc7-page-header">
                         <div>
                             <h1 class="page-title">QC 7 TOOL</h1>
@@ -1532,7 +1532,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
                 <span>Dashboard</span>
             </div>
-            <div class="mobile-nav-item" data-permission="dashboard.read" onclick="openQC7Tools(event, this)">
+            <div class="mobile-nav-item" data-permission="qc7.read" onclick="openQC7Tools(event, this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-7"/></svg>
                 <span>QC 7 TOOL</span>
             </div>
@@ -1869,8 +1869,8 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=96.0.0"></script>
-    <script src="js/auth.js?v=85.0.0"></script>
+    <script src="js/api.js?v=96.1.0"></script>
+    <script src="js/auth.js?v=85.1.0"></script>
     <script src="js/app.js?v=96.5.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
     <script src="js/parameter-checklist.js?v=1.3.0"></script>

@@ -5,6 +5,7 @@ const PaintingAuth = {
     users: [],
     permissionOptions: [
         { key: "dashboard.read", label: "ดู Dashboard" },
+        { key: "qc7.read", label: "ดู QC 7 TOOL" },
         { key: "inspection.create", label: "บันทึกงานตรวจ" },
         { key: "daily_report.read", label: "ดูรายงานรายวัน" },
         { key: "events.read", label: "ดู Event (5M1E)" },
