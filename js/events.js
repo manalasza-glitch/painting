@@ -108,8 +108,7 @@ function renderEventsTab() {
         return `
             <tr>
                 <td style="white-space: nowrap; font-weight: 600;">
-                    <div>${evt.date || '-'}</div>
-                    <div style="font-size: 0.75rem; color: #cbd5e1;">⏱️ ${displayTime}</div>
+                    <div>${evt.date || '-'} ${displayTime}</div>
                 </td>
                 <td style="white-space: nowrap;">
                     <span style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
@@ -135,7 +134,7 @@ function renderEventsTab() {
                     👤 ${evt.recorder || '-'}
                 </td>
                 <td style="text-align: center; white-space: nowrap;">
-                    <button class="btn-action btn-delete" onclick="deleteEventRecord('${evt.id}', ${evt.rowIndex || 0}, '${(evt.title || '').replace(/'/g, "\\'")}')" title="ลบรายการ">🗑️</button>
+                    <button class="btn-action-delete" onclick="deleteEventRecord('${evt.id}', ${evt.rowIndex || 0}, '${(evt.title || '').replace(/'/g, "\\'")}')" title="ลบรายการ">🗑️ ลบ</button>
                 </td>
             </tr>
         `;
