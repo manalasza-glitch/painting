@@ -702,6 +702,32 @@ button, input, textarea, select {
   white-space: nowrap;
 }
 
+.parameter-history-table th,
+.parameter-history-table td {
+  padding: 0.7rem 0.6rem;
+  vertical-align: middle;
+}
+
+.parameter-history-table th:nth-child(1),
+.parameter-history-table td:nth-child(1) { width: 15%; }
+.parameter-history-table th:nth-child(2),
+.parameter-history-table td:nth-child(2) { width: 12%; }
+.parameter-history-table th:nth-child(3),
+.parameter-history-table td:nth-child(3) { width: 16%; }
+.parameter-history-table th:nth-child(4),
+.parameter-history-table td:nth-child(4) { width: 16%; }
+.parameter-history-table th:nth-child(5),
+.parameter-history-table td:nth-child(5) { width: 16%; }
+.parameter-history-table th:nth-child(6),
+.parameter-history-table td:nth-child(6) { width: 12%; }
+.parameter-history-table th:nth-child(7),
+.parameter-history-table td:nth-child(7) { width: 13%; }
+
+.parameter-history-date,
+.parameter-history-time {
+  white-space: nowrap;
+}
+
 .btn-add-staff {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
@@ -2786,9 +2812,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   }
 
   #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(1)::before { content: "วันที่: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(2)::before { content: "ผู้ตรวจ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(3)::before { content: "หัวหน้ากะ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(4)::before { content: "จำนวน: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(5)::before { content: "ปกติ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(6)::before { content: "ผิดปกติ: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(2)::before { content: "เวลาที่ตรวจ: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(3)::before { content: "ผู้ตรวจ: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(4)::before { content: "หัวหน้ากะ: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(5)::before { content: "จำนวน: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(6)::before { content: "ปกติ: "; }
+  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(7)::before { content: "ผิดปกติ: "; }
 }
