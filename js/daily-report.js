@@ -219,19 +219,23 @@ function getCurrentTimeSlot() {
 
 let currentTargetStaffType = "recorder";
 
-let PAINTING_RECORDERS_LIST = [
-    "สมชาย ใจดี",
-    "วิชัย มีสุข",
-    "สมศักดิ์ ขยันงาน"
-];
+// The cloud Recorders sheet is the source of truth. Do not seed this with mock names.
+let PAINTING_RECORDERS_LIST = [];
 
 async function loadStaffList() {
+    // Invalidate caches created by older builds that contained mock names.
+    const staffCacheVersion = "2.1.0";
+    if (localStorage.getItem("PAINTING_RECORDERS_CACHE_VER") !== staffCacheVersion) {
+        localStorage.removeItem("PAINTING_RECORDERS_CACHE");
+        localStorage.setItem("PAINTING_RECORDERS_CACHE_VER", staffCacheVersion);
+    }
+
     // 1. Load from local cache for instant UI rendering
     const cachedRecorders = localStorage.getItem("PAINTING_RECORDERS_CACHE");
     if (cachedRecorders) {
         try {
             const list = JSON.parse(cachedRecorders);
-            if (Array.isArray(list) && list.length > 0) {
+            if (Array.isArray(list)) {
                 PAINTING_RECORDERS_LIST = list;
             }
         } catch (e) {}
@@ -240,7 +244,7 @@ async function loadStaffList() {
     // 2. Fetch fresh list from Cloud (Google Sheet Recorders tab)
     if (typeof fetchRecordersFromAPI === 'function') {
         const cloudRecorders = await fetchRecordersFromAPI();
-        if (cloudRecorders && cloudRecorders.length > 0) {
+        if (Array.isArray(cloudRecorders)) {
             PAINTING_RECORDERS_LIST = cloudRecorders;
             saveStaffList();
             renderStaffDropdownsUI();

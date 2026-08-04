@@ -147,6 +147,10 @@ function openEventModal() {
 
     // Populate Recorder Dropdown from global recorders list
     populateEventRecorderDropdown();
+    // Refresh the list from the cloud so this form always reflects the real staff list.
+    if (typeof loadStaffList === "function") {
+        loadStaffList().then(() => populateEventRecorderDropdown());
+    }
 
     modal.classList.add("active");
 }
@@ -162,14 +166,14 @@ function populateEventRecorderDropdown() {
     const select = document.getElementById("eventRecorderSelect");
     if (!select) return;
 
-    let recordersList = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
-    
-    // Check if global staff list is available
-    if (window.staffList && Array.isArray(window.staffList) && window.staffList.length > 0) {
-        recordersList = window.staffList;
-    }
-
-    select.innerHTML = recordersList.map(name => `<option value="${name}">${name}</option>`).join("");
+    const recordersList = (typeof PAINTING_RECORDERS_LIST !== "undefined" && Array.isArray(PAINTING_RECORDERS_LIST))
+        ? PAINTING_RECORDERS_LIST
+        : [];
+    const current = select.value;
+    select.innerHTML = '<option value="">-- เลือกผู้บันทึก --</option>' +
+        recordersList.map(name => `<option value="${name}">${name}</option>`).join("") +
+        '<option value="__ADD_NEW__">➕ เพิ่มรายชื่อผู้บันทึกใหม่...</option>';
+    if (current && recordersList.includes(current)) select.value = current;
 }
 
 async function handleEventFormSubmit(event) {

@@ -1758,7 +1758,7 @@
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.25rem;">ผู้บันทึก (Recorded By)</label>
-                    <select id="eventRecorderSelect" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" required></select>
+                    <select id="eventRecorderSelect" class="form-control" style="padding: 0.4rem 0.6rem; min-height: 38px;" onchange="handleStaffSelectChange(this, 'recorder')" required></select>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.85rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
@@ -1892,13 +1892,13 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=96.1.0"></script>
+    <script src="js/api.js?v=96.2.0"></script>
     <script src="js/auth.js?v=86.2.0"></script>
     <script src="js/app.js?v=96.8.0"></script>
-    <script src="js/daily-report.js?v=93.0.0"></script>
+    <script src="js/daily-report.js?v=93.1.0"></script>
     <script src="js/parameter-checklist.js?v=1.5.0"></script>
     <script src="js/equipment-checklist.js?v=1.1.0"></script>
-    <script src="js/events.js?v=89.1.0"></script>
+    <script src="js/events.js?v=89.2.0"></script>
 </body>
 
 </html>

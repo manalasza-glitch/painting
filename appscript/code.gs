@@ -1122,8 +1122,14 @@ function doGet(e) {
       if (!recSheet) {
         recSheet = ss.insertSheet("Recorders");
         recSheet.appendRow(["Name"]);
-        const defaults = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน"];
-        defaults.forEach(n => recSheet.appendRow([n]));
+      }
+
+      // Remove only the old sample names from the Recorders sheet. Other sheets are untouched.
+      const mockRecorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
+      const valuesBeforeCleanup = recSheet.getDataRange().getValues();
+      for (let i = valuesBeforeCleanup.length - 1; i >= 1; i--) {
+        const name = String(valuesBeforeCleanup[i][0] || "").trim();
+        if (mockRecorders.indexOf(name) >= 0) recSheet.deleteRow(i + 1);
       }
 
       const values = recSheet.getDataRange().getValues();

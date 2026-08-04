@@ -378,12 +378,8 @@ async function addRecorderToAPI(name) {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=addRecorder&name=' + encodeURIComponent(cleanName);
 
     try {
-        await fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "addRecorder", name: cleanName })
-        });
+        // The Apps Script endpoint handles recorder mutations through GET parameters.
+        await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
     } catch (e) {
         console.warn("Failed to sync new recorder to cloud:", e);
     }
@@ -399,12 +395,8 @@ async function deleteRecorderFromAPI(name) {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=deleteRecorder&name=' + encodeURIComponent(cleanName);
 
     try {
-        await fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "deleteRecorder", name: cleanName })
-        });
+        // The Apps Script endpoint handles recorder mutations through GET parameters.
+        await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
     } catch (e) {
         console.warn("Failed to delete recorder from cloud:", e);
     }
