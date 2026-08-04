@@ -2,6 +2,7 @@
 
 const PaintingAuth = {
     currentUser: null,
+    ready: false,
     users: [],
     permissionRefreshTimer: null,
     permissionOptions: [
@@ -90,6 +91,7 @@ const PaintingAuth = {
     },
 
     async init() {
+        this.ready = false;
         const storedUser = localStorage.getItem("PAINTING_CURRENT_USER");
         if (storedUser) {
             try {
@@ -98,6 +100,10 @@ const PaintingAuth = {
                 await this.refreshCurrentUserPermissions();
                 this.updateUserHeaderUI();
                 this.hideAuthModal();
+                this.ready = true;
+                if (typeof window.initializePaintingApp === 'function') {
+                    window.initializePaintingApp();
+                }
                 return;
             } catch (e) {
                 localStorage.removeItem("PAINTING_CURRENT_USER");
@@ -105,6 +111,7 @@ const PaintingAuth = {
         }
 
         // Show Auth Shell Modal if not logged in
+        this.ready = true;
         this.showAuthModal();
         this.checkFirstTimeBootstrap();
     },
@@ -191,9 +198,14 @@ const PaintingAuth = {
 
             if (res && res.status === "success" && res.user) {
                 this.currentUser = res.user;
-                localStorage.setItem("PAINTING_CURRENT_USER", JSON.stringify(res.user));
+                this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
+                localStorage.setItem("PAINTING_CURRENT_USER", JSON.stringify(this.currentUser));
                 this.updateUserHeaderUI();
                 this.hideAuthModal();
+                this.ready = true;
+                if (typeof window.initializePaintingApp === 'function') {
+                    window.initializePaintingApp();
+                }
                 if (typeof showToast === "function") {
                     showToast(`ยินดีต้อนรับคุณ ${res.user.displayName || res.user.employeeId}`, "success");
                 }
@@ -537,6 +549,10 @@ const PaintingAuth = {
         this.loadUsers();
     }
 };
+
+// Expose the auth service for navigation guards and the app bootstrap layer.
+// Top-level const bindings are not properties of window in regular scripts.
+window.PaintingAuth = PaintingAuth;
 
 window.addEventListener("storage", (e) => {
     if (e.key === "PAINTING_LOCAL_USERS") {

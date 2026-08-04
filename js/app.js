@@ -8,6 +8,22 @@ let currentQualityViewMode = 'ng';
 let globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
 let inspectionDataScope = "today";
 let dashboardDateChangeTimer = null;
+let paintingAppInitUserKey = "";
+let paintingAppInitPromise = null;
+let paintingAppPollingStarted = false;
+
+function hasAppPermission(permission) {
+    return !!(
+        typeof PaintingAuth !== 'undefined' &&
+        PaintingAuth.currentUser &&
+        typeof PaintingAuth.hasPermission === 'function' &&
+        PaintingAuth.hasPermission(permission)
+    );
+}
+
+function canLoadInspectionData() {
+    return ['dashboard.read', 'history.read', 'qc7.read'].some(hasAppPermission);
+}
 
 function formatDateForDisplay(dateVal, timestampVal) {
     let source = timestampVal || dateVal;
@@ -71,62 +87,110 @@ function setCurrentDateTimeDefaults() {
     }
 }
 
-window.onload = async () => {
-    // Keep the authentication layer from blocking the app after a restored
-    // session (for example when the site is opened from a fresh cache-busted URL).
-    if (window.PaintingAuth && PaintingAuth.currentUser && typeof PaintingAuth.hideAuthModal === 'function') {
-        PaintingAuth.hideAuthModal();
+async function initializePaintingApp() {
+    // Do not start data requests before authentication (and the live permission
+    // refresh) has completed. This is important for users who only have the
+    // inspection-create permission.
+    if (typeof PaintingAuth === 'undefined' || !PaintingAuth.currentUser || PaintingAuth.ready === false) {
+        return;
     }
 
-    setCurrentDateTimeDefaults();
-
-    const dashboardDateInput = document.getElementById("dashboardDateFilter");
-    const todayDate = getStandardISODate(new Date().toISOString());
-    if (dashboardDateInput) dashboardDateInput.value = todayDate;
-
-    const cacheVer = localStorage.getItem("PAINTING_INSPECTION_CACHE_VER");
-    if (cacheVer !== "2.0.0") {
-        localStorage.removeItem("PAINTING_INSPECTION_CACHE");
-        localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
-        localStorage.removeItem("PAINTING_EVENTS_CACHE");
-        localStorage.setItem("PAINTING_INSPECTION_CACHE_VER", "2.0.0");
+    const userKey = String(PaintingAuth.currentUser.employeeId || PaintingAuth.currentUser.displayName || '');
+    if (paintingAppInitPromise && paintingAppInitUserKey === userKey) {
+        return paintingAppInitPromise;
     }
 
-    if (typeof initDailyReportForm === 'function') {
-        initDailyReportForm();
-    }
-    if (typeof initParameterChecklist === 'function') {
-        initParameterChecklist();
-    }
-
-    const settingInput = document.getElementById("settingApiUrl");
-    if (settingInput) {
-        settingInput.value = getApiUrl();
-    }
-
-    await loadDataFromAPI(false, todayDate);
-
-    // Poll data every 15 seconds only if there are no pending sync requests
-    setInterval(() => {
-        if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests === 0) {
-            loadDataFromAPI(true); // silent reload
-            if (typeof renderStaffDropdowns === 'function') {
-                renderStaffDropdowns();
-            }
-            if (typeof loadEventsData === 'function') {
-                loadEventsData();
-            }
-            if (typeof refreshDailyReportHistory === 'function') {
-                refreshDailyReportHistory();
-            }
-            if (typeof refreshParameterChecklist === 'function') {
-                refreshParameterChecklist();
-            }
+    paintingAppInitUserKey = userKey;
+    paintingAppInitPromise = (async () => {
+        // Keep the authentication layer from blocking the app after a restored
+        // session (for example when the site is opened from a fresh cache-busted URL).
+        if (typeof PaintingAuth.hideAuthModal === 'function') {
+            PaintingAuth.hideAuthModal();
         }
-    }, 15000);
-};
+
+        setCurrentDateTimeDefaults();
+
+        const dashboardDateInput = document.getElementById("dashboardDateFilter");
+        const todayDate = getStandardISODate(new Date().toISOString());
+        if (dashboardDateInput) dashboardDateInput.value = todayDate;
+
+        const cacheVer = localStorage.getItem("PAINTING_INSPECTION_CACHE_VER");
+        if (cacheVer !== "2.0.0") {
+            localStorage.removeItem("PAINTING_INSPECTION_CACHE");
+            localStorage.removeItem("PAINTING_OUTPUTDIARY_CACHE");
+            localStorage.removeItem("PAINTING_EVENTS_CACHE");
+            localStorage.setItem("PAINTING_INSPECTION_CACHE_VER", "2.0.0");
+        }
+
+        // Only initialize data-heavy sections when the user can actually read
+        // them. A user who can only create inspections should get a fast form
+        // without downloading reports, charts, histories, or checklist data.
+        if (hasAppPermission('daily_report.read') && typeof initDailyReportForm === 'function') {
+            initDailyReportForm();
+        }
+        if (hasAppPermission('checklist.read') && typeof initParameterChecklist === 'function') {
+            initParameterChecklist();
+        }
+
+        const settingInput = document.getElementById("settingApiUrl");
+        if (settingInput && typeof getApiUrl === 'function') {
+            settingInput.value = getApiUrl();
+        }
+
+        if (canLoadInspectionData()) {
+            await loadDataFromAPI(false, todayDate);
+        } else {
+            // Do not leave stale records in memory when this user is not
+            // permitted to read inspection data.
+            inspectionRecords = [];
+            inspectionDataScope = "today";
+        }
+
+        // Poll data every 15 seconds only if there are no pending sync requests.
+        // Each request is permission-gated so changing permissions takes effect
+        // without forcing a full page reload.
+        if (!paintingAppPollingStarted) {
+            paintingAppPollingStarted = true;
+            setInterval(() => {
+                if (typeof activeSyncRequests !== 'undefined' && activeSyncRequests !== 0) {
+                    return;
+                }
+
+                if (canLoadInspectionData()) {
+                    loadDataFromAPI(true); // silent reload
+                }
+                if ((hasAppPermission('daily_report.read') || hasAppPermission('events.read')) && typeof renderStaffDropdowns === 'function') {
+                    renderStaffDropdowns();
+                }
+                if (hasAppPermission('events.read') && typeof loadEventsData === 'function') {
+                    loadEventsData();
+                }
+                if (hasAppPermission('daily_report.read') && typeof refreshDailyReportHistory === 'function') {
+                    refreshDailyReportHistory();
+                }
+                if (hasAppPermission('checklist.read') && typeof refreshParameterChecklist === 'function') {
+                    refreshParameterChecklist();
+                }
+            }, 15000);
+        }
+    })();
+
+    try {
+        await paintingAppInitPromise;
+    } catch (error) {
+        console.error('Painting app initialization failed:', error);
+        paintingAppInitPromise = null;
+    }
+    return paintingAppInitPromise;
+}
+
+window.initializePaintingApp = initializePaintingApp;
+window.onload = () => initializePaintingApp();
 
 async function loadDataFromAPI(silent = false, requestedDate = null) {
+    if (!canLoadInspectionData()) {
+        return;
+    }
     if (!silent) showToast("กำลังโหลดข้อมูล...", "info");
     
     // Only fetch if not currently syncing to avoid race conditions overriding local cache
