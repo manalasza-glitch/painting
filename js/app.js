@@ -132,6 +132,20 @@ async function initializePaintingApp() {
             initParameterChecklist();
         }
 
+        // Preload data for the two administrative/reporting pages that users
+        // previously had to refresh manually. These calls run in the
+        // background and are still permission-gated.
+        if (hasAppPermission('qc.read') && typeof refreshQCChecklistHistory === 'function') {
+            Promise.resolve(refreshQCChecklistHistory()).catch(error => {
+                console.warn('Unable to preload QC checklist history:', error);
+            });
+        }
+        if (hasAppPermission('users.manage') && typeof PaintingAuth.loadUsers === 'function') {
+            Promise.resolve(PaintingAuth.loadUsers()).catch(error => {
+                console.warn('Unable to preload user list:', error);
+            });
+        }
+
         const settingInput = document.getElementById("settingApiUrl");
         if (settingInput && typeof getApiUrl === 'function') {
             settingInput.value = getApiUrl();
