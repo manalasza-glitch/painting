@@ -160,14 +160,33 @@ function toggleChecklistMenu(event, element) {
     if (element) element.setAttribute('aria-expanded', String(!isOpen));
 }
 
+function toggleMobileChecklistMenu(event, element) {
+    if (event) event.preventDefault();
+    if (window.PaintingAuth && typeof PaintingAuth.hasPermission === 'function' && !PaintingAuth.hasPermission('checklist.read')) return;
+    const menu = document.getElementById('mobile-checklist-menu');
+    if (!menu) return;
+    const willOpen = menu.hidden;
+    menu.hidden = !willOpen;
+    if (element) element.setAttribute('aria-expanded', String(willOpen));
+}
+
+function closeMobileChecklistMenu() {
+    const menu = document.getElementById('mobile-checklist-menu');
+    const trigger = document.querySelector('.mobile-checklist-trigger');
+    if (menu) menu.hidden = true;
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
 function openParameterChecklistMode(mode, event, element) {
     if (event) event.preventDefault();
+    closeMobileChecklistMenu();
     if (typeof setParameterChecklistMode === 'function') setParameterChecklistMode(mode);
     switchTab('parameter-checklist-tab', element);
 }
 
 function openEquipmentChecklist(event, element) {
     if (event) event.preventDefault();
+    closeMobileChecklistMenu();
     switchTab('equipment-checklist-tab', element);
 }
 
@@ -221,6 +240,9 @@ function switchTab(tabId, element) {
     }
     if (tabId === "qc7-tools-tab") {
         document.querySelectorAll('[onclick*="openQC7Tools"]').forEach(el => el.classList.add("active"));
+    }
+    if (tabId === "parameter-checklist-tab" || tabId === "equipment-checklist-tab") {
+        document.querySelectorAll('[data-mobile-checklist="true"]').forEach(el => el.classList.add("active"));
     }
 
     // Scroll window to top smoothly

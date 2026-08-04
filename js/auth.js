@@ -22,7 +22,7 @@ const PaintingAuth = {
     },
 
     applyPermissions() {
-        document.querySelectorAll('.nav-link[data-permission], .mobile-nav-item[data-permission]').forEach(item => {
+        document.querySelectorAll('.nav-link[data-permission], .mobile-nav-item[data-permission], .mobile-checklist-option[data-permission]').forEach(item => {
             if (this.hasPermission(item.dataset.permission)) {
                 item.style.removeProperty('display');
             } else {

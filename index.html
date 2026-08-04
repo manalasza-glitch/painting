@@ -619,7 +619,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.6.0">
+    <link rel="stylesheet" href="css/style.css?v=96.7.0">
     <link rel="stylesheet" href="css/auth.css?v=83.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -1527,6 +1527,20 @@
 
     <!-- MOBILE BOTTOM NAVIGATION BAR (Android & iOS Smartphones) -->
     <nav class="mobile-bottom-nav">
+        <div id="mobile-checklist-menu" class="mobile-checklist-menu" hidden>
+            <button type="button" class="mobile-checklist-option" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)">
+                <span class="mobile-checklist-option-icon">☑</span>
+                <span>รายการตรวจเช็กพารามิเตอร์</span>
+            </button>
+            <button type="button" class="mobile-checklist-option" data-permission="checklist.read" onclick="openParameterChecklistMode('water', event, this)">
+                <span class="mobile-checklist-option-icon">💧</span>
+                <span>วัดค่าน้ำ</span>
+            </button>
+            <button type="button" class="mobile-checklist-option" data-permission="checklist.read" onclick="openEquipmentChecklist(event, this)">
+                <span class="mobile-checklist-option-icon">⚙</span>
+                <span>ตรวจเช็กอุปกรณ์</span>
+            </button>
+        </div>
         <div class="mobile-nav-items">
             <div class="mobile-nav-item active" data-permission="dashboard.read" onclick="switchTab('dashboard-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -1544,7 +1558,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>
                 <span>ฟอร์มผลิต</span>
             </div>
-                <div class="mobile-nav-item" data-permission="checklist.read" onclick="switchTab('parameter-checklist-tab', this)">
+            <div class="mobile-nav-item mobile-checklist-trigger" data-mobile-checklist="true" data-permission="checklist.read" onclick="toggleMobileChecklistMenu(event, this)" aria-expanded="false">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m16 16 1.5 1.5L21 14"/></svg>
                 <span>เช็กลิสก่อนเริ่มงาน</span>
             </div>
@@ -1870,8 +1884,8 @@
 
     <!-- JS Files -->
     <script src="js/api.js?v=96.1.0"></script>
-    <script src="js/auth.js?v=86.1.0"></script>
-    <script src="js/app.js?v=96.5.0"></script>
+    <script src="js/auth.js?v=86.2.0"></script>
+    <script src="js/app.js?v=96.6.0"></script>
     <script src="js/daily-report.js?v=93.0.0"></script>
     <script src="js/parameter-checklist.js?v=1.3.0"></script>
     <script src="js/equipment-checklist.js?v=1.1.0"></script>
