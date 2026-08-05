@@ -230,7 +230,7 @@ function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody
     const body = document.getElementById(bodyId);
     if (!body) return;
     const groups = groupParameterChecklistRows(rows).slice(0, 10);
-    const includeDetails = bodyId === "qcWaterChecklistHistoryBody";
+    const includeDetails = bodyId === "qcParameterChecklistHistoryBody" || bodyId === "qcWaterChecklistHistoryBody";
     const columnCount = includeDetails ? 8 : 7;
     if (!groups.length) {
         body.innerHTML = `<tr><td colspan="${columnCount}" style="text-align:center; color:#94a3b8; padding:1.5rem;">${parameterChecklistEscape(emptyText)}</td></tr>`;
@@ -239,7 +239,8 @@ function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody
     body.innerHTML = groups.map((group, index) => {
         const ng = group.rows.filter(row => String(row.status).toUpperCase() === "NG").length;
         const ok = group.rows.filter(row => String(row.status).toUpperCase() === "OK").length;
-        const detailId = `qc-water-detail-${index}`;
+        const detailPrefix = bodyId === "qcWaterChecklistHistoryBody" ? "water" : "parameter";
+        const detailId = `qc-${detailPrefix}-detail-${index}`;
         return `<tr>
             <td class="parameter-history-date">${parameterChecklistEscape(formatDailyReportDate(group.date, group.timestamp))}</td>
             <td class="parameter-history-time">${parameterChecklistEscape(formatParameterChecklistTime(group.time, group.timestamp))}</td>
@@ -261,7 +262,7 @@ function renderQCChecklistHistories() {
 function renderQCChecklistHistoryMessage(bodyId, message, isError = false) {
     const body = document.getElementById(bodyId);
     if (!body) return;
-    const columnCount = bodyId === "qcWaterChecklistHistoryBody" || bodyId === "qcEquipmentChecklistHistoryBody" ? 8 : 7;
+    const columnCount = bodyId === "qcParameterChecklistHistoryBody" || bodyId === "qcWaterChecklistHistoryBody" || bodyId === "qcEquipmentChecklistHistoryBody" ? 8 : 7;
     body.innerHTML = `<tr><td colspan="${columnCount}" style="text-align:center; color:${isError ? "#fb7185" : "#94a3b8"}; padding:1.5rem;">${parameterChecklistEscape(message)}</td></tr>`;
 }
 
