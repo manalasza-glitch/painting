@@ -234,19 +234,26 @@ function toggleChecklistMenu(event, element) {
 }
 
 function toggleMobileChecklistMenu(event, element) {
-    if (event) event.preventDefault();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     if (window.PaintingAuth && typeof PaintingAuth.hasPermission === 'function' && !PaintingAuth.hasPermission('checklist.read')) return;
     const menu = document.getElementById('mobile-checklist-menu');
     if (!menu) return;
     const willOpen = menu.hidden;
     menu.hidden = !willOpen;
+    menu.classList.toggle('is-open', willOpen);
     if (element) element.setAttribute('aria-expanded', String(willOpen));
 }
 
 function closeMobileChecklistMenu() {
     const menu = document.getElementById('mobile-checklist-menu');
     const trigger = document.querySelector('.mobile-checklist-trigger');
-    if (menu) menu.hidden = true;
+    if (menu) {
+        menu.hidden = true;
+        menu.classList.remove('is-open');
+    }
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
 }
 

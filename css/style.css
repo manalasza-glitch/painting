@@ -2914,6 +2914,15 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     text-align: center !important;
   }
 
+  .mobile-checklist-trigger {
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
   #parameter-checklist-tab.water-mode table thead {
     display: none !important;
   }
