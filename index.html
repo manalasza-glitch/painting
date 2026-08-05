@@ -807,10 +807,15 @@
                 <section id="dashboard-tab" class="tab-page active" data-permission="dashboard.read">
                     
                     <div id="dashboardControlsHeader" class="section-title-bar" style="margin-bottom: 1.75rem !important; justify-content: flex-end !important;">
-                        <div class="date-filter-wrap" style="display: flex; gap: 0.6rem; align-items: center;">
-                            <div style="position: relative; flex-grow: 1; min-width: 180px;">
+                        <div class="date-filter-wrap dashboard-date-range" style="display: flex; gap: 0.6rem; align-items: center;">
+                            <div class="dashboard-date-field" style="position: relative; flex-grow: 1; min-width: 180px;">
+                                <span class="dashboard-date-label">ตั้งแต่</span>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#38bdf8" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 2;"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-                                <input type="date" id="dashboardDateFilter" oninput="queueDashboardDateChange(this.value)" onchange="queueDashboardDateChange(this.value)" onclick="if(this.showPicker) this.showPicker();" style="width: 100%; padding-left: 40px; padding-right: 12px; height: 42px; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; background: #0b1329; color: #f8fafc; font-weight: 700; font-size: 0.92rem; color-scheme: dark; cursor: pointer; outline: none; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
+                                <input type="date" id="dashboardDateFilter" oninput="queueDashboardDateRangeChange()" onchange="queueDashboardDateRangeChange()" onclick="if(this.showPicker) this.showPicker();" style="width: 100%; padding-left: 40px; padding-right: 12px; height: 42px; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; background: #0b1329; color: #f8fafc; font-weight: 700; font-size: 0.92rem; color-scheme: dark; cursor: pointer; outline: none; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
+                            </div>
+                            <div class="dashboard-date-field" style="position: relative; flex-grow: 1; min-width: 180px;">
+                                <span class="dashboard-date-label">ถึง</span>
+                                <input type="date" id="dashboardDateFilterEnd" oninput="queueDashboardDateRangeChange()" onchange="queueDashboardDateRangeChange()" onclick="if(this.showPicker) this.showPicker();" style="width: 100%; padding: 0 12px; height: 42px; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; background: #0b1329; color: #f8fafc; font-weight: 700; font-size: 0.92rem; color-scheme: dark; cursor: pointer; outline: none; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
                             </div>
                             <button type="button" id="btnResetDashboardFilter" onclick="resetDashboardDateFilter()" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 0 20px; height: 42px; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.9rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); transition: all 0.2s ease;">
                                 ดูข้อมูลทั้งหมด
@@ -1949,7 +1954,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.18.0"></script>
+    <script src="js/app.js?v=96.19.0"></script>
     <script src="js/daily-report.js?v=93.7.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>

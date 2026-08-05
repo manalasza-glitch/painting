@@ -1597,6 +1597,39 @@ button, input, textarea, select {
     width: 100% !important;
 }
 
+.dashboard-date-range {
+    flex-wrap: wrap;
+}
+
+.dashboard-date-field {
+    position: relative;
+}
+
+.dashboard-date-label {
+    position: absolute;
+    top: -1.05rem;
+    left: 0.25rem;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+@media (max-width: 500px) {
+    .dashboard-date-range {
+        align-items: stretch !important;
+        gap: 1.25rem 0.5rem !important;
+    }
+    .dashboard-date-field {
+        min-width: 0 !important;
+        flex: 1 1 calc(50% - 0.25rem) !important;
+    }
+    .dashboard-date-range #btnResetDashboardFilter {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}
+
 /* iOS-Style Segmented Control for Shift Radio Pills */
 .dr-radio-pills {
     display: flex;

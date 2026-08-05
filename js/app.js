@@ -111,8 +111,10 @@ async function initializePaintingApp() {
         setCurrentDateTimeDefaults();
 
         const dashboardDateInput = document.getElementById("dashboardDateFilter");
+        const dashboardDateEndInput = document.getElementById("dashboardDateFilterEnd");
         const todayDate = getStandardISODate(new Date().toISOString());
         if (dashboardDateInput) dashboardDateInput.value = todayDate;
+        if (dashboardDateEndInput) dashboardDateEndInput.value = todayDate;
 
         const cacheVer = localStorage.getItem("PAINTING_INSPECTION_CACHE_VER");
         if (cacheVer !== "2.0.0") {
@@ -621,6 +623,48 @@ function queueDashboardDateChange(dateValue) {
     dashboardDateChangeTimer = setTimeout(() => changeDashboardDate(dateValue), 80);
 }
 
+function getDashboardDateRange() {
+    const startInput = document.getElementById("dashboardDateFilter");
+    const endInput = document.getElementById("dashboardDateFilterEnd");
+    let start = getStandardISODate(startInput ? startInput.value : "");
+    let end = getStandardISODate(endInput ? endInput.value : "");
+    // Keep the legacy single-date control usable when the end-date field is not
+    // present on an older cached page.
+    if (start && !end && !endInput) end = start;
+    if (start && end && start > end) [start, end] = [end, start];
+    return { start, end };
+}
+
+function dashboardRecordInDateRange(record, range = getDashboardDateRange()) {
+    const recordDate = getStandardISODate(record && (record.date || record.timestamp));
+    if (!recordDate) return false;
+    if (range.start && recordDate < range.start) return false;
+    if (range.end && recordDate > range.end) return false;
+    return true;
+}
+
+function queueDashboardDateRangeChange() {
+    clearTimeout(dashboardDateChangeTimer);
+    dashboardDateChangeTimer = setTimeout(() => changeDashboardDateRange(), 80);
+}
+
+async function changeDashboardDateRange() {
+    const range = getDashboardDateRange();
+    const startInput = document.getElementById("dashboardDateFilter");
+    const endInput = document.getElementById("dashboardDateFilterEnd");
+    if (startInput && endInput && startInput.value && endInput.value && startInput.value > endInput.value) {
+        showToast("วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด", "error");
+        return;
+    }
+
+    // A single day can use the server-side date filter. A range needs the full
+    // history once, then all dashboard sections share the same client filter.
+    const requestedDate = range.start && range.end && range.start === range.end
+        ? range.start
+        : "";
+    await loadDataFromAPI(false, requestedDate);
+}
+
 async function changeDashboardDate(dateValue) {
     const selectedDate = String(dateValue || "").trim();
     await loadDataFromAPI(false, selectedDate || getStandardISODate(new Date().toISOString()));
@@ -628,7 +672,9 @@ async function changeDashboardDate(dateValue) {
 
 async function showAllDashboardData() {
     const filterInput = document.getElementById("dashboardDateFilter");
+    const endInput = document.getElementById("dashboardDateFilterEnd");
     if (filterInput) filterInput.value = "";
+    if (endInput) endInput.value = "";
     await loadDataFromAPI(false, "");
 }
 
@@ -668,15 +714,12 @@ function renderDashboard() {
     }
 
     // Apply Date Filter
-    const filterInput = document.getElementById("dashboardDateFilter");
-    const filterDate = filterInput ? filterInput.value : "";
+    const range = getDashboardDateRange();
+    const hasDateFilter = Boolean(range.start || range.end);
 
     let filteredRecords = inspectionRecords;
-    if (filterDate) {
-        filteredRecords = inspectionRecords.filter(r => {
-            const recordDateStr = getStandardISODate(r.date || r.timestamp);
-            return recordDateStr === filterDate;
-        });
+    if (hasDateFilter) {
+        filteredRecords = inspectionRecords.filter(r => dashboardRecordInDateRange(r, range));
     }
 
     // 1. Calculate KPI Metrics using Filtered Data
@@ -726,7 +769,7 @@ function renderDashboard() {
     // Update KPI 1 subtext
     const kpi1Subtext = document.querySelector('.kpi-card.blue .kpi-subtext');
     if (kpi1Subtext) {
-        kpi1Subtext.innerText = filterDate ? `↑ รายการวันที่เลือก` : `↑ รายการทั้งหมด`;
+        kpi1Subtext.innerText = hasDateFilter ? `↑ รายการในช่วงวันที่เลือก` : `↑ รายการทั้งหมด`;
     }
 
     const topCategory = defectsCategory[0];
@@ -734,14 +777,14 @@ function renderDashboard() {
     document.getElementById("kpiTopDefectCount").innerText = topCategory.val > 0 ? `${topCategory.val} ชิ้น` : "0 ชิ้น";
 
     // Update KPI 4
-    document.getElementById("kpiTodayDefects").innerText = filterDate ? grandTotalDefects : todayDefects;
+    document.getElementById("kpiTodayDefects").innerText = hasDateFilter ? grandTotalDefects : todayDefects;
     const kpi4Title = document.querySelector('.kpi-card.yellow .kpi-label');
     const kpi4Subtext = document.querySelector('.kpi-card.yellow .kpi-subtext');
-    if (kpi4Title) kpi4Title.innerText = filterDate ? 'อัตราของเสียที่เลือก' : 'อัตราของเสียวันนี้';
-    if (kpi4Subtext) kpi4Subtext.innerText = filterDate ? 'วันที่เลือก' : 'วันนี้';
+    if (kpi4Title) kpi4Title.innerText = hasDateFilter ? 'อัตราของเสียที่เลือก' : 'อัตราของเสียวันนี้';
+    if (kpi4Subtext) kpi4Subtext.innerText = hasDateFilter ? 'ช่วงวันที่เลือก' : 'วันนี้';
 
     // 2. Render Daily Statistics Chart
-    renderDailyChart(filterDate ? filteredRecords : inspectionRecords, filterDate);
+    renderDailyChart(hasDateFilter ? filteredRecords : inspectionRecords, hasDateFilter ? 'range' : '');
 
     // 3. Render Defect Donut Chart
     renderDonutChart(defectsCategory, grandTotalDefects);
@@ -750,7 +793,7 @@ function renderDashboard() {
     renderSeverityBars(defectsCategory, grandTotalDefects);
 
     // 5. Update Recent Table to reflect filtered date
-    renderRecentTable(filterDate ? filteredRecords : inspectionRecords);
+    renderRecentTable(hasDateFilter ? filteredRecords : inspectionRecords);
 
     // 6. Render Output Diary Charts (from Google Sheets outputdiary)
     renderDailyReportCharts();
@@ -1105,9 +1148,10 @@ function getModelWithGroupLabel(rawModel) {
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
-    const filterInput = document.getElementById("dashboardDateFilter");
-    const filterDate = filterInput ? filterInput.value : "";
-    const data = await fetchDailyReportDataFromAPI(filterDate);
+    const range = getDashboardDateRange();
+    const hasDateFilter = Boolean(range.start || range.end);
+    const apiDateFilter = range.start && range.end && range.start === range.end ? range.start : "";
+    const data = await fetchDailyReportDataFromAPI(apiDateFilter);
     
     if (!data || data.length === 0) {
         // Reset KPI Elements to 0
@@ -1134,8 +1178,8 @@ async function renderDailyReportCharts() {
     }
 
     let filteredData = data;
-    if (filterDate) {
-        filteredData = data.filter(r => String(r.date).substring(0, 10) === filterDate);
+    if (hasDateFilter) {
+        filteredData = data.filter(r => dashboardRecordInDateRange(r, range));
     }
 
     // 1. Calculate KPIs
@@ -1673,7 +1717,9 @@ function resetChartZoomInFullscreen() {
 
 // Expose dashboard controls explicitly for inline handlers and older cached pages.
 window.queueDashboardDateChange = queueDashboardDateChange;
+window.queueDashboardDateRangeChange = queueDashboardDateRangeChange;
 window.changeDashboardDate = changeDashboardDate;
+window.changeDashboardDateRange = changeDashboardDateRange;
 window.showAllDashboardData = showAllDashboardData;
 window.resetDashboardDateFilter = resetDashboardDateFilter;
 window.loadDataFromAPI = loadDataFromAPI;
