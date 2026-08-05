@@ -172,7 +172,10 @@ function renderModelDropdownOptions(productGroup = selectedProductGroup(), categ
 function renderColorDropdownUI(productGroup = selectedProductGroup()) {
     const select = document.getElementById('drColor');
     if (!select) return;
-    const colors = PAINTING_MODEL_GROUPS[productGroup]?.colors || [];
+    const colors = [
+        ...(PAINTING_MODEL_GROUPS[productGroup]?.colors || []),
+        { value: "สีเฉพาะงาน", label: "สีเฉพาะงาน", code: "CUSTOM" }
+    ];
     const previous = select.value;
     select.innerHTML = '<option value="">-- เลือกสี --</option>' + colors.map(color => `<option value="${escapeDailyReportHtml(color.value)}" data-color-code="${escapeDailyReportHtml(color.code)}">${escapeDailyReportHtml(color.label)}</option>`).join('');
     select.disabled = !productGroup;
