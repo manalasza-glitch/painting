@@ -181,9 +181,6 @@ async function submitParameterChecklist() {
     try {
         await sendParameterChecklistToAPI(payload);
         showToast(`บันทึก${title}ลง Google Sheets เรียบร้อยแล้ว`, "success");
-        if ((typeof hasAppPermission !== "function" || hasAppPermission("qc.read")) && typeof refreshQCChecklistHistory === "function") {
-            await refreshQCChecklistHistory();
-        }
     } catch (error) {
         showToast(`บันทึก${title}ไม่สำเร็จ: ${error.message}`, "error");
     } finally {

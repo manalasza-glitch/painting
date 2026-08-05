@@ -103,9 +103,6 @@ async function submitEquipmentChecklist() {
     try {
         await sendEquipmentChecklistToAPI(payload);
         showToast("บันทึกเช็กลิสอุปกรณ์ลง Google Sheets เรียบร้อยแล้ว", "success");
-        if ((typeof hasAppPermission !== "function" || hasAppPermission("qc.read")) && typeof refreshQCChecklistHistory === "function") {
-            await refreshQCChecklistHistory();
-        }
     } catch (error) {
         showToast(`บันทึกเช็กลิสอุปกรณ์ไม่สำเร็จ: ${error.message}`, "error");
     } finally {
