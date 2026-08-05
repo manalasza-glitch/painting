@@ -917,6 +917,22 @@
                             </div>
                         </div>
 
+                        <!-- Daily aggregation chart: one category group per day. -->
+                        <div class="chart-card navy-theme dashboard-overview-chart-card dashboard-overview-daily-by-day-card" style="grid-column: 1 / -1;">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b4d8" stroke-width="2.5"><rect x="3" y="4" width="4" height="16"/><rect x="10" y="9" width="4" height="11"/><rect x="17" y="2" width="4" height="18"/></svg>
+                                    <span>DAILY TOTALS BY DATE (สรุปของเสียแยกตามวัน)</span>
+                                </div>
+                                <button class="btn-chart-expand" onclick="openChartFullscreen('dailyByDayChart', 'DAILY TOTALS BY DATE')" title="ขยายเต็มหน้าจอ">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                </button>
+                            </div>
+                            <div class="chart-container-wrapper dashboard-overview-daily-by-day-wrapper" style="height: 300px; max-height: 320px; flex-grow: 0; overflow: hidden; position: relative;">
+                                <canvas id="dailyByDayChart"></canvas>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Output Diary Production Report Section -->
@@ -1954,7 +1970,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.19.0"></script>
+    <script src="js/app.js?v=96.20.0"></script>
     <script src="js/daily-report.js?v=93.7.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>

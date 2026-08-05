@@ -1,5 +1,6 @@
 let inspectionRecords = [];
 let dailyChartInstance = null;
+let dailyByDayChartInstance = null;
 let donutChartInstance = null;
 let outputDailyChartInstance = null;
 let topModelsChartInstance = null;
@@ -700,6 +701,7 @@ function resetInspectionDashboard() {
     if (avgDefect) avgDefect.innerText = "เฉลี่ย 0 ชิ้น/ครั้ง";
 
     if (dailyChartInstance) { dailyChartInstance.destroy(); dailyChartInstance = null; }
+    if (dailyByDayChartInstance) { dailyByDayChartInstance.destroy(); dailyByDayChartInstance = null; }
     if (donutChartInstance) { donutChartInstance.destroy(); donutChartInstance = null; }
     const severityList = document.getElementById("defectProgressList");
     if (severityList) severityList.innerHTML = "";
@@ -784,7 +786,9 @@ function renderDashboard() {
     if (kpi4Subtext) kpi4Subtext.innerText = hasDateFilter ? 'ช่วงวันที่เลือก' : 'วันนี้';
 
     // 2. Render Daily Statistics Chart
-    renderDailyChart(hasDateFilter ? filteredRecords : inspectionRecords, hasDateFilter ? 'range' : '');
+    const chartRecords = hasDateFilter ? filteredRecords : inspectionRecords;
+    renderDailyChart(chartRecords, hasDateFilter ? 'range' : '');
+    renderDailyByDayChart(chartRecords);
 
     // 3. Render Defect Donut Chart
     renderDonutChart(defectsCategory, grandTotalDefects);
@@ -808,14 +812,11 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
         return;
     }
 
-    // Aggregate last 7 days of records, or just the filtered date if filterDate is set
-    let recentRecords = [];
-    if (filterDate) {
-        recentRecords = [...recordsData].reverse();
-    } else {
-        recentRecords = [...recordsData].reverse().slice(-7);
-    }
-    
+    // Keep the original record-level chart: each inspection round remains
+    // visible, so the chart continues to match the existing DAILY STATISTICS.
+    const recentRecords = filterDate
+        ? [...recordsData].reverse()
+        : [...recordsData].reverse().slice(-7);
     const labels = recentRecords.map(r => String(r.date || r.timestamp || '').split('T')[0].substring(0, 10));
     const rustData = recentRecords.map(r => Number(r.rust) || 0);
     const dentData = recentRecords.map(r => Number(r.dent) || 0);
@@ -1866,6 +1867,55 @@ function renderQC7Histogram(records) {
         type: 'bar',
         data: { labels: ['0', '1–2', '3–5', '6–10', '11+'], datasets: [{ label: 'รายการตรวจ', data: bins, backgroundColor: '#38bdf8', borderRadius: 6 }] },
         options: qc7ChartOptions()
+    });
+}
+
+function renderDailyByDayChart(recordsData = inspectionRecords) {
+    const ctx = document.getElementById("dailyByDayChart");
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    const dailyTotals = {};
+    (Array.isArray(recordsData) ? recordsData : []).forEach(record => {
+        const day = getStandardISODate(record && (record.date || record.timestamp));
+        if (!day) return;
+        if (!dailyTotals[day]) dailyTotals[day] = { rust: 0, dent: 0, weld: 0, chemical: 0, oil: 0 };
+        dailyTotals[day].rust += Number(record.rust) || 0;
+        dailyTotals[day].dent += Number(record.dent) || 0;
+        dailyTotals[day].weld += Number(record.weld) || 0;
+        dailyTotals[day].chemical += Number(record.chemical) || 0;
+        dailyTotals[day].oil += Number(record.oil) || 0;
+    });
+
+    const days = Object.keys(dailyTotals).sort();
+    const rows = days.map(day => dailyTotals[day]);
+    const totalByDay = rows.map(row => row.rust + row.dent + row.weld + row.chemical + row.oil);
+
+    if (dailyByDayChartInstance) dailyByDayChartInstance.destroy();
+    dailyByDayChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: days,
+            datasets: [
+                { type: 'line', label: 'รวมของเสียต่อวัน', data: totalByDay, borderColor: '#00b4d8', backgroundColor: 'rgba(0,180,216,0.16)', borderWidth: 3, fill: true, tension: 0.35 },
+                { label: 'สนิม (Rust)', data: rows.map(row => row.rust), backgroundColor: '#10b981', borderRadius: 4 },
+                { label: 'รอยบุบ (Dent)', data: rows.map(row => row.dent), backgroundColor: '#3b82f6', borderRadius: 4 },
+                { label: 'สะเก็ดเชื่อม (Weld)', data: rows.map(row => row.weld), backgroundColor: '#f59e0b', borderRadius: 4 },
+                { label: 'คราบน้ำยา (Chemical)', data: rows.map(row => row.chemical), backgroundColor: '#06b6d4', borderRadius: 4 },
+                { label: 'คราบน้ำมัน (Oil)', data: rows.map(row => row.oil), backgroundColor: '#8b5cf6', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: window.innerWidth < 640 ? 10 : 12 }, boxWidth: window.innerWidth < 640 ? 10 : 20, padding: window.innerWidth < 640 ? 4 : 10 } },
+                zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' } }
+            },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+            }
+        }
     });
 }
 
