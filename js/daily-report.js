@@ -659,8 +659,8 @@ function renderDailyReportList(targetBodyId = 'dailyReportListBody') {
         return;
     }
 
-    // 2. Otherwise display top 5 saved records from Google Sheets backend
-    const savedRecords = getSavedDailyReportRecords().slice(0, 5);
+    // 2. Otherwise display every saved record from the Google Sheets backend.
+    const savedRecords = getSavedDailyReportRecords();
     if (savedRecords.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">ยังไม่มีประวัติการบันทึก</td></tr>`;
         return;
