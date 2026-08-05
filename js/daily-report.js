@@ -1,167 +1,219 @@
-let PAINTING_MODEL_GROUPS = {
-    "Gland Plate": [
-        "[75170148] Gland Plate LC600",
-        "[BRU53717] Gland Plate NLC600"
-    ],
-    "Box & U-Box": [
-        "Box NMS 4/6 W. 240 mm.",
-        "BOX 300x400x200",
-        "BOX 400x500x200",
-        "U-BOX STANDARD",
-        "[BRU53714] U Box 450 mm.",
-        "[75170145] U Box LC600 mm.",
-        "[BRU53715] U Box NLC600 mm."
-    ],
-    "Door (บานประตู)": [
-        "Door NLC 450 mm.",
-        "DOOR PANEL NLC-01",
-        "DOOR PANEL NMS-01",
-        "Flat Door LC 600",
-        "[BRU53715] Door NLC 600 mm."
-    ],
-    "Cover NMS": [
-        "Cover NMS 6 w. 245 mm.",
-        "[BRU30890] Cover NMS 4 w. 245 mm.",
-        "[BRU30892] Cover NMS 8 w. 325 mm."
-    ],
-    "Cover NLC (EZ / LUG)": [
-        "Cover NLC EZ100 600 mm.",
-        "[BRU53718] Cover NLC EZ100 450 mm. 12 w.",
-        "[BRU53738] Cover NLC LUG250 450 mm. 12 w."
-    ]
-};
-
-const PAINTING_PART_CATEGORY_ORDER = ["Door", "U Box", "Box", "Cover", "Gland Plate", "Other"];
-
-function getPartCategory(partName) {
-    const normalized = String(partName || "")
-        .toLowerCase()
-        .replace(/[_-]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    if (/\bu\s*box\b/.test(normalized)) return "U Box";
-    if (/\bdoor\b/.test(normalized)) return "Door";
-    if (/\bbox\b/.test(normalized)) return "Box";
-    if (/\bcover\b/.test(normalized)) return "Cover";
-    if (/\bgland\s*plate\b/.test(normalized)) return "Gland Plate";
-    return "Other";
-}
-
-function normalizePartModelGroups(sourceGroups) {
-    const normalizedGroups = {};
-    PAINTING_PART_CATEGORY_ORDER.forEach(category => {
-        normalizedGroups[category] = [];
-    });
-
-    for (const [sourceGroup, sourceModels] of Object.entries(sourceGroups || {})) {
-        if (!Array.isArray(sourceModels)) continue;
-
-        const sourceIsCategory = PAINTING_PART_CATEGORY_ORDER.includes(sourceGroup);
-
-        sourceModels.forEach(sourceModel => {
-            const value = String(sourceModel || "").trim();
-            if (!value) return;
-
-            const modelCategory = getPartCategory(value);
-            const category = modelCategory === "Other" ? getPartCategory(sourceGroup) : modelCategory;
-
-            const label = sourceIsCategory || value.toLowerCase().includes(String(sourceGroup).toLowerCase())
-                ? value
-                : `${value} (${sourceGroup})`;
-
-            if (!normalizedGroups[category].some(item => item.value === value && item.label === label)) {
-                normalizedGroups[category].push({ value, label });
-            }
-        });
-    }
-
-    Object.keys(normalizedGroups).forEach(category => {
-        if (normalizedGroups[category].length === 0) delete normalizedGroups[category];
-    });
-
-    return normalizedGroups;
-}
-
-function escapeDailyReportHtml(value) {
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-PAINTING_MODEL_GROUPS = normalizePartModelGroups(PAINTING_MODEL_GROUPS);
-
-async function loadPartModelsList() {
-    // 1. Load from local cache
-    const cached = localStorage.getItem("PAINTING_PART_MODELS_CACHE");
-    if (cached) {
-        try {
-            const parsed = JSON.parse(cached);
-            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                PAINTING_MODEL_GROUPS = normalizePartModelGroups(parsed);
-            }
-        } catch (e) {}
-    }
-
-    renderPartGroupDropdownUI();
-    renderModelDropdownOptions();
-
-    // 2. Fetch fresh mapping from Cloud Google Sheet (PartModel sheet tab)
-    if (typeof fetchPartModelsFromAPI === 'function') {
-        const cloudGroups = await fetchPartModelsFromAPI();
-        if (cloudGroups && typeof cloudGroups === 'object' && Object.keys(cloudGroups).length > 0) {
-            PAINTING_MODEL_GROUPS = normalizePartModelGroups(cloudGroups);
-            renderPartGroupDropdownUI();
-            renderModelDropdownOptions();
+// Canonical production catalog used by the daily production form.
+// Each selection is intentionally hierarchical: product group -> part category -> model/code -> color.
+const PAINTING_PRODUCT_GROUP_ORDER = ["LC600 Classic", "LC600 Visi-smart", "PDB", "CU (resi thai)", "NLC"];
+const PAINTING_PRODUCT_GROUPS_DEFAULT = {
+    "LC600 Classic": {
+        colors: [{ value: "GREY BUTTER", label: "GREY BUTTER (1025216PX20)", code: "1025216PX20" }],
+        categories: {
+            "Flat Door": [{ value: "7517016200", label: "Flat Door (7517016200)" }],
+            "Gland Plate": [{ value: "7517014800", label: "Gland Plate (7517014800)" }],
+            "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+            "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
+        }
+    },
+    "LC600 Visi-smart": {
+        colors: [{ value: "WHITE", label: "WHITE (1003532PX20)", code: "1003532PX20" }],
+        categories: {
+            "Curve Door": [{ value: "7517016600", label: "Curve Door (7517016600)" }],
+            "Gland Plate": [{ value: "7517014000", label: "Gland Plate (7517014000)" }],
+            "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+            "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
+        }
+    },
+    "PDB": {
+        colors: [{ value: "WHITE N-47", label: "WHITE N-47 (1214891PX20)", code: "1214891PX20" }],
+        categories: {
+            "PDB": [
+                { value: "827111-S", label: "DBS30 (827111-S)" },
+                { value: "827198-S", label: "DBS45 (827198-S)" },
+                { value: "827285-S", label: "DBS60 (827285-S)" }
+            ]
+        }
+    },
+    "CU (resi thai)": {
+        colors: [{ value: "White 2910", label: "White 2910 (1223326PX20)", code: "1223326PX20" }],
+        categories: {
+            "Metal Box": [
+                { value: "BRU30887", label: "METAL BOX 4/6 WAY (BRU30887)" },
+                { value: "BRU30888", label: "METAL BOX 8/10 WAY (BRU30888)" },
+                { value: "BRU30889", label: "METAL BOX 14 WAY (BRU30889)" }
+            ],
+            "Metal Cover": [
+                { value: "BRU30890", label: "METAL COVER 4 WAY (BRU30890)" },
+                { value: "BRU30891", label: "METAL COVER 6 WAY (BRU30891)" },
+                { value: "BRU30892", label: "METAL COVER 8 WAY (BRU30892)" },
+                { value: "BRU30893", label: "METAL COVER 10 WAY (BRU30893)" },
+                { value: "BRU30894", label: "METAL COVER 14 WAY (BRU30894)" }
+            ]
+        }
+    },
+    "NLC": {
+        colors: [
+            { value: "GREY", label: "GREY (1259025)", code: "1259025" },
+            { value: "WHITE SE3", label: "WHITE SE3 (1259107)", code: "1259107" }
+        ],
+        categories: {
+            "U BOX": [
+                { value: "BRU53714", label: "U BOX 450mm (BRU53714)" },
+                { value: "BRU53715", label: "U BOX 600mm (BRU53715)" },
+                { value: "BRU53716", label: "U BOX 750mm (BRU53716)" },
+                { value: "BRU53771", label: "U BOX 900mm (BRU53771)" }
+            ],
+            "Door": [
+                { value: "BRU53743", label: "Door 450mm (BRU53743)" },
+                { value: "BRU53744", label: "Door 600mm (BRU53744)" },
+                { value: "BRU53747", label: "Door 750mm (BRU53747)" },
+                { value: "BRU53749", label: "Door 900mm (BRU53749)" }
+            ],
+            "Gland Plate": [{ value: "BRU53717", label: "Gland Plate (BRU53717)" }],
+            "Cover 100EZ": [
+                { value: "BRU53718", label: "Cover EZ100 450mm 12 way (BRU53718)" },
+                { value: "BRU53719", label: "Cover EZ100 600mm 18 way (BRU53719)" },
+                { value: "BRU53720", label: "Cover EZ100 600mm 24 way (BRU53720)" },
+                { value: "BRU53721", label: "Cover EZ100 600mm 30 way (BRU53721)" },
+                { value: "BRU53722", label: "Cover EZ100 750mm 36 way (BRU53722)" },
+                { value: "BRU53723", label: "Cover EZ100 750mm 42 way (BRU53723)" }
+            ],
+            "Cover 100LUG": [
+                { value: "BRU53724", label: "Cover LUG100 450mm 12 way (BRU53724)" },
+                { value: "BRU53725", label: "Cover LUG100 450mm 18 way (BRU53725)" },
+                { value: "BRU53726", label: "Cover LUG100 600mm 24 way (BRU53726)" },
+                { value: "BRU53727", label: "Cover LUG100 600mm 30 way (BRU53727)" },
+                { value: "BRU53728", label: "Cover LUG100 600mm 36 way (BRU53728)" },
+                { value: "BRU53729", label: "Cover LUG100 750mm 42 way (BRU53729)" }
+            ],
+            "Cover 250EZ": [
+                { value: "BRU53730", label: "Cover EZ250 600mm 12 way (BRU53730)" },
+                { value: "BRU53731", label: "Cover EZ250 600mm 18 way (BRU53731)" },
+                { value: "BRU53732", label: "Cover EZ250 750mm 24 way (BRU53732)" },
+                { value: "BRU53734", label: "Cover EZ250 750mm 30 way (BRU53734)" },
+                { value: "BRU53735", label: "Cover EZ250 900mm 36 way (BRU53735)" },
+                { value: "BRU53736", label: "Cover EZ250 900mm 42 way (BRU53736)" },
+                { value: "BRU53737", label: "Cover EZ250 900mm 48 way (BRU53737)" }
+            ],
+            "Cover 250LUG": [
+                { value: "BRU53738", label: "Cover LUG250 450mm 12 way (BRU53738)" },
+                { value: "BRU53739", label: "Cover LUG250 600mm 18 way (BRU53739)" },
+                { value: "BRU53740", label: "Cover LUG250 600mm 24 way (BRU53740)" },
+                { value: "BRU53741", label: "Cover LUG250 600mm 30 way (BRU53741)" },
+                { value: "BRU53742", label: "Cover LUG250 750mm 36 way (BRU53742)" },
+                { value: "BRU53745", label: "Cover LUG250 750mm 42 way (BRU53745)" },
+                { value: "BRU53746", label: "Cover LUG250 900mm 48 way (BRU53746)" }
+            ]
         }
     }
+};
+
+let PAINTING_MODEL_GROUPS = JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
+const PAINTING_PRODUCT_CATALOG_CACHE = "PAINTING_PRODUCT_CATALOG_CACHE_V2";
+
+function escapeDailyReportHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-function renderPartGroupDropdownUI() {
-    const groupSelect = document.getElementById('drPartGroup');
-    if (!groupSelect) return;
-
-    const currentVal = groupSelect.value;
-    let html = '<option value="">-- เลือกประเภทชิ้นงาน --</option>';
-
-    PAINTING_PART_CATEGORY_ORDER.forEach(gName => {
-        if (!PAINTING_MODEL_GROUPS[gName]) return;
-        html += `<option value="${escapeDailyReportHtml(gName)}">${escapeDailyReportHtml(gName)}</option>`;
-    });
-
-    groupSelect.innerHTML = html;
-    if (currentVal && PAINTING_MODEL_GROUPS[currentVal]) {
-        groupSelect.value = currentVal;
-    }
-}
-
-function renderModelDropdownOptions(groupFilter = null) {
-    const modelSelects = document.querySelectorAll('.model-select');
-    const groupSelect = document.getElementById('drPartGroup');
-    const selectedGroup = groupFilter === null ? (groupSelect ? groupSelect.value : "") : groupFilter;
-    let html = selectedGroup
-        ? '<option value="">-- เลือกรุ่นงาน --</option>'
-        : '<option value="">-- กรุณาเลือกประเภทชิ้นงานก่อน --</option>';
-
-    if (selectedGroup && PAINTING_MODEL_GROUPS[selectedGroup]) {
-        PAINTING_MODEL_GROUPS[selectedGroup].forEach(model => {
-            html += `<option value="${escapeDailyReportHtml(model.value)}">${escapeDailyReportHtml(model.label)}</option>`;
+function normalizeProductCatalog(source) {
+    if (!source || typeof source !== "object") return JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
+    const candidate = {};
+    for (const groupName of PAINTING_PRODUCT_GROUP_ORDER) {
+        const raw = source[groupName];
+        if (!raw || typeof raw !== "object" || !raw.categories) continue;
+        const categories = {};
+        Object.entries(raw.categories).forEach(([category, models]) => {
+            if (!Array.isArray(models)) return;
+            const list = models.map(item => typeof item === "string" ? { value: item, label: item } : item)
+                .filter(item => item && item.value).map(item => ({ value: String(item.value), label: String(item.label || item.value) }));
+            if (list.length) categories[String(category)] = list;
         });
+        const colors = Array.isArray(raw.colors) ? raw.colors.map(item => typeof item === "string" ? { value: item, label: item } : item)
+            .filter(item => item && item.value).map(item => ({ value: String(item.value), label: String(item.label || item.value), code: String(item.code || "") })) : [];
+        if (Object.keys(categories).length) candidate[groupName] = { categories, colors };
     }
+    return Object.keys(candidate).length ? candidate : JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
+}
 
-    modelSelects.forEach(sel => {
-        sel.innerHTML = html;
-        sel.disabled = !selectedGroup;
+function selectedProductGroup() {
+    return document.getElementById('drProductGroup')?.value || "";
+}
+
+function renderProductGroupDropdownUI() {
+    const select = document.getElementById('drProductGroup');
+    if (!select) return;
+    const previous = select.value;
+    select.innerHTML = '<option value="">-- เลือกกลุ่มผลิตภัณฑ์ --</option>' + PAINTING_PRODUCT_GROUP_ORDER
+        .filter(name => PAINTING_MODEL_GROUPS[name])
+        .map(name => `<option value="${escapeDailyReportHtml(name)}">${escapeDailyReportHtml(name)}</option>`).join('');
+    if (previous && PAINTING_MODEL_GROUPS[previous]) select.value = previous;
+}
+
+function renderPartGroupDropdownUI(productGroup = selectedProductGroup()) {
+    const select = document.getElementById('drPartGroup');
+    if (!select) return;
+    const categories = PAINTING_MODEL_GROUPS[productGroup]?.categories || {};
+    const previous = select.value;
+    select.innerHTML = '<option value="">-- เลือกประเภทชิ้นงาน --</option>' + Object.keys(categories)
+        .map(name => `<option value="${escapeDailyReportHtml(name)}">${escapeDailyReportHtml(name)}</option>`).join('');
+    select.disabled = !productGroup;
+    if (previous && categories[previous]) select.value = previous;
+}
+
+function renderModelDropdownOptions(productGroup = selectedProductGroup(), category = document.getElementById('drPartGroup')?.value || "") {
+    const models = PAINTING_MODEL_GROUPS[productGroup]?.categories?.[category] || [];
+    const html = productGroup && category ? '<option value="">-- เลือกรุ่นงาน / รหัส --</option>' : '<option value="">-- เลือกประเภทชิ้นงานก่อน --</option>';
+    document.querySelectorAll('.model-select').forEach(select => {
+        const previous = select.value;
+        select.innerHTML = html + models.map(item => `<option value="${escapeDailyReportHtml(item.value)}">${escapeDailyReportHtml(item.label)}</option>`).join('');
+        select.disabled = !(productGroup && category);
+        if (previous && models.some(item => item.value === previous)) select.value = previous;
     });
+}
+
+function renderColorDropdownUI(productGroup = selectedProductGroup()) {
+    const select = document.getElementById('drColor');
+    if (!select) return;
+    const colors = PAINTING_MODEL_GROUPS[productGroup]?.colors || [];
+    const previous = select.value;
+    select.innerHTML = '<option value="">-- เลือกสี --</option>' + colors.map(color => `<option value="${escapeDailyReportHtml(color.value)}" data-color-code="${escapeDailyReportHtml(color.code)}">${escapeDailyReportHtml(color.label)}</option>`).join('');
+    select.disabled = !productGroup;
+    if (previous && colors.some(color => color.value === previous)) select.value = previous;
+}
+
+function filterProductGroupDropdown() {
+    const partSelect = document.getElementById('drPartGroup');
+    const modelSelect = document.getElementById('drModel');
+    const colorSelect = document.getElementById('drColor');
+    if (partSelect) partSelect.value = "";
+    if (modelSelect) modelSelect.value = "";
+    if (colorSelect) colorSelect.value = "";
+    renderPartGroupDropdownUI();
+    renderModelDropdownOptions();
+    renderColorDropdownUI();
 }
 
 function filterModelDropdown() {
-    const groupSelect = document.getElementById('drPartGroup');
-    const selectedGroup = groupSelect ? groupSelect.value : "";
-    renderModelDropdownOptions(selectedGroup);
+    const modelSelect = document.getElementById('drModel');
+    if (modelSelect) modelSelect.value = "";
+    renderModelDropdownOptions();
+}
+
+async function loadPartModelsList() {
+    const cached = localStorage.getItem(PAINTING_PRODUCT_CATALOG_CACHE);
+    if (cached) {
+        try { PAINTING_MODEL_GROUPS = normalizeProductCatalog(JSON.parse(cached)); } catch (e) {}
+    }
+    renderProductGroupDropdownUI();
+    filterProductGroupDropdown();
+    if (typeof fetchPartModelsFromAPI === 'function') {
+        const cloudGroups = await fetchPartModelsFromAPI();
+        if (cloudGroups && typeof cloudGroups === 'object') {
+            const normalized = normalizeProductCatalog(cloudGroups);
+            PAINTING_MODEL_GROUPS = normalized;
+            localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(normalized));
+            renderProductGroupDropdownUI();
+            filterProductGroupDropdown();
+        }
+    }
 }
 
 const PAINTING_TIMESLOTS = [
@@ -462,8 +514,12 @@ function initDailyReportForm() {
 }
 
 function addDailyReportRecord({ silent = false } = {}) {
+    const productGroup = document.getElementById('drProductGroup')?.value || "";
+    const partCategory = document.getElementById('drPartGroup')?.value || "";
     const model = document.getElementById('drModel').value;
-    const color = document.getElementById('drColor')?.value || 'ไม่ระบุ';
+    const colorSelect = document.getElementById('drColor');
+    const color = colorSelect?.value || "";
+    const colorCode = colorSelect?.selectedOptions?.[0]?.dataset?.colorCode || "";
     const timeSlot = document.getElementById('drTime').value;
     const prodQty = Number(document.getElementById('drProdQty').value) || 0;
     
@@ -475,8 +531,8 @@ function addDailyReportRecord({ silent = false } = {}) {
     const waterStain = Number(document.getElementById('drWaterStain').value) || 0;
     const otherDefect = Number(document.getElementById('drOtherDefect').value) || 0;
 
-    if (!model || !timeSlot) {
-        showToast("กรุณาเลือกรุ่นงานและช่วงเวลา", "error");
+    if (!productGroup || !partCategory || !model || !color || !timeSlot) {
+        showToast("กรุณาเลือกกลุ่มผลิตภัณฑ์ ประเภท รุ่น สี และช่วงเวลาให้ครบถ้วน", "error");
         return false;
     }
 
@@ -489,8 +545,11 @@ function addDailyReportRecord({ silent = false } = {}) {
 
     dailyReportRecords.push({
         id: Date.now().toString(),
+        productGroup,
+        partCategory,
         model,
         color,
+        colorCode,
         timeSlot,
         prodQty,
         dent,
@@ -510,7 +569,10 @@ function addDailyReportRecord({ silent = false } = {}) {
     // Clear inputs for next entry, but keep current time slot auto-selected
     const currentSlot = getCurrentTimeSlot();
     document.getElementById('drTime').value = currentSlot || "";
-    if (document.getElementById('drColor')) document.getElementById('drColor').value = "ไม่ระบุ";
+    if (document.getElementById('drProductGroup')) document.getElementById('drProductGroup').value = "";
+    renderPartGroupDropdownUI("");
+    renderModelDropdownOptions("", "");
+    renderColorDropdownUI("");
     document.getElementById('drProdQty').value = "";
     document.getElementById('drDent').value = "";
     document.getElementById('drColorDrop').value = "";
@@ -807,8 +869,11 @@ async function submitDailyReport() {
                 shift: shift,
                 recorder: recorder,
                 checker: checker,
+                productGroup: r.productGroup || "",
+                partCategory: r.partCategory || "",
                 model: r.model,
-                color: r.color || "ไม่ระบุ",
+                color: r.color || "",
+                colorCode: r.colorCode || "",
                 timeSlot: r.timeSlot,
                 prodQty: r.prodQty,
                 dent: r.dent,

@@ -1063,18 +1063,20 @@ function getModelWithGroupLabel(rawModel) {
     let foundGroup = "";
 
     for (const grpName in groups) {
-        const arr = groups[grpName];
-        if (Array.isArray(arr)) {
-            const hasMatch = arr.some(item => {
-                const cleanItem = String(item).trim();
-                return cleanItem.toLowerCase() === raw.toLowerCase() ||
-                       raw.toLowerCase().includes(cleanItem.toLowerCase()) ||
-                       cleanItem.toLowerCase().includes(raw.toLowerCase());
-            });
-            if (hasMatch) {
-                foundGroup = grpName;
-                break;
-            }
+        const group = groups[grpName];
+        const items = Array.isArray(group)
+            ? group
+            : Object.values(group?.categories || {}).flat();
+        const hasMatch = items.some(item => {
+            const candidate = typeof item === 'object' ? (item.value || item.label) : item;
+            const cleanItem = String(candidate || '').trim();
+            return cleanItem.toLowerCase() === raw.toLowerCase() ||
+                   raw.toLowerCase().includes(cleanItem.toLowerCase()) ||
+                   cleanItem.toLowerCase().includes(raw.toLowerCase());
+        });
+        if (hasMatch) {
+            foundGroup = grpName;
+            break;
         }
     }
 

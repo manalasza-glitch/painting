@@ -1,12 +1,64 @@
 const SHEET_NAME = "Inspection";
 const DAILY_REPORT_ID_HEADER = "SubmissionId";
 const DAILY_REPORT_COLOR_HEADER = "Color";
+const DAILY_REPORT_PRODUCT_GROUP_HEADER = "ProductGroup";
+const DAILY_REPORT_PART_CATEGORY_HEADER = "PartCategory";
+const DAILY_REPORT_COLOR_CODE_HEADER = "ColorCode";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read"];
+
+// Production catalog used by the daily report cascading selectors.
+const PART_MODEL_CATALOG = {
+  "LC600 Classic": { colors: [{ value: "GREY BUTTER", label: "GREY BUTTER (1025216PX20)", code: "1025216PX20" }], categories: {
+    "Flat Door": [{ value: "7517016200", label: "Flat Door (7517016200)" }],
+    "Gland Plate": [{ value: "7517014800", label: "Gland Plate (7517014800)" }],
+    "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+    "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
+  } },
+  "LC600 Visi-smart": { colors: [{ value: "WHITE", label: "WHITE (1003532PX20)", code: "1003532PX20" }], categories: {
+    "Curve Door": [{ value: "7517016600", label: "Curve Door (7517016600)" }],
+    "Gland Plate": [{ value: "7517014000", label: "Gland Plate (7517014000)" }],
+    "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+    "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
+  } },
+  "PDB": { colors: [{ value: "WHITE N-47", label: "WHITE N-47 (1214891PX20)", code: "1214891PX20" }], categories: {
+    "PDB": [
+      { value: "827111-S", label: "DBS30 (827111-S)" },
+      { value: "827198-S", label: "DBS45 (827198-S)" },
+      { value: "827285-S", label: "DBS60 (827285-S)" }
+    ]
+  } },
+  "CU (resi thai)": { colors: [{ value: "White 2910", label: "White 2910 (1223326PX20)", code: "1223326PX20" }], categories: {
+    "Metal Box": [
+      { value: "BRU30887", label: "METAL BOX 4/6 WAY (BRU30887)" },
+      { value: "BRU30888", label: "METAL BOX 8/10 WAY (BRU30888)" },
+      { value: "BRU30889", label: "METAL BOX 14 WAY (BRU30889)" }
+    ],
+    "Metal Cover": [
+      { value: "BRU30890", label: "METAL COVER 4 WAY (BRU30890)" },
+      { value: "BRU30891", label: "METAL COVER 6 WAY (BRU30891)" },
+      { value: "BRU30892", label: "METAL COVER 8 WAY (BRU30892)" },
+      { value: "BRU30893", label: "METAL COVER 10 WAY (BRU30893)" },
+      { value: "BRU30894", label: "METAL COVER 14 WAY (BRU30894)" }
+    ]
+  } },
+  "NLC": { colors: [
+    { value: "GREY", label: "GREY (1259025)", code: "1259025" },
+    { value: "WHITE SE3", label: "WHITE SE3 (1259107)", code: "1259107" }
+  ], categories: {
+    "U BOX": [["BRU53714", "U BOX 450mm"], ["BRU53715", "U BOX 600mm"], ["BRU53716", "U BOX 750mm"], ["BRU53771", "U BOX 900mm"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
+    "Door": [["BRU53743", "Door 450mm"], ["BRU53744", "Door 600mm"], ["BRU53747", "Door 750mm"], ["BRU53749", "Door 900mm"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
+    "Gland Plate": [{ value: "BRU53717", label: "Gland Plate (BRU53717)" }],
+    "Cover 100EZ": [["BRU53718", "Cover EZ100 450mm 12 way"], ["BRU53719", "Cover EZ100 600mm 18 way"], ["BRU53720", "Cover EZ100 600mm 24 way"], ["BRU53721", "Cover EZ100 600mm 30 way"], ["BRU53722", "Cover EZ100 750mm 36 way"], ["BRU53723", "Cover EZ100 750mm 42 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
+    "Cover 100LUG": [["BRU53724", "Cover LUG100 450mm 12 way"], ["BRU53725", "Cover LUG100 450mm 18 way"], ["BRU53726", "Cover LUG100 600mm 24 way"], ["BRU53727", "Cover LUG100 600mm 30 way"], ["BRU53728", "Cover LUG100 600mm 36 way"], ["BRU53729", "Cover LUG100 750mm 42 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
+    "Cover 250EZ": [["BRU53730", "Cover EZ250 600mm 12 way"], ["BRU53731", "Cover EZ250 600mm 18 way"], ["BRU53732", "Cover EZ250 750mm 24 way"], ["BRU53734", "Cover EZ250 750mm 30 way"], ["BRU53735", "Cover EZ250 900mm 36 way"], ["BRU53736", "Cover EZ250 900mm 42 way"], ["BRU53737", "Cover EZ250 900mm 48 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
+    "Cover 250LUG": [["BRU53738", "Cover LUG250 450mm 12 way"], ["BRU53739", "Cover LUG250 600mm 18 way"], ["BRU53740", "Cover LUG250 600mm 24 way"], ["BRU53741", "Cover LUG250 600mm 30 way"], ["BRU53742", "Cover LUG250 750mm 36 way"], ["BRU53745", "Cover LUG250 750mm 42 way"], ["BRU53746", "Cover LUG250 900mm 48 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" }))
+  } }
+};
 
 function getDefaultPermissions(role) {
   return String(role || "").trim() === "Super Admin" ? ALL_PERMISSIONS.slice() : DEFAULT_USER_PERMISSIONS.slice();
@@ -49,6 +101,21 @@ function ensureDailyReportColorColumn(sheet) {
   const newColumn = lastColumn + 1;
   sheet.getRange(1, newColumn).setValue(DAILY_REPORT_COLOR_HEADER);
   return newColumn;
+}
+
+function ensureDailyReportCatalogColumns(sheet) {
+  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0].map(String);
+  const names = [DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER];
+  names.forEach(name => {
+    if (headers.indexOf(name) < 0) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(name);
+      headers.push(name);
+    }
+  });
+  return names.reduce((result, name) => {
+    result[name] = headers.indexOf(name) + 1;
+    return result;
+  }, {});
 }
 
 function hasDailyReportSubmission(sheet, submissionId, idColumn) {
@@ -471,13 +538,14 @@ function doPost(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER
         ]);
       }
 
       const submissionId = String(data.submissionId || "").trim();
       const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
       ensureDailyReportColorColumn(prodSheet);
+      ensureDailyReportCatalogColumns(prodSheet);
       if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -519,7 +587,10 @@ function doPost(e) {
             r.otherDefect,    // Column R (Column 18)
             r.totalDefect,    // Column S (Column 19)
             submissionId,     // Column T: idempotency key
-            r.color || "ไม่ระบุ" // Column U: production color
+            r.color || "",           // Column U: production color
+            r.productGroup || "",    // Column V: product group
+            r.partCategory || "",     // Column W: part category
+            r.colorCode || ""          // Column X: color code
           ]);
         });
       }
@@ -841,7 +912,7 @@ function doGet(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER
         ]);
       }
 
@@ -855,6 +926,7 @@ function doGet(e) {
       const submissionId = String(payloadData.submissionId || "").trim();
       const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
       ensureDailyReportColorColumn(prodSheet);
+      ensureDailyReportCatalogColumns(prodSheet);
       if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -884,7 +956,10 @@ function doGet(e) {
           waterStain: Number(e.parameter.waterStain) || 0,
           otherDefect: Number(e.parameter.otherDefect) || 0,
           totalDefect: Number(e.parameter.totalDefect) || 0,
-          color: e.parameter.color || "ไม่ระบุ"
+          color: e.parameter.color || "",
+          productGroup: e.parameter.productGroup || "",
+          partCategory: e.parameter.partCategory || "",
+          colorCode: e.parameter.colorCode || ""
         }];
       }
 
@@ -894,7 +969,7 @@ function doGet(e) {
             now, dateVal, shiftVal, recorderVal, checkerVal,
             burner, wash, ovenEtc, dtNote,
             r.model, r.timeSlot, r.prodQty,
-             r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId, r.color || "ไม่ระบุ"
+             r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId, r.color || "", r.productGroup || "", r.partCategory || "", r.colorCode || ""
           ]);
         });
       }
@@ -1017,7 +1092,10 @@ function doGet(e) {
         otherDefect: Number(r[17]) || 0,
         totalDefect: Number(r[18]) || 0,
         submissionId: String(r[19] || ""),
-        color: String(r[20] || "")
+        color: String(r[20] || ""),
+        productGroup: String(r[21] || ""),
+        partCategory: String(r[22] || ""),
+        colorCode: String(r[23] || "")
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
@@ -1095,41 +1173,26 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", data: filteredData })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle getPartModels action (PartModel sheet tab)
+    // Handle getPartModels action. Keep the legacy PartModel sheet untouched;
+    // the related catalog is stored in a dedicated PartModelCatalog sheet.
     if (action === "getPartModels") {
-      let pmSheet = ss.getSheetByName("PartModel");
-      if (!pmSheet) {
-        pmSheet = ss.insertSheet("PartModel");
-        pmSheet.appendRow(["PartGroup", "ModelName"]);
-        const defaultGroups = {
-          "Gland Plate": ["[75170148] Gland Plate LC600", "[BRU53717] Gland Plate NLC600"],
-          "Box & U-Box": ["Box NMS 4/6 W. 240 mm.", "BOX 300x400x200", "BOX 400x500x200", "U-BOX STANDARD", "[BRU53714] U Box 450 mm.", "[75170145] U Box LC600 mm.", "[BRU53715] U Box NLC600 mm."],
-          "Door (บานประตู)": ["Door NLC 450 mm.", "DOOR PANEL NLC-01", "DOOR PANEL NMS-01", "Flat Door LC 600", "[BRU53715] Door NLC 600 mm."],
-          "Cover NMS": ["Cover NMS 6 w. 245 mm.", "[BRU30890] Cover NMS 4 w. 245 mm.", "[BRU30892] Cover NMS 8 w. 325 mm."],
-          "Cover NLC (EZ / LUG)": ["Cover NLC EZ100 600 mm.", "[BRU53718] Cover NLC EZ100 450 mm. 12 w.", "[BRU53738] Cover NLC LUG250 450 mm. 12 w."]
-        };
-        for (const grp in defaultGroups) {
-          defaultGroups[grp].forEach(m => pmSheet.appendRow([grp, m]));
-        }
+      let catalogSheet = ss.getSheetByName("PartModelCatalog");
+      if (!catalogSheet) {
+        catalogSheet = ss.insertSheet("PartModelCatalog");
+        catalogSheet.appendRow(["ProductGroup", "PartCategory", "ModelCode", "ModelName", "ColorName", "ColorCode"]);
+        Object.keys(PART_MODEL_CATALOG).forEach(groupName => {
+          const group = PART_MODEL_CATALOG[groupName];
+          const firstColor = (group.colors || [])[0] || {};
+          Object.keys(group.categories || {}).forEach(category => {
+            (group.categories[category] || []).forEach(model => {
+              catalogSheet.appendRow([groupName, category, model.value, model.label, firstColor.value || "", firstColor.code || ""]);
+            });
+          });
+        });
+        catalogSheet.setFrozenRows(1);
         SpreadsheetApp.flush();
       }
-
-      const values = pmSheet.getDataRange().getValues();
-      const groupsMap = {};
-      if (values && values.length > 1) {
-        for (let i = 1; i < values.length; i++) {
-          const group = String(values[i][0] || "").trim();
-          const model = String(values[i][1] || "").trim();
-          if (group && model) {
-            if (!groupsMap[group]) groupsMap[group] = [];
-            if (!groupsMap[group].includes(model)) {
-              groupsMap[group].push(model);
-            }
-          }
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", groups: groupsMap })).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", groups: PART_MODEL_CATALOG })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getRecorders action (Cloud Sync)
