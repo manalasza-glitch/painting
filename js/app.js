@@ -1147,6 +1147,30 @@ function getModelWithGroupLabel(rawModel) {
     return raw;
 }
 
+function renderOutputDailyLegend(datasets = []) {
+    const container = document.getElementById('outputDailyLegend');
+    if (!container) return;
+
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[char]));
+
+    if (!datasets.length) {
+        container.innerHTML = '<div class="chart-legend-dropdown-item">ยังไม่มีข้อมูลกราฟ</div>';
+        return;
+    }
+
+    container.innerHTML = datasets.map(dataset => {
+        const color = dataset.borderColor || dataset.backgroundColor || '#94a3b8';
+        const axis = dataset.yAxisID === 'y1' ? '% ของเสีย' : dataset.type === 'bar' ? 'ยอดผลิต (ชิ้น)' : 'ของเสีย (ชิ้น)';
+        return `<div class="chart-legend-dropdown-item">
+            <span class="chart-legend-dropdown-swatch" style="background:${escapeHtml(color)}"></span>
+            <span>${escapeHtml(dataset.label || '-')}</span>
+            <span class="chart-legend-dropdown-axis">${escapeHtml(axis)}</span>
+        </div>`;
+    }).join('');
+}
+
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
@@ -1362,6 +1386,8 @@ async function renderDailyReportCharts() {
         }
     });
 
+    renderOutputDailyLegend(stackedDatasets);
+
     const ctxDaily = document.getElementById("outputDailyChart");
     if (ctxDaily && typeof Chart !== 'undefined') {
         if (outputDailyChartInstance) {
@@ -1379,6 +1405,7 @@ async function renderDailyReportCharts() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
+                        display: false,
                         labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 11 } }
                     },
                     zoom: {
@@ -1698,7 +1725,10 @@ function openChartFullscreen(chartId, title) {
         maintainAspectRatio: false,
         indexAxis: sourceOptions.indexAxis || 'x',
         plugins: {
-            legend: sourceOptions.plugins && sourceOptions.plugins.legend !== undefined ? sourceOptions.plugins.legend : {
+            legend: sourceOptions.plugins && sourceOptions.plugins.legend && sourceOptions.plugins.legend.display === false ? {
+                display: true,
+                labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
+            } : sourceOptions.plugins && sourceOptions.plugins.legend !== undefined ? sourceOptions.plugins.legend : {
                 labels: { color: '#e2e8f0', font: { family: 'Sarabun', size: 12 } }
             },
             zoom: {

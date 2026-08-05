@@ -619,7 +619,7 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.25.0">
+    <link rel="stylesheet" href="css/style.css?v=96.26.0">
     <link rel="stylesheet" href="css/auth.css?v=83.2.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
@@ -990,6 +990,10 @@
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span style="background: rgba(0, 180, 216, 0.2); color: #38bdf8; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700;">Stacked Breakdown</span>
+                                        <details class="chart-legend-dropdown" id="outputDailyLegendDropdown">
+                                            <summary>ดูรายละเอียดกราฟ</summary>
+                                            <div id="outputDailyLegend" class="chart-legend-dropdown-content" aria-label="รายละเอียดกราฟ"></div>
+                                        </details>
                                         <button class="btn-chart-expand" onclick="openChartFullscreen('outputDailyChart', 'ยอดผลิตรายวันแบ่งตามรุ่นงาน (Stacked Model) VS ของเสีย')" title="ขยายเต็มหน้าจอ">
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                                         </button>
@@ -1970,7 +1974,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.23.0"></script>
+    <script src="js/app.js?v=96.24.0"></script>
     <script src="js/daily-report.js?v=93.8.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
