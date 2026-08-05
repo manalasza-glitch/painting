@@ -177,9 +177,9 @@ async function initializePaintingApp() {
                 if (hasAppPermission('daily_report.read') && typeof refreshDailyReportHistory === 'function') {
                     refreshDailyReportHistory();
                 }
-                if (hasAppPermission('qc.read') && typeof refreshQCChecklistHistory === 'function' && document.getElementById('qc-history-tab')?.classList.contains('active')) {
-                    refreshQCChecklistHistory();
-                }
+                // QC history is refreshed when its menu opens or when the
+                // user presses its refresh button. Do not poll all three
+                // checklist sheets every 15 seconds while the page is open.
             }, 15000);
         }
     })();
