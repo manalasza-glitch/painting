@@ -2883,7 +2883,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
   /* Final mobile-nav override: keep the complete menu swipeable on phones. */
   .mobile-bottom-nav {
-    overflow: hidden !important;
+    /* The checklist options open above this bar. Hiding overflow clips the
+       popup and makes its rows impossible to tap on a phone. */
+    overflow: visible !important;
   }
 
   .mobile-nav-items {
@@ -2921,6 +2923,11 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     touch-action: manipulation !important;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  .mobile-checklist-menu {
+    z-index: 1110 !important;
+    pointer-events: auto !important;
   }
 
   #parameter-checklist-tab.water-mode table thead {
