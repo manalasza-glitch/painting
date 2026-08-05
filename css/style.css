@@ -2795,17 +2795,17 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     width: 100% !important;
   }
 
-  /* Water checklist: convert the wide data table into stacked cards. This
-     keeps every input/select directly below its checklist item and removes
-     horizontal scrolling on Android and iOS. */
-  #parameter-checklist-tab.water-mode .table-responsive {
+  /* Parameter and water checklists: convert the wide data table into stacked
+     cards. This keeps every input/select directly below its checklist item
+     and removes horizontal scrolling on Android and iOS. */
+  #parameter-checklist-tab .table-responsive {
     overflow-x: hidden !important;
     width: 100% !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody,
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody tr,
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td {
+  #parameter-checklist-tab #parameterChecklistItemsBody,
+  #parameter-checklist-tab #parameterChecklistItemsBody tr,
+  #parameter-checklist-tab #parameterChecklistItemsBody td {
     display: block !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -2813,7 +2813,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     box-sizing: border-box !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody tr {
+  #parameter-checklist-tab #parameterChecklistItemsBody tr {
     margin: 0 0 0.75rem !important;
     padding: 0.75rem !important;
     border: 1px solid rgba(56, 189, 248, 0.25) !important;
@@ -2821,7 +2821,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: rgba(15, 23, 42, 0.72) !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td {
+  #parameter-checklist-tab #parameterChecklistItemsBody td {
     display: grid !important;
     grid-template-columns: 6.2rem minmax(0, 1fr) !important;
     gap: 0.5rem !important;
@@ -2833,7 +2833,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     text-align: left !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:first-child {
+  #parameter-checklist-tab #parameterChecklistItemsBody td:first-child {
     display: block !important;
     padding: 0.25rem 0 0.55rem !important;
     color: #38bdf8 !important;
@@ -2842,39 +2842,39 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:first-child::before {
+  #parameter-checklist-tab #parameterChecklistItemsBody td:first-child::before {
     content: "ข้อ " !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(2)::before { content: "กระบวนการ"; }
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(3)::before { content: "รายการตรวจ"; }
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(4)::before { content: "มาตรฐาน"; }
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(5)::before { content: "ค่าที่ตรวจได้"; }
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(6)::before { content: "ผลตรวจ"; }
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(7)::before { content: "หมายเหตุ"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(2)::before { content: "กระบวนการ"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(3)::before { content: "รายการตรวจ"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(4)::before { content: "มาตรฐาน"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(5)::before { content: "ค่าที่ตรวจได้"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(6)::before { content: "ผลตรวจ"; }
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(7)::before { content: "หมายเหตุ"; }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(5),
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(6),
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(7) {
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(5),
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(6),
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(7) {
     grid-template-columns: 1fr !important;
     gap: 0.3rem !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody input,
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody select {
+  #parameter-checklist-tab #parameterChecklistItemsBody input,
+  #parameter-checklist-tab #parameterChecklistItemsBody select {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(5)::before,
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(6)::before,
-  #parameter-checklist-tab.water-mode #parameterChecklistItemsBody td:nth-child(7)::before {
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(5)::before,
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(6)::before,
+  #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(7)::before {
     color: #cbd5e1 !important;
     font-weight: 700 !important;
   }
 
-  #parameter-checklist-tab.water-mode table {
+  #parameter-checklist-tab table {
     display: block !important;
     width: 100% !important;
     min-width: 0 !important;
@@ -2930,11 +2930,11 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     pointer-events: auto !important;
   }
 
-  #parameter-checklist-tab.water-mode table thead {
+  #parameter-checklist-tab table thead {
     display: none !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody tr {
+  #parameter-checklist-tab #parameterChecklistHistoryBody tr {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.35rem 0.6rem !important;
@@ -2942,18 +2942,18 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-bottom: 1px solid rgba(148, 163, 184, 0.15) !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td {
+  #parameter-checklist-tab #parameterChecklistHistoryBody td {
     display: block !important;
     padding: 0.2rem 0 !important;
     min-width: 0 !important;
     white-space: normal !important;
   }
 
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(1)::before { content: "วันที่: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(2)::before { content: "เวลาที่ตรวจ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(3)::before { content: "ผู้ตรวจ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(4)::before { content: "หัวหน้ากะ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(5)::before { content: "จำนวน: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(6)::before { content: "ปกติ: "; }
-  #parameter-checklist-tab.water-mode #parameterChecklistHistoryBody td:nth-child(7)::before { content: "ผิดปกติ: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(1)::before { content: "วันที่: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(2)::before { content: "เวลาที่ตรวจ: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(3)::before { content: "ผู้ตรวจ: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(4)::before { content: "หัวหน้ากะ: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(5)::before { content: "จำนวน: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(6)::before { content: "ปกติ: "; }
+  #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(7)::before { content: "ผิดปกติ: "; }
 }
