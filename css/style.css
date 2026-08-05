@@ -1867,6 +1867,36 @@ button, input, textarea, select {
   accent-color: #38bdf8;
 }
 
+/* Keep the permission dialog actions visible when the permission list grows. */
+#permissionModal .modal-box {
+  max-height: 85vh !important;
+  overflow: hidden !important;
+}
+
+#permissionModal #permissionOptions {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+#permissionModal .permission-modal-actions {
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(56, 189, 248, 0.16);
+  background: rgba(7, 13, 30, 0.38);
+  padding-top: 0.9rem !important;
+}
+
+@media (max-width: 500px) {
+  #permissionModal .modal-box {
+    height: 90vh !important;
+    max-height: 90vh !important;
+    width: 96% !important;
+    bottom: 0;
+  }
+}
+
 @media (max-width: 500px) {
     .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6 {
         grid-template-columns: 1fr !important;
