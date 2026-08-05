@@ -566,12 +566,12 @@ async function reconcileDailyReportDraft() {
     }
 }
 
-function renderDailyReportList() {
-    const tbody = document.getElementById('dailyReportListBody');
+function renderDailyReportList(targetBodyId = 'dailyReportListBody') {
+    const tbody = document.getElementById(targetBodyId);
     if (!tbody) return;
 
     // 1. If draft session items exist before submission, display them with delete action
-    if (Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
+    if (targetBodyId === 'dailyReportListBody' && Array.isArray(dailyReportRecords) && dailyReportRecords.length > 0) {
         const draftDate = document.getElementById('reportDate')?.value || '';
         const draftDateLabel = draftDate ? `${formatDailyReportDate(draftDate)} (ร่าง)` : 'วันนี้ (ร่าง)';
         tbody.innerHTML = dailyReportRecords.map((r, i) => `
@@ -848,4 +848,8 @@ async function submitDailyReport() {
 async function generate1MonthMockData() {
     showToast("ระบบดึงข้อมูลจาก Google Sheets เท่านั้น", "info");
     return;
+}
+
+function renderQCDailyReportHistory() {
+    renderDailyReportList('qcDailyReportListBody');
 }

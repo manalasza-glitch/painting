@@ -127,13 +127,16 @@ function renderEquipmentChecklistHistory() {
     const body = document.getElementById("qcEquipmentChecklistHistoryBody") || document.getElementById("equipmentChecklistHistoryBody");
     if (!body) return;
     const groups = groupEquipmentChecklistRows(equipmentChecklistHistory).slice(0, 10);
+    const includeDetails = body.id === "qcEquipmentChecklistHistoryBody";
+    const columnCount = includeDetails ? 8 : 7;
     if (!groups.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">ยังไม่มีประวัติเช็กลิสอุปกรณ์</td></tr>`;
+        body.innerHTML = `<tr><td colspan="${columnCount}" style="text-align:center; color:#94a3b8; padding:1.5rem;">ยังไม่มีประวัติเช็กลิสอุปกรณ์</td></tr>`;
         return;
     }
-    body.innerHTML = groups.map(group => {
+    body.innerHTML = groups.map((group, index) => {
         const ng = group.rows.filter(row => String(row.status).toUpperCase() === "NG").length;
         const ok = group.rows.filter(row => String(row.status).toUpperCase() === "OK").length;
+        const detailId = `qc-equipment-detail-${index}`;
         return `<tr>
             <td class="equipment-history-date">${equipmentChecklistEscape(formatDailyReportDate(group.date, group.timestamp))}</td>
             <td class="equipment-history-time">${equipmentChecklistEscape(formatEquipmentChecklistTime(group.timestamp))}</td>
@@ -142,7 +145,8 @@ function renderEquipmentChecklistHistory() {
             <td style="text-align:center;">${group.rows.length}</td>
             <td style="color:#34d399; text-align:center;">${ok}</td>
             <td style="color:${ng ? "#fb7185" : "#94a3b8"}; text-align:center; font-weight:800;">${ng}</td>
-        </tr>`;
+            ${includeDetails ? `<td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCChecklistDetail('${detailId}', this)">ดูรายละเอียด</button></td>` : ""}
+        </tr>${includeDetails ? `<tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="8"><div class="qc-history-detail-wrap"><table class="qc-history-detail-table"><thead><tr><th>ข้อ</th><th>รายการตรวจ</th><th>มาตรฐาน</th><th>ค่าที่บันทึก</th><th>ผลตรวจ</th><th>หมายเหตุ</th></tr></thead><tbody>${typeof renderQCChecklistDetailRows === "function" ? renderQCChecklistDetailRows(group.rows) : ""}</tbody></table></div></td></tr>` : ""}`;
     }).join("");
 }
 

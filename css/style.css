@@ -728,6 +728,65 @@ button, input, textarea, select {
   white-space: nowrap;
 }
 
+.qc-history-detail-button {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 9px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.qc-history-detail-button:hover,
+.qc-history-detail-button:focus-visible {
+  background: rgba(56, 189, 248, 0.24);
+  outline: none;
+}
+
+.qc-history-detail-row > td {
+  padding: 0.75rem !important;
+  background: rgba(7, 13, 30, 0.72);
+}
+
+.qc-history-detail-wrap {
+  overflow-x: auto;
+}
+
+.qc-history-detail-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.qc-history-detail-table th,
+.qc-history-detail-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.78rem;
+}
+
+.qc-history-detail-table th {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  white-space: nowrap;
+}
+
+.parameter-history-table th:nth-child(8),
+.parameter-history-table td:nth-child(8),
+.equipment-history-table th:nth-child(8),
+.equipment-history-table td:nth-child(8) {
+  width: 14%;
+}
+
 .btn-add-staff {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;

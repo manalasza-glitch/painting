@@ -201,17 +201,45 @@ function groupParameterChecklistRows(rows) {
     return Array.from(groups.values()).sort((a, b) => String(b.timestamp || b.date).localeCompare(String(a.timestamp || a.date)));
 }
 
+function toggleQCChecklistDetail(detailId, button) {
+    const row = document.getElementById(detailId);
+    if (!row) return;
+    const isOpen = row.style.display === "table-row";
+    row.style.display = isOpen ? "none" : "table-row";
+    if (button) button.textContent = isOpen ? "ดูรายละเอียด" : "ซ่อนรายละเอียด";
+}
+
+function renderQCChecklistDetailRows(rows) {
+    return rows.map(row => {
+        const item = [row.process, row.checkItem].filter(Boolean).join(" — ") || "-";
+        const value = row.actualValue || row.status || "-";
+        const status = String(row.status || "-").toUpperCase();
+        const statusColor = status === "NG" ? "#fb7185" : status === "OK" ? "#34d399" : "#fbbf24";
+        return `<tr>
+            <td>${parameterChecklistEscape(row.itemNo || "-")}</td>
+            <td>${parameterChecklistEscape(item)}</td>
+            <td>${parameterChecklistEscape(row.standard || "-")}</td>
+            <td>${parameterChecklistEscape(value)}</td>
+            <td style="color:${statusColor}; font-weight:800;">${parameterChecklistEscape(status)}</td>
+            <td>${parameterChecklistEscape(row.note || "-")}</td>
+        </tr>`;
+    }).join("");
+}
+
 function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody", rows = parameterChecklistHistory, emptyText = "ยังไม่มีประวัติการตรวจพารามิเตอร์") {
     const body = document.getElementById(bodyId);
     if (!body) return;
     const groups = groupParameterChecklistRows(rows).slice(0, 10);
+    const includeDetails = bodyId === "qcWaterChecklistHistoryBody";
+    const columnCount = includeDetails ? 8 : 7;
     if (!groups.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">${parameterChecklistEscape(emptyText)}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="${columnCount}" style="text-align:center; color:#94a3b8; padding:1.5rem;">${parameterChecklistEscape(emptyText)}</td></tr>`;
         return;
     }
-    body.innerHTML = groups.map(group => {
+    body.innerHTML = groups.map((group, index) => {
         const ng = group.rows.filter(row => String(row.status).toUpperCase() === "NG").length;
         const ok = group.rows.filter(row => String(row.status).toUpperCase() === "OK").length;
+        const detailId = `qc-water-detail-${index}`;
         return `<tr>
             <td class="parameter-history-date">${parameterChecklistEscape(formatDailyReportDate(group.date, group.timestamp))}</td>
             <td class="parameter-history-time">${parameterChecklistEscape(formatParameterChecklistTime(group.time, group.timestamp))}</td>
@@ -220,7 +248,8 @@ function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody
             <td style="text-align:center;">${group.rows.length}</td>
             <td style="color:#34d399; text-align:center;">${ok}</td>
             <td style="color:${ng ? "#fb7185" : "#94a3b8"}; text-align:center; font-weight:800;">${ng}</td>
-        </tr>`;
+            ${includeDetails ? `<td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCChecklistDetail('${detailId}', this)">ดูรายละเอียด</button></td>` : ""}
+        </tr>${includeDetails ? `<tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="8"><div class="qc-history-detail-wrap"><table class="qc-history-detail-table"><thead><tr><th>ข้อ</th><th>รายการตรวจ</th><th>มาตรฐาน</th><th>ค่าที่บันทึก</th><th>ผลตรวจ</th><th>หมายเหตุ</th></tr></thead><tbody>${renderQCChecklistDetailRows(group.rows)}</tbody></table></div></td></tr>` : ""}`;
     }).join("");
 }
 
@@ -232,7 +261,8 @@ function renderQCChecklistHistories() {
 function renderQCChecklistHistoryMessage(bodyId, message, isError = false) {
     const body = document.getElementById(bodyId);
     if (!body) return;
-    body.innerHTML = `<tr><td colspan="7" style="text-align:center; color:${isError ? "#fb7185" : "#94a3b8"}; padding:1.5rem;">${parameterChecklistEscape(message)}</td></tr>`;
+    const columnCount = bodyId === "qcWaterChecklistHistoryBody" || bodyId === "qcEquipmentChecklistHistoryBody" ? 8 : 7;
+    body.innerHTML = `<tr><td colspan="${columnCount}" style="text-align:center; color:${isError ? "#fb7185" : "#94a3b8"}; padding:1.5rem;">${parameterChecklistEscape(message)}</td></tr>`;
 }
 
 function setQCChecklistRefreshButtonLoading(isLoading) {
@@ -275,6 +305,13 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
         renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "กำลังโหลดประวัติเช็กลิสอุปกรณ์...");
+        const dailyReportPromise = typeof refreshDailyReportHistory === "function"
+            ? refreshDailyReportHistory()
+            : Promise.resolve();
+        dailyReportPromise.then(() => {
+            if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
+        }).catch(() => {});
+        if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
         try {
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
                 // Load the two populated history sheets first. The parameter
