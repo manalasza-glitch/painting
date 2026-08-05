@@ -1305,6 +1305,10 @@ async function renderDailyReportCharts() {
 
     const datesList = Object.keys(dateGroupMap).sort();
     const defectsList = datesList.map(d => dateDefectsMap[d]);
+    const defectRateList = datesList.map(d => {
+        const production = dateTotalProdMap[d] || 0;
+        return production > 0 ? Number(((dateDefectsMap[d] || 0) / production * 100).toFixed(2)) : 0;
+    });
 
     // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Specific Model Names
     const stackedDatasets = [
@@ -1316,6 +1320,20 @@ async function renderDailyReportCharts() {
             backgroundColor: 'rgba(239, 68, 68, 0.25)',
             borderWidth: 3,
             pointRadius: 4,
+            fill: false,
+            tension: 0.3,
+            order: 0
+        },
+        {
+            type: 'line',
+            label: '% ของเสีย (NG Rate)',
+            data: defectRateList,
+            yAxisID: 'y1',
+            borderColor: '#facc15',
+            backgroundColor: 'rgba(250, 204, 21, 0.18)',
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#facc15',
             fill: false,
             tension: 0.3,
             order: 0
@@ -1382,6 +1400,16 @@ async function renderDailyReportCharts() {
                         stacked: true,
                         ticks: { color: '#94a3b8' },
                         grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: '#facc15',
+                            callback: value => `${value}%`
+                        },
+                        grid: { drawOnChartArea: false }
                     }
                 }
             }
