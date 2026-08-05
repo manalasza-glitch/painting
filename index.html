@@ -619,8 +619,8 @@
     </style>
 
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
-    <link rel="stylesheet" href="css/style.css?v=96.21.0">
-    <link rel="stylesheet" href="css/auth.css?v=83.1.0">
+    <link rel="stylesheet" href="css/style.css?v=96.22.0">
+    <link rel="stylesheet" href="css/auth.css?v=83.2.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1599,10 +1599,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>
                 <span>ฟอร์มผลิต</span>
             </div>
-            <button type="button" class="mobile-nav-item mobile-checklist-trigger" data-mobile-checklist="true" data-permission="checklist.read" onclick="toggleMobileChecklistMenu(event, this)" aria-expanded="false" aria-controls="mobile-checklist-menu">
+            <div class="mobile-nav-item mobile-checklist-trigger" role="button" tabindex="0" data-mobile-checklist="true" data-permission="checklist.read" onclick="toggleMobileChecklistMenu(event, this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') toggleMobileChecklistMenu(event, this)" aria-expanded="false" aria-controls="mobile-checklist-menu">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m16 16 1.5 1.5L21 14"/></svg>
                 <span>เช็กลิสก่อนเริ่มงาน</span>
-            </button>
+            </div>
             <div class="mobile-nav-item" data-permission="events.read" onclick="switchTab('event-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 <span>Event 5M1E</span>
@@ -1929,8 +1929,8 @@
 
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
-    <script src="js/auth.js?v=86.5.0"></script>
-    <script src="js/app.js?v=96.15.0"></script>
+    <script src="js/auth.js?v=86.6.0"></script>
+    <script src="js/app.js?v=96.16.0"></script>
     <script src="js/daily-report.js?v=93.4.0"></script>
     <script src="js/parameter-checklist.js?v=1.11.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>

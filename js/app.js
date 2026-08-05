@@ -236,10 +236,9 @@ function toggleChecklistMenu(event, element) {
 function toggleMobileChecklistMenu(event, element) {
     if (event) {
         event.stopPropagation();
-        // The trigger is a real button on mobile. Do not cancel its default
-        // activation before the toggle runs; this is especially important on
-        // iOS where cancelling the click can make a partially visible item
-        // appear unresponsive.
+        // Keep the mobile trigger's click activation intact. Cancelling the
+        // click before the toggle runs can make a partially visible item
+        // appear unresponsive on iOS.
         if (event.cancelable && event.type !== 'click') event.preventDefault();
     }
     const menu = document.getElementById('mobile-checklist-menu');

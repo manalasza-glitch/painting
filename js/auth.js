@@ -108,12 +108,11 @@ const PaintingAuth = {
                 this.currentUser = parsedUser;
                 this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
 
-                try {
-                    await this.refreshCurrentUserPermissions();
-                } catch (e) {
-                    console.warn("Unable to refresh permissions during session restore:", e);
-                }
-
+                // Do not leave the full-screen login shell above the app while
+                // the live permission refresh is waiting on Google Sheets. The
+                // stored session is already enough to unlock the UI; refresh
+                // permissions in the background instead of blocking taps on
+                // the mobile navigation bar.
                 try {
                     this.updateUserHeaderUI();
                     this.hideAuthModal();
@@ -122,11 +121,15 @@ const PaintingAuth = {
                         window.initializePaintingApp();
                     }
                 } catch (e) {
-                    // Keep the restored session even if a data widget fails.
-                    console.error("Painting app initialization after refresh failed:", e);
-                    this.ready = true;
-                    this.hideAuthModal();
+                    console.error("Painting app initialization after session restore failed:", e);
                 }
+
+                // Permission synchronization must never block the restored
+                // session or the page controls. A later refresh updates the
+                // menu visibility through updateUserHeaderUI().
+                Promise.resolve(this.refreshCurrentUserPermissions()).catch(e => {
+                    console.warn("Unable to refresh permissions during session restore:", e);
+                });
                 return;
             }
         }

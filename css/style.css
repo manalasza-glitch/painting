@@ -2919,12 +2919,6 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     z-index: 3 !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: inherit !important;
-    font: inherit !important;
     user-select: none;
     -webkit-user-select: none;
   }
