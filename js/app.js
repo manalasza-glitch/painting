@@ -1310,6 +1310,10 @@ async function renderDailyReportCharts() {
         const production = dateTotalProdMap[d] || 0;
         return production > 0 ? Number(((dateDefectsMap[d] || 0) / production * 100).toFixed(2)) : 0;
     });
+    const maxDefectCount = Math.max(...defectsList, 0);
+    const defectAxisMax = Math.max(5, Math.ceil((maxDefectCount * 1.25) / 5) * 5);
+    const maxDefectRate = Math.max(...defectRateList, 0);
+    const defectRateAxisMax = Math.min(100, Math.max(5, Math.ceil((maxDefectRate * 1.25) / 5) * 5));
 
     // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Specific Model Names
     const stackedDatasets = [
@@ -1317,6 +1321,7 @@ async function renderDailyReportCharts() {
             type: 'line',
             label: 'ของเสียรวม (ชิ้น)',
             data: defectsList,
+            yAxisID: 'yDefect',
             borderColor: '#ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.25)',
             borderWidth: 3,
@@ -1405,11 +1410,18 @@ async function renderDailyReportCharts() {
                     y1: {
                         position: 'right',
                         beginAtZero: true,
-                        max: 100,
+                        max: defectRateAxisMax,
                         ticks: {
                             color: '#facc15',
                             callback: value => `${value}%`
                         },
+                        grid: { drawOnChartArea: false }
+                    },
+                    yDefect: {
+                        display: false,
+                        position: 'left',
+                        beginAtZero: true,
+                        max: defectAxisMax,
                         grid: { drawOnChartArea: false }
                     }
                 }
