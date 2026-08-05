@@ -1,5 +1,6 @@
 const SHEET_NAME = "Inspection";
 const DAILY_REPORT_ID_HEADER = "SubmissionId";
+const DAILY_REPORT_COLOR_HEADER = "Color";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
@@ -37,6 +38,16 @@ function ensureDailyReportIdColumn(sheet) {
   if (existingIndex >= 0) return existingIndex + 1;
   const newColumn = lastColumn + 1;
   sheet.getRange(1, newColumn).setValue(DAILY_REPORT_ID_HEADER);
+  return newColumn;
+}
+
+function ensureDailyReportColorColumn(sheet) {
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  const existingIndex = headers.indexOf(DAILY_REPORT_COLOR_HEADER);
+  if (existingIndex >= 0) return existingIndex + 1;
+  const newColumn = lastColumn + 1;
+  sheet.getRange(1, newColumn).setValue(DAILY_REPORT_COLOR_HEADER);
   return newColumn;
 }
 
@@ -460,12 +471,13 @@ function doPost(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER
         ]);
       }
 
       const submissionId = String(data.submissionId || "").trim();
       const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
+      ensureDailyReportColorColumn(prodSheet);
       if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -506,7 +518,8 @@ function doPost(e) {
             r.waterStain,     // Column Q (Column 17)
             r.otherDefect,    // Column R (Column 18)
             r.totalDefect,    // Column S (Column 19)
-            submissionId      // Column T: idempotency key
+            submissionId,     // Column T: idempotency key
+            r.color || "ไม่ระบุ" // Column U: production color
           ]);
         });
       }
@@ -828,7 +841,7 @@ function doGet(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER
         ]);
       }
 
@@ -841,6 +854,7 @@ function doGet(e) {
 
       const submissionId = String(payloadData.submissionId || "").trim();
       const submissionIdColumn = ensureDailyReportIdColumn(prodSheet);
+      ensureDailyReportColorColumn(prodSheet);
       if (hasDailyReportSubmission(prodSheet, submissionId, submissionIdColumn)) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitDailyReport", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -869,7 +883,8 @@ function doGet(e) {
           thickPaint: Number(e.parameter.thickPaint) || 0,
           waterStain: Number(e.parameter.waterStain) || 0,
           otherDefect: Number(e.parameter.otherDefect) || 0,
-          totalDefect: Number(e.parameter.totalDefect) || 0
+          totalDefect: Number(e.parameter.totalDefect) || 0,
+          color: e.parameter.color || "ไม่ระบุ"
         }];
       }
 
@@ -879,7 +894,7 @@ function doGet(e) {
             now, dateVal, shiftVal, recorderVal, checkerVal,
             burner, wash, ovenEtc, dtNote,
             r.model, r.timeSlot, r.prodQty,
-            r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId
+             r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId, r.color || "ไม่ระบุ"
           ]);
         });
       }
@@ -1001,7 +1016,8 @@ function doGet(e) {
         waterStain: Number(r[16]) || 0,
         otherDefect: Number(r[17]) || 0,
         totalDefect: Number(r[18]) || 0,
-        submissionId: String(r[19] || "")
+        submissionId: String(r[19] || ""),
+        color: String(r[20] || "")
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();

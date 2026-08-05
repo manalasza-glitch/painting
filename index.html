@@ -1096,8 +1096,8 @@
                         <h3 class="dr-section-title" style="margin:0 0 1rem;">รายการพ่นสีรายวัน</h3>
                         <div class="table-responsive">
                             <table class="data-table" style="width:100%; border-collapse:separate; border-spacing:0;">
-                                <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">สถานะ</th></tr></thead>
-                                <tbody id="qcDailyReportListBody"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูล...</td></tr></tbody>
+                                <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">สถานะ</th></tr></thead>
+                                <tbody id="qcDailyReportListBody"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:1.5rem;">กำลังโหลดข้อมูล...</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -1344,7 +1344,7 @@
                     <div class="dr-card">
                         <h3 class="dr-section-title">ส่วนที่ 2: ยอดผลิตและของเสีย</h3>
                         <div class="dr-form-stack">
-                            <div class="dr-grid-2">
+                            <div class="dr-grid-3">
                                 <div class="form-group">
                                     <label>ประเภทชิ้นงาน (Part Category)</label>
                                     <select id="drPartGroup" class="form-control" onchange="filterModelDropdown()"></select>
@@ -1352,6 +1352,14 @@
                                 <div class="form-group">
                                     <label>รุ่นงาน (Model)</label>
                                     <select id="drModel" class="form-control model-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>สี</label>
+                                    <select id="drColor" class="form-control">
+                                        <option value="ไม่ระบุ" selected>ไม่ระบุ</option>
+                                        <option value="สีขาว">สีขาว</option>
+                                        <option value="สีเทา">สีเทา</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="dr-grid-2">
@@ -1421,13 +1429,14 @@
                                         <th style="padding: 0.95rem 1.1rem; text-align: left; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📅 วันที่</th>
                                         <th style="padding: 0.95rem 1.1rem; text-align: left; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">⚙️ รุ่นงาน</th>
                                         <th style="padding: 0.95rem 1.1rem; text-align: left; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">⏰ เวลา</th>
+                                        <th style="padding: 0.95rem 1.1rem; text-align: center; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎨 สี</th>
                                         <th style="padding: 0.95rem 1.1rem; text-align: center; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📦 ยอดผลิต</th>
                                         <th style="padding: 0.95rem 1.1rem; text-align: center; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ ยอดเสีย</th>
                                         <th style="padding: 0.95rem 1.1rem; text-align: center; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">⚡ จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dailyReportListBody">
-                                    <tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">กำลังโหลดประวัติการบันทึกจากหลังบ้าน...</td></tr>
+                                    <tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2rem;">กำลังโหลดประวัติการบันทึกจากหลังบ้าน...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1633,6 +1642,7 @@
                                 <th>วันที่</th>
                                 <th>รุ่นงาน</th>
                                 <th>เวลา</th>
+                                <th>สี</th>
                                 <th>กะ</th>
                                 <th>ผลิต</th>
                                 <th>เสีย</th>
@@ -1640,7 +1650,7 @@
                             </tr>
                         </thead>
                         <tbody id="dailyReportHistoryBody">
-                            <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td></tr>
+                            <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1931,7 +1941,7 @@
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.17.0"></script>
-    <script src="js/daily-report.js?v=93.4.0"></script>
+    <script src="js/daily-report.js?v=93.5.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
     <script src="js/events.js?v=89.4.0"></script>
