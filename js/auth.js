@@ -95,19 +95,39 @@ const PaintingAuth = {
         this.ready = false;
         const storedUser = localStorage.getItem("PAINTING_CURRENT_USER");
         if (storedUser) {
+            let parsedUser = null;
             try {
-                this.currentUser = JSON.parse(storedUser);
-                this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
-                await this.refreshCurrentUserPermissions();
-                this.updateUserHeaderUI();
-                this.hideAuthModal();
-                this.ready = true;
-                if (typeof window.initializePaintingApp === 'function') {
-                    window.initializePaintingApp();
-                }
-                return;
+                parsedUser = JSON.parse(storedUser);
             } catch (e) {
                 localStorage.removeItem("PAINTING_CURRENT_USER");
+            }
+
+            if (parsedUser && typeof parsedUser === "object") {
+                // Restore the local session first. A temporary API or page
+                // initialization error must not turn a refresh into a logout.
+                this.currentUser = parsedUser;
+                this.currentUser.permissions = normalizeUserPermissions(this.currentUser.permissions, this.currentUser.role, this.currentUser.employeeId);
+
+                try {
+                    await this.refreshCurrentUserPermissions();
+                } catch (e) {
+                    console.warn("Unable to refresh permissions during session restore:", e);
+                }
+
+                try {
+                    this.updateUserHeaderUI();
+                    this.hideAuthModal();
+                    this.ready = true;
+                    if (typeof window.initializePaintingApp === 'function') {
+                        window.initializePaintingApp();
+                    }
+                } catch (e) {
+                    // Keep the restored session even if a data widget fails.
+                    console.error("Painting app initialization after refresh failed:", e);
+                    this.ready = true;
+                    this.hideAuthModal();
+                }
+                return;
             }
         }
 
