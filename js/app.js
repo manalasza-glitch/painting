@@ -787,7 +787,8 @@ function renderDashboard() {
 
     // 2. Render Daily Statistics Chart
     const chartRecords = hasDateFilter ? filteredRecords : inspectionRecords;
-    renderDailyChart(chartRecords, hasDateFilter ? 'range' : '');
+    const chartMode = hasDateFilter ? 'range' : (inspectionDataScope === 'all' ? 'all' : '');
+    renderDailyChart(chartRecords, chartMode);
     renderDailyByDayChart(chartRecords);
 
     // 3. Render Defect Donut Chart
@@ -814,7 +815,7 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
 
     // Keep the original record-level chart: each inspection round remains
     // visible, so the chart continues to match the existing DAILY STATISTICS.
-    const recentRecords = filterDate
+    const recentRecords = (filterDate === 'all' || filterDate === 'range')
         ? [...recordsData].reverse()
         : [...recordsData].reverse().slice(-7);
     const labels = recentRecords.map(r => String(r.date || r.timestamp || '').split('T')[0].substring(0, 10));
