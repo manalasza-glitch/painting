@@ -48,6 +48,39 @@ const PARAMETER_CHECKLIST_ITEMS = PARAMETER_CHECKLIST_SOURCE_ITEMS
     .map((item, index) => ({ ...item, itemNo: index + 1 }));
 let parameterChecklistMode = "full";
 
+// These full parameter checks are visual/condition checks rather than
+// measurements, so the "actual value" field is represented by pass/fail
+// buttons. The numbers refer to the displayed numbers in the parameter menu.
+const PARAMETER_BOOLEAN_ITEM_NUMBERS = new Set([2, 3, 4, 6, 14, 15]);
+
+function isParameterBooleanItem(displayItemNo) {
+    return parameterChecklistMode === "full" && PARAMETER_BOOLEAN_ITEM_NUMBERS.has(displayItemNo);
+}
+
+function setParameterActualChoice(itemNo, value, button) {
+    const actualInput = document.getElementById(`parameterActual_${itemNo}`);
+    const statusInput = document.getElementById(`parameterStatus_${itemNo}`);
+    if (actualInput) actualInput.value = value;
+    if (statusInput) statusInput.value = value === "ผ่าน" ? "OK" : "NG";
+
+    const group = button?.closest(".parameter-choice-group") || document.querySelector(`[data-parameter-choice-group="${itemNo}"]`);
+    group?.querySelectorAll(".parameter-choice-btn").forEach(choice => {
+        choice.classList.toggle("is-selected", choice === button || choice.dataset.value === value);
+    });
+}
+
+function renderParameterActualControl(displayItemNo) {
+    if (!isParameterBooleanItem(displayItemNo)) {
+        return `<input class="form-control parameter-actual-input" id="parameterActual_${displayItemNo}" placeholder="ค่าที่ตรวจได้">`;
+    }
+
+    return `<div class="parameter-choice-group" data-parameter-choice-group="${displayItemNo}" role="group" aria-label="ผลการตรวจข้อ ${displayItemNo}">
+        <input type="hidden" class="parameter-actual-input" id="parameterActual_${displayItemNo}" value="ผ่าน">
+        <button type="button" class="parameter-choice-btn parameter-choice-pass is-selected" data-value="ผ่าน" onclick="setParameterActualChoice(${displayItemNo}, 'ผ่าน', this)">ผ่าน</button>
+        <button type="button" class="parameter-choice-btn parameter-choice-fail" data-value="ไม่ผ่าน" onclick="setParameterActualChoice(${displayItemNo}, 'ไม่ผ่าน', this)">ไม่ผ่าน</button>
+    </div>`;
+}
+
 function getActiveParameterChecklistItems() {
     return parameterChecklistMode === "water" ? WATER_PARAMETER_CHECKLIST_ITEMS : PARAMETER_CHECKLIST_ITEMS;
 }
@@ -129,7 +162,7 @@ function renderParameterChecklistItems() {
             <td>${parameterChecklistEscape(item.process)}</td>
             <td>${parameterChecklistEscape(item.checkItem)}</td>
             <td style="color:#a5f3fc; white-space:nowrap;">${parameterChecklistEscape(item.standard)}</td>
-            <td><input class="form-control parameter-actual-input" id="parameterActual_${displayItemNo}" placeholder="ค่าที่ตรวจได้"></td>
+            <td>${renderParameterActualControl(displayItemNo)}</td>
             <td><select class="form-control parameter-status-input" id="parameterStatus_${displayItemNo}">
                 <option value="OK" selected>ปกติ (OK)</option>
                 <option value="NG">ผิดปกติ (NG)</option>

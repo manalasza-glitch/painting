@@ -2867,6 +2867,24 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     max-width: 100% !important;
   }
 
+  #parameter-checklist-tab #parameterChecklistItemsBody .parameter-choice-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #parameter-checklist-tab #parameterChecklistItemsBody .parameter-choice-btn {
+    width: 100% !important;
+    min-height: 2.7rem !important;
+    padding: 0.55rem 0.65rem !important;
+    border-radius: 10px !important;
+    font: inherit !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+  }
+
   #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(5)::before,
   #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(6)::before,
   #parameter-checklist-tab #parameterChecklistItemsBody td:nth-child(7)::before {
@@ -2956,4 +2974,45 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(5)::before { content: "จำนวน: "; }
   #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(6)::before { content: "ปกติ: "; }
   #parameter-checklist-tab #parameterChecklistHistoryBody td:nth-child(7)::before { content: "ผิดปกติ: "; }
+}
+
+/* Pass/fail controls for visual parameter checks. */
+.parameter-choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.parameter-choice-btn {
+  flex: 1 1 7rem;
+  min-height: 2.7rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.parameter-choice-btn:hover,
+.parameter-choice-btn:focus-visible {
+  border-color: #38bdf8;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.parameter-choice-btn.parameter-choice-pass.is-selected {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+.parameter-choice-btn.parameter-choice-fail.is-selected {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: #f43f5e;
+  color: #fda4af;
 }
