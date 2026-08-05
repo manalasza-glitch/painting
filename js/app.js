@@ -1659,6 +1659,13 @@ window.changeDashboardDate = changeDashboardDate;
 window.showAllDashboardData = showAllDashboardData;
 window.resetDashboardDateFilter = resetDashboardDateFilter;
 window.loadDataFromAPI = loadDataFromAPI;
+// Keep the mobile checklist handlers available to inline touch/click
+// attributes even when the page is served through a cached script scope.
+window.toggleChecklistMenu = toggleChecklistMenu;
+window.toggleMobileChecklistMenu = toggleMobileChecklistMenu;
+window.openParameterChecklistMode = openParameterChecklistMode;
+window.openEquipmentChecklist = openEquipmentChecklist;
+window.switchTab = switchTab;
 
 // ---------------------------------------------------------------------------
 // QC 7 TOOLS
