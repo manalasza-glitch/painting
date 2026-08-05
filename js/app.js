@@ -777,6 +777,8 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
     const rustData = recentRecords.map(r => Number(r.rust) || 0);
     const dentData = recentRecords.map(r => Number(r.dent) || 0);
     const weldData = recentRecords.map(r => Number(r.weld) || 0);
+    const chemicalData = recentRecords.map(r => Number(r.chemical) || 0);
+    const oilData = recentRecords.map(r => Number(r.oil) || 0);
     const totalsData = recentRecords.map(r => (Number(r.rust)||0)+(Number(r.dent)||0)+(Number(r.weld)||0)+(Number(r.chemical)||0)+(Number(r.oil)||0));
 
     if (dailyChartInstance) {
@@ -817,6 +819,20 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
                     label: 'สะเก็ดเชื่อม (Weld)',
                     data: weldData,
                     backgroundColor: '#f59e0b',
+                    borderRadius: 4
+                },
+                {
+                    type: 'bar',
+                    label: 'คราบน้ำยา (Chemical)',
+                    data: chemicalData,
+                    backgroundColor: '#06b6d4',
+                    borderRadius: 4
+                },
+                {
+                    type: 'bar',
+                    label: 'คราบน้ำมัน (Oil)',
+                    data: oilData,
+                    backgroundColor: '#8b5cf6',
                     borderRadius: 4
                 }
             ]

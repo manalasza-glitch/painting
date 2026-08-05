@@ -529,6 +529,7 @@ function addDailyReportRecord({ silent = false } = {}) {
     const thinPaint = Number(document.getElementById('drThinPaint').value) || 0;
     const thickPaint = Number(document.getElementById('drThickPaint').value) || 0;
     const waterStain = Number(document.getElementById('drWaterStain').value) || 0;
+    const dust = Number(document.getElementById('drDust').value) || 0;
     const otherDefect = Number(document.getElementById('drOtherDefect').value) || 0;
 
     if (!productGroup || !partCategory || !model || !color || !timeSlot) {
@@ -536,12 +537,12 @@ function addDailyReportRecord({ silent = false } = {}) {
         return false;
     }
 
-    if (prodQty === 0 && (dent+colorDrop+thinPaint+thickPaint+waterStain+otherDefect) === 0) {
+    if (prodQty === 0 && (dent+colorDrop+thinPaint+thickPaint+waterStain+dust+otherDefect) === 0) {
         showToast("กรุณากรอกยอดผลิตหรือยอดของเสียอย่างน้อย 1 ชิ้น", "error");
         return false;
     }
 
-    const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + otherDefect;
+    const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + dust + otherDefect;
 
     dailyReportRecords.push({
         id: Date.now().toString(),
@@ -557,6 +558,7 @@ function addDailyReportRecord({ silent = false } = {}) {
         thinPaint,
         thickPaint,
         waterStain,
+        dust,
         otherDefect,
         totalDefect
     });
@@ -579,6 +581,7 @@ function addDailyReportRecord({ silent = false } = {}) {
     document.getElementById('drThinPaint').value = "";
     document.getElementById('drThickPaint').value = "";
     document.getElementById('drWaterStain').value = "";
+    document.getElementById('drDust').value = "";
     document.getElementById('drOtherDefect').value = "";
     
     if (!silent) {
@@ -703,7 +706,7 @@ function getDailyReportDefectTotal(record) {
     const explicit = Number(record.totalDefect || record.TotalDefect || record.total_defect);
     if (Number.isFinite(explicit)) return explicit;
 
-    return ["dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "otherDefect"]
+    return ["dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "dust", "otherDefect"]
         .reduce((total, key) => total + (Number(record[key]) || 0), 0);
 }
 
@@ -801,8 +804,9 @@ async function submitDailyReport() {
         const thinPaint = Number(document.getElementById('drThinPaint').value) || 0;
         const thickPaint = Number(document.getElementById('drThickPaint').value) || 0;
         const waterStain = Number(document.getElementById('drWaterStain').value) || 0;
+        const dust = Number(document.getElementById('drDust').value) || 0;
         const otherDefect = Number(document.getElementById('drOtherDefect').value) || 0;
-        const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + otherDefect;
+        const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + dust + otherDefect;
 
         if (model && (prodQty > 0 || totalDefect > 0)) {
             addDailyReportRecord({ silent: true });
@@ -881,6 +885,7 @@ async function submitDailyReport() {
                 thinPaint: r.thinPaint,
                 thickPaint: r.thickPaint,
                 waterStain: r.waterStain,
+                dust: r.dust,
                 otherDefect: r.otherDefect,
                 totalDefect: r.totalDefect
             });
