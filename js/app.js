@@ -503,7 +503,7 @@ async function deleteInspectionRecord(index) {
         return;
     }
 
-    const confirmMsg = `คุณต้องการลบรายการตรวจเช็คของวันที่ "${formatDateForDisplay(record.date, record.timestamp)}" ใช่หรือไม่?`;
+    const confirmMsg = `คุณต้องการลบรายการตรวจเช็คของวันที่ "${formatDateForDisplay(record.date, '')}" ใช่หรือไม่?`;
     if (!confirm(confirmMsg)) return;
 
     // Remove locally from memory and re-render immediately
@@ -634,7 +634,7 @@ function getDashboardDateRange() {
 }
 
 function dashboardRecordInDateRange(record, range = getDashboardDateRange()) {
-    const recordDate = getStandardISODate(record && (record.date || record.timestamp));
+    const recordDate = getStandardISODate(record && (record.date || record.Date));
     if (!recordDate) return false;
     if (range.start && recordDate < range.start) return false;
     if (range.end && recordDate > range.end) return false;
@@ -742,7 +742,7 @@ function renderDashboard() {
         totalChemical += chemical;
         totalOil += oil;
 
-        const recordDateStr = String(r.date || r.timestamp || '').split('T')[0].substring(0, 10);
+        const recordDateStr = getStandardISODate(r.date || r.Date);
         if (recordDateStr === todayStr) {
             todayDefects += rowTotal;
         }
@@ -782,23 +782,38 @@ function renderDashboard() {
     if (kpi4Title) kpi4Title.innerText = hasDateFilter ? 'อัตราของเสียที่เลือก' : 'อัตราของเสียวันนี้';
     if (kpi4Subtext) kpi4Subtext.innerText = hasDateFilter ? 'ช่วงวันที่เลือก' : 'วันนี้';
 
-    // 2. Render Daily Statistics Chart
-    const chartRecords = hasDateFilter ? filteredRecords : inspectionRecords;
+    // 2. Render the three overview charts from the same combined daily source
+    // used by QC 7 TOOL. Keep the existing dashboard date/range behavior.
+    const combinedReady = qc7DataLoaded && Array.isArray(qc7CombinedRecords);
+    const chartSource = combinedReady ? qc7CombinedRecords : inspectionRecords;
+    const chartRecords = hasDateFilter
+        ? chartSource.filter(record => dashboardRecordInDateRange(record, range))
+        : chartSource;
     const chartMode = hasDateFilter ? 'range' : (inspectionDataScope === 'all' ? 'all' : '');
     renderDailyChart(chartRecords, chartMode);
     renderDailyByDayChart(chartRecords);
 
     // 3. Render Defect Donut Chart
-    renderDonutChart(defectsCategory, grandTotalDefects);
+    const chartDefectsCategory = combinedReady
+        ? qc7DefectTotals(chartRecords)
+        : defectsCategory;
+    const chartGrandTotalDefects = chartDefectsCategory.reduce((sum, item) => sum + item.val, 0);
+    renderDonutChart(chartDefectsCategory, chartGrandTotalDefects);
 
     // 4. Render Defect Progress Bars
-    renderSeverityBars(defectsCategory, grandTotalDefects);
+    renderSeverityBars(chartDefectsCategory, chartGrandTotalDefects);
 
     // 5. Update Recent Table to reflect filtered date
     renderRecentTable(hasDateFilter ? filteredRecords : inspectionRecords);
 
     // 6. Render Output Diary Charts (from Google Sheets outputdiary)
     renderDailyReportCharts();
+
+    // The overview can render immediately from the inspection cache, then
+    // refresh once the combined QC 7 source has finished loading.
+    if (!qc7DataLoaded && !qc7DataLoading && typeof loadQC7Data === 'function') {
+        loadQC7Data();
+    }
 }
 
 function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
@@ -815,13 +830,16 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
     const recentRecords = (filterDate === 'all' || filterDate === 'range')
         ? [...recordsData].reverse()
         : [...recordsData].reverse().slice(-7);
-    const labels = recentRecords.map(r => String(r.date || r.timestamp || '').split('T')[0].substring(0, 10));
-    const rustData = recentRecords.map(r => Number(r.rust) || 0);
-    const dentData = recentRecords.map(r => Number(r.dent) || 0);
-    const weldData = recentRecords.map(r => Number(r.weld) || 0);
-    const chemicalData = recentRecords.map(r => Number(r.chemical) || 0);
-    const oilData = recentRecords.map(r => Number(r.oil) || 0);
-    const totalsData = recentRecords.map(r => (Number(r.rust)||0)+(Number(r.dent)||0)+(Number(r.weld)||0)+(Number(r.chemical)||0)+(Number(r.oil)||0));
+    const labels = recentRecords.map(r => getStandardISODate(r.date || r.Date));
+    const totalsData = recentRecords.map(r => qc7RecordDefects(r));
+    const categoryDatasets = (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).map(type => ({
+        type: 'bar',
+        label: type.label,
+        data: recentRecords.map(record => Number(record[type.key]) || 0),
+        backgroundColor: type.color,
+        borderRadius: 4,
+        stack: 'defects'
+    }));
 
     if (dailyChartInstance) {
         dailyChartInstance.destroy();
@@ -842,41 +860,7 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
                     fill: true,
                     tension: 0.4
                 },
-                {
-                    type: 'bar',
-                    label: 'สนิม (Rust)',
-                    data: rustData,
-                    backgroundColor: '#10b981',
-                    borderRadius: 4
-                },
-                {
-                    type: 'bar',
-                    label: 'รอยบุบ (Dent)',
-                    data: dentData,
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 4
-                },
-                {
-                    type: 'bar',
-                    label: 'สะเก็ดเชื่อม (Weld)',
-                    data: weldData,
-                    backgroundColor: '#f59e0b',
-                    borderRadius: 4
-                },
-                {
-                    type: 'bar',
-                    label: 'คราบน้ำยา (Chemical)',
-                    data: chemicalData,
-                    backgroundColor: '#06b6d4',
-                    borderRadius: 4
-                },
-                {
-                    type: 'bar',
-                    label: 'คราบน้ำมัน (Oil)',
-                    data: oilData,
-                    backgroundColor: '#8b5cf6',
-                    borderRadius: 4
-                }
+                ...categoryDatasets
             ]
         },
         options: {
@@ -905,14 +889,17 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
                     zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
                 }
             },
-            scales: {
-                x: {
-                    ticks: { color: '#94a3b8' },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                },
-                y: {
-                    ticks: { color: '#94a3b8' },
-                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' }
                 }
             }
         }
@@ -1008,7 +995,10 @@ function renderRecentTable(recordsData = inspectionRecords) {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
-        const dateFormatted = formatDateForDisplay(r.date, r.timestamp);
+        // Inspection column A (`date`) is the work/check date and time.
+        // `timestamp` is only the upload time from column H and must not be
+        // shown as the inspection time in this table.
+        const dateFormatted = formatDateForDisplay(r.date, '');
 
         return `
             <tr>
@@ -1047,7 +1037,9 @@ function renderFullHistoryTable(records) {
         const chemical = Number(r.chemical) || 0;
         const oil = Number(r.oil) || 0;
         const total = rust + dent + weld + chemical + oil;
-        const dateFormatted = formatDateForDisplay(r.date, r.timestamp);
+        // Use the actual inspection date/time from column A, not the upload
+        // timestamp stored in column H.
+        const dateFormatted = formatDateForDisplay(r.date, '');
 
         return `
             <tr>
@@ -1073,7 +1065,7 @@ function renderFullHistoryTable(records) {
 function filterHistoryTable() {
     const query = document.getElementById("globalSearch").value.toLowerCase();
     const filtered = inspectionRecords.filter(r => {
-        const dStr = formatDateForDisplay(r.date, r.timestamp).toLowerCase();
+        const dStr = formatDateForDisplay(r.date, '').toLowerCase();
         return dStr.includes(query) || (r.note && r.note.toLowerCase().includes(query));
     });
     renderFullHistoryTable(filtered);
@@ -1956,6 +1948,13 @@ async function loadQC7Data(force = false) {
         } finally {
             qc7DataLoading = false;
             renderQC7Tools();
+            // Dashboard charts initially render from the Inspection cache so
+            // the page stays responsive, then switch to the combined
+            // Inspection + outputdiary source as soon as it is available.
+            const dashboard = document.getElementById('dashboard-tab');
+            if (dashboard && dashboard.classList.contains('active')) {
+                renderDashboard();
+            }
         }
     })();
     qc7LoadPromise = load;
@@ -1982,6 +1981,20 @@ function qc7RecordDefects(record) {
     const explicit = Number(record && record.totalDefect);
     if (Number.isFinite(explicit)) return explicit;
     return qc7DefectTypes.reduce((sum, type) => sum + (Number(record && record[type.key]) || 0), 0);
+}
+
+// Keep Dashboard defect totals identical to QC 7 TOOL. The returned shape
+// matches the Dashboard donut/progress-bar renderers (`name`, `val`, `color`).
+function qc7DefectTotals(records = []) {
+    return qc7DefectTypes.map(type => ({
+        name: type.label,
+        key: type.key,
+        val: (Array.isArray(records) ? records : []).reduce(
+            (sum, record) => sum + (Number(record && record[type.key]) || 0),
+            0
+        ),
+        color: type.color
+    }));
 }
 
 function qc7FilteredRecords() {
@@ -2113,19 +2126,18 @@ function renderDailyByDayChart(recordsData = inspectionRecords) {
 
     const dailyTotals = {};
     (Array.isArray(recordsData) ? recordsData : []).forEach(record => {
-        const day = getStandardISODate(record && (record.date || record.timestamp));
+        const day = getStandardISODate(record && (record.date || record.Date));
         if (!day) return;
-        if (!dailyTotals[day]) dailyTotals[day] = { rust: 0, dent: 0, weld: 0, chemical: 0, oil: 0 };
-        dailyTotals[day].rust += Number(record.rust) || 0;
-        dailyTotals[day].dent += Number(record.dent) || 0;
-        dailyTotals[day].weld += Number(record.weld) || 0;
-        dailyTotals[day].chemical += Number(record.chemical) || 0;
-        dailyTotals[day].oil += Number(record.oil) || 0;
+        if (!dailyTotals[day]) dailyTotals[day] = {};
+        (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).forEach(type => {
+            dailyTotals[day][type.key] = (dailyTotals[day][type.key] || 0) + (Number(record[type.key]) || 0);
+        });
     });
 
     const days = Object.keys(dailyTotals).sort();
     const rows = days.map(day => dailyTotals[day]);
-    const totalByDay = rows.map(row => row.rust + row.dent + row.weld + row.chemical + row.oil);
+    const totalByDay = rows.map(row => (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : [])
+        .reduce((sum, type) => sum + (Number(row[type.key]) || 0), 0));
 
     if (dailyByDayChartInstance) dailyByDayChartInstance.destroy();
     dailyByDayChartInstance = new Chart(ctx, {
@@ -2134,11 +2146,14 @@ function renderDailyByDayChart(recordsData = inspectionRecords) {
             labels: days,
             datasets: [
                 { type: 'line', label: 'รวมของเสียต่อวัน', data: totalByDay, borderColor: '#00b4d8', backgroundColor: 'rgba(0,180,216,0.16)', borderWidth: 3, fill: true, tension: 0.35 },
-                { label: 'สนิม (Rust)', data: rows.map(row => row.rust), backgroundColor: '#10b981', borderRadius: 4 },
-                { label: 'รอยบุบ (Dent)', data: rows.map(row => row.dent), backgroundColor: '#3b82f6', borderRadius: 4 },
-                { label: 'สะเก็ดเชื่อม (Weld)', data: rows.map(row => row.weld), backgroundColor: '#f59e0b', borderRadius: 4 },
-                { label: 'คราบน้ำยา (Chemical)', data: rows.map(row => row.chemical), backgroundColor: '#06b6d4', borderRadius: 4 },
-                { label: 'คราบน้ำมัน (Oil)', data: rows.map(row => row.oil), backgroundColor: '#8b5cf6', borderRadius: 4 }
+                ...(typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).map(type => ({
+                    type: 'bar',
+                    label: type.label,
+                    data: rows.map(row => row[type.key] || 0),
+                    backgroundColor: type.color,
+                    borderRadius: 4,
+                    stack: 'defects'
+                }))
             ]
         },
         options: {
@@ -2149,8 +2164,8 @@ function renderDailyByDayChart(recordsData = inspectionRecords) {
                 zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' } }
             },
             scales: {
-                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
             }
         }
     });
