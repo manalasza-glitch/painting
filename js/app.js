@@ -816,6 +816,16 @@ function getInspectionDefectTypes() {
         .filter(type => inspectionKeys.has(type.key));
 }
 
+function getInspectionTimeKey(record) {
+    // Inspection column A contains the work/check date and time.  Do not use
+    // column H (upload timestamp), because it describes when the row reached
+    // Sheets rather than when the inspection happened.
+    const raw = String(record && (record.date || record.Date) || '').trim();
+    const match = raw.match(/(?:[T ]|^)(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (!match) return '';
+    return `${String(match[1]).padStart(2, '0')}:${match[2]}`;
+}
+
 function renderDailyChart(recordsData = inspectionRecords, filterDate = "", defectTypes = getInspectionDefectTypes()) {
     const ctx = document.getElementById("dailyChart");
     if (!ctx) return;
@@ -825,17 +835,36 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "", defe
         return;
     }
 
-    // Keep the original record-level chart: each inspection round remains
-    // visible, so the chart continues to match the existing DAILY STATISTICS.
-    const recentRecords = (filterDate === 'all' || filterDate === 'range')
-        ? [...recordsData].reverse()
-        : [...recordsData].reverse().slice(-7);
-    const labels = recentRecords.map(r => getStandardISODate(r.date || r.Date));
-    const totalsData = recentRecords.map(r => defectTypes.reduce((sum, type) => sum + (Number(r && r[type.key]) || 0), 0));
+    // Group Inspection rows by the same inspection time across the selected
+    // dates.  The date range is already applied by renderDashboard; this
+    // function only aggregates the rows it receives and never reads
+    // outputdiary or the upload timestamp.
+    const groupedByTime = new Map();
+    (Array.isArray(recordsData) ? recordsData : []).forEach(record => {
+        const timeKey = getInspectionTimeKey(record) || 'ไม่ระบุเวลา';
+        if (!groupedByTime.has(timeKey)) {
+            groupedByTime.set(timeKey, defectTypes.reduce((group, type) => {
+                group[type.key] = 0;
+                return group;
+            }, { timeKey }));
+        }
+        const group = groupedByTime.get(timeKey);
+        defectTypes.forEach(type => {
+            group[type.key] += Number(record && record[type.key]) || 0;
+        });
+    });
+
+    const groupedRows = [...groupedByTime.values()].sort((a, b) => {
+        if (a.timeKey === 'ไม่ระบุเวลา') return 1;
+        if (b.timeKey === 'ไม่ระบุเวลา') return -1;
+        return a.timeKey.localeCompare(b.timeKey);
+    });
+    const labels = groupedRows.map(row => row.timeKey);
+    const totalsData = groupedRows.map(row => defectTypes.reduce((sum, type) => sum + (Number(row[type.key]) || 0), 0));
     const categoryDatasets = defectTypes.map(type => ({
         type: 'bar',
         label: type.label,
-        data: recentRecords.map(record => Number(record[type.key]) || 0),
+        data: groupedRows.map(row => Number(row[type.key]) || 0),
         backgroundColor: type.color,
         borderRadius: 4,
         stack: 'defects'
