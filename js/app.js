@@ -708,12 +708,8 @@ function resetInspectionDashboard() {
 
 function renderDashboard() {
     const hasInspectionRows = Array.isArray(inspectionRecords) && inspectionRecords.length > 0;
-    const hasCombinedRows = qc7DataLoaded && Array.isArray(qc7CombinedRecords) && qc7CombinedRecords.length > 0;
-    if (!hasInspectionRows && !hasCombinedRows) {
+    if (!hasInspectionRows) {
         resetInspectionDashboard();
-        if (!qc7DataLoaded && !qc7DataLoading && typeof loadQC7Data === 'function') {
-            loadQC7Data();
-        }
         return;
     }
 
@@ -787,21 +783,19 @@ function renderDashboard() {
     if (kpi4Title) kpi4Title.innerText = hasDateFilter ? 'อัตราของเสียที่เลือก' : 'อัตราของเสียวันนี้';
     if (kpi4Subtext) kpi4Subtext.innerText = hasDateFilter ? 'ช่วงวันที่เลือก' : 'วันนี้';
 
-    // 2. Render the three overview charts from the same combined daily source
-    // used by QC 7 TOOL. Keep the existing dashboard date/range behavior.
-    const combinedReady = qc7DataLoaded && Array.isArray(qc7CombinedRecords);
-    const chartSource = combinedReady ? qc7CombinedRecords : inspectionRecords;
+    // 2. Dashboard overview is sourced from Inspection only. QC 7 TOOL has
+    // its own combined Inspection + outputdiary data source.
+    const chartSource = inspectionRecords;
     const chartRecords = hasDateFilter
         ? chartSource.filter(record => dashboardRecordInDateRange(record, range))
         : chartSource;
     const chartMode = hasDateFilter ? 'range' : (inspectionDataScope === 'all' ? 'all' : '');
-    renderDailyChart(chartRecords, chartMode);
-    renderDailyByDayChart(chartRecords);
+    const inspectionTypes = getInspectionDefectTypes();
+    renderDailyChart(chartRecords, chartMode, inspectionTypes);
+    renderDailyByDayChart(chartRecords, inspectionTypes);
 
     // 3. Render Defect Donut Chart
-    const chartDefectsCategory = combinedReady
-        ? qc7DefectTotals(chartRecords)
-        : defectsCategory;
+    const chartDefectsCategory = defectsCategory;
     const chartGrandTotalDefects = chartDefectsCategory.reduce((sum, item) => sum + item.val, 0);
     renderDonutChart(chartDefectsCategory, chartGrandTotalDefects);
 
@@ -814,14 +808,15 @@ function renderDashboard() {
     // 6. Render Output Diary Charts (from Google Sheets outputdiary)
     renderDailyReportCharts();
 
-    // The overview can render immediately from the inspection cache, then
-    // refresh once the combined QC 7 source has finished loading.
-    if (!qc7DataLoaded && !qc7DataLoading && typeof loadQC7Data === 'function') {
-        loadQC7Data();
-    }
 }
 
-function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
+function getInspectionDefectTypes() {
+    const inspectionKeys = new Set(['rust', 'dent', 'weld', 'chemical', 'oil']);
+    return (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : [])
+        .filter(type => inspectionKeys.has(type.key));
+}
+
+function renderDailyChart(recordsData = inspectionRecords, filterDate = "", defectTypes = getInspectionDefectTypes()) {
     const ctx = document.getElementById("dailyChart");
     if (!ctx) return;
 
@@ -836,8 +831,8 @@ function renderDailyChart(recordsData = inspectionRecords, filterDate = "") {
         ? [...recordsData].reverse()
         : [...recordsData].reverse().slice(-7);
     const labels = recentRecords.map(r => getStandardISODate(r.date || r.Date));
-    const totalsData = recentRecords.map(r => qc7RecordDefects(r));
-    const categoryDatasets = (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).map(type => ({
+    const totalsData = recentRecords.map(r => defectTypes.reduce((sum, type) => sum + (Number(r && r[type.key]) || 0), 0));
+    const categoryDatasets = defectTypes.map(type => ({
         type: 'bar',
         label: type.label,
         data: recentRecords.map(record => Number(record[type.key]) || 0),
@@ -1967,13 +1962,6 @@ async function loadQC7Data(force = false) {
         } finally {
             qc7DataLoading = false;
             renderQC7Tools();
-            // Dashboard charts initially render from the Inspection cache so
-            // the page stays responsive, then switch to the combined
-            // Inspection + outputdiary source as soon as it is available.
-            const dashboard = document.getElementById('dashboard-tab');
-            if (dashboard && dashboard.classList.contains('active')) {
-                renderDashboard();
-            }
         }
     })();
     qc7LoadPromise = load;
@@ -2139,7 +2127,7 @@ function renderQC7Histogram(records) {
     });
 }
 
-function renderDailyByDayChart(recordsData = inspectionRecords) {
+function renderDailyByDayChart(recordsData = inspectionRecords, defectTypes = getInspectionDefectTypes()) {
     const ctx = document.getElementById("dailyByDayChart");
     if (!ctx || typeof Chart === 'undefined') return;
 
@@ -2148,14 +2136,14 @@ function renderDailyByDayChart(recordsData = inspectionRecords) {
         const day = getStandardISODate(record && (record.date || record.Date));
         if (!day) return;
         if (!dailyTotals[day]) dailyTotals[day] = {};
-        (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).forEach(type => {
+        defectTypes.forEach(type => {
             dailyTotals[day][type.key] = (dailyTotals[day][type.key] || 0) + (Number(record[type.key]) || 0);
         });
     });
 
     const days = Object.keys(dailyTotals).sort();
     const rows = days.map(day => dailyTotals[day]);
-    const totalByDay = rows.map(row => (typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : [])
+    const totalByDay = rows.map(row => defectTypes
         .reduce((sum, type) => sum + (Number(row[type.key]) || 0), 0));
 
     if (dailyByDayChartInstance) dailyByDayChartInstance.destroy();
@@ -2165,7 +2153,7 @@ function renderDailyByDayChart(recordsData = inspectionRecords) {
             labels: days,
             datasets: [
                 { type: 'line', label: 'รวมของเสียต่อวัน', data: totalByDay, borderColor: '#00b4d8', backgroundColor: 'rgba(0,180,216,0.16)', borderWidth: 3, fill: true, tension: 0.35 },
-                ...(typeof qc7DefectTypes !== 'undefined' ? qc7DefectTypes : []).map(type => ({
+                ...defectTypes.map(type => ({
                     type: 'bar',
                     label: type.label,
                     data: rows.map(row => row[type.key] || 0),
