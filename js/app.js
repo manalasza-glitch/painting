@@ -339,9 +339,6 @@ function switchTab(tabId, element) {
         renderDashboard();
     } else if (tabId === "qc7-tools-tab") {
         initQC7Tools();
-        if (inspectionDataScope !== "all" && typeof loadDataFromAPI === 'function') {
-            loadDataFromAPI(true, "").then(() => renderQC7Tools());
-        }
     } else if (tabId === "daily-report-tab") {
         if (typeof renderStaffDropdowns === 'function') {
             renderStaffDropdowns();
@@ -1810,14 +1807,164 @@ let qc7HistogramChartInstance = null;
 let qc7ParetoChartInstance = null;
 let qc7ScatterChartInstance = null;
 let qc7ControlChartInstance = null;
+let qc7CombinedRecords = [];
+let qc7DataLoaded = false;
+let qc7DataLoading = false;
+let qc7LoadPromise = null;
 
 const qc7DefectTypes = [
     { key: 'rust', label: 'สนิม', color: '#f59e0b' },
     { key: 'dent', label: 'รอยบุบ', color: '#3b82f6' },
     { key: 'weld', label: 'สะเก็ดเชื่อม', color: '#ef4444' },
     { key: 'chemical', label: 'คราบน้ำยา', color: '#06b6d4' },
-    { key: 'oil', label: 'คราบน้ำมัน', color: '#8b5cf6' }
+    { key: 'oil', label: 'คราบน้ำมัน', color: '#8b5cf6' },
+    { key: 'colorDrop', label: 'เม็ดสี', color: '#ec4899' },
+    { key: 'thinPaint', label: 'สีบาง', color: '#14b8a6' },
+    { key: 'thickPaint', label: 'สีหนา/สีปูด', color: '#f97316' },
+    { key: 'waterStain', label: 'คราบน้ำ/จาระบี', color: '#22d3ee' },
+    { key: 'dust', label: 'เศษฝุ่น', color: '#a3e635' },
+    { key: 'otherDefect', label: 'อื่นๆ', color: '#a78bfa' }
 ];
+
+function qc7Number(record, keys) {
+    const source = record || {};
+    for (const key of keys) {
+        const value = source[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            const number = Number(value);
+            if (Number.isFinite(number)) return number;
+        }
+    }
+    return 0;
+}
+
+function qc7OutputDefectTotal(record) {
+    if (typeof getDailyReportDefectTotal === 'function') {
+        return getDailyReportDefectTotal(record);
+    }
+    return qc7Number(record, ['totalDefect', 'TotalDefect', 'total_defect']) ||
+        ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'dust', 'otherDefect']
+            .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
+}
+
+function qc7InspectionRejectTotal(record) {
+    return ['rust', 'dent', 'weld', 'chemical', 'oil']
+        .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
+}
+
+function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
+    const byDate = new Map();
+    const ensureDay = date => {
+        if (!date) return null;
+        if (!byDate.has(date)) {
+            byDate.set(date, {
+                date,
+                prodQty: 0,
+                outputDiaryDefects: 0,
+                rackRejects: 0,
+                outputRecordCount: 0,
+                inspectionRecordCount: 0,
+                rust: 0,
+                dent: 0,
+                weld: 0,
+                chemical: 0,
+                oil: 0,
+                colorDrop: 0,
+                thinPaint: 0,
+                thickPaint: 0,
+                waterStain: 0,
+                dust: 0,
+                otherDefect: 0
+            });
+        }
+        return byDate.get(date);
+    };
+
+    (Array.isArray(inspectionRows) ? inspectionRows : []).forEach(record => {
+        const day = ensureDay(qc7RecordDate(record));
+        if (!day) return;
+        day.inspectionRecordCount += 1;
+        day.rust += qc7Number(record, ['rust']);
+        day.dent += qc7Number(record, ['dent']);
+        day.weld += qc7Number(record, ['weld']);
+        day.chemical += qc7Number(record, ['chemical']);
+        day.oil += qc7Number(record, ['oil']);
+        day.rackRejects += qc7InspectionRejectTotal(record);
+    });
+
+    (Array.isArray(outputRows) ? outputRows : []).forEach(record => {
+        const day = ensureDay(qc7RecordDate(record));
+        if (!day) return;
+        day.outputRecordCount += 1;
+        day.prodQty += qc7Number(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty']);
+
+        const outputDefects = qc7OutputDefectTotal(record);
+        day.outputDiaryDefects += outputDefects;
+        day.dent += qc7Number(record, ['dent']);
+        day.colorDrop += qc7Number(record, ['colorDrop']);
+        day.thinPaint += qc7Number(record, ['thinPaint']);
+        day.thickPaint += qc7Number(record, ['thickPaint']);
+        day.waterStain += qc7Number(record, ['waterStain']);
+        day.dust += qc7Number(record, ['dust']);
+        day.otherDefect += qc7Number(record, ['otherDefect']);
+
+        // Keep the displayed defect categories consistent with the sheet's
+        // explicit total, even when a legacy row omitted one category field.
+        const listedDefects = ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'dust', 'otherDefect']
+            .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
+        day.otherDefect += Math.max(0, outputDefects - listedDefects);
+    });
+
+    return Array.from(byDate.values()).map(day => {
+        // ProdQty already includes defects recorded in outputdiary. Rack
+        // rejects are a separate stage, so they are added to both the total
+        // production and total-defect figures exactly once.
+        day.totalProduction = day.prodQty + day.rackRejects;
+        day.totalDefect = day.outputDiaryDefects + day.rackRejects;
+        day.goodQty = Math.max(0, day.totalProduction - day.totalDefect);
+        day.recordCount = day.outputRecordCount + day.inspectionRecordCount;
+        return day;
+    }).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+async function loadQC7Data(force = false) {
+    if (qc7LoadPromise && !force) return qc7LoadPromise;
+    if (!force && qc7DataLoaded) {
+        renderQC7Tools();
+        return qc7CombinedRecords;
+    }
+
+    qc7DataLoading = true;
+    renderQC7Tools();
+    const load = (async () => {
+        try {
+            const inspectionPromise = typeof fetchInspectionDataFromAPI === 'function'
+                ? fetchInspectionDataFromAPI('')
+                : Promise.resolve(Array.isArray(inspectionRecords) ? inspectionRecords : []);
+            const outputPromise = typeof fetchDailyReportDataFromAPI === 'function'
+                ? fetchDailyReportDataFromAPI('')
+                : Promise.resolve(typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []);
+            const [inspectionRows, outputRows] = await Promise.all([inspectionPromise, outputPromise]);
+            qc7CombinedRecords = buildQC7CombinedRecords(inspectionRows, outputRows);
+            qc7DataLoaded = true;
+            return qc7CombinedRecords;
+        } catch (error) {
+            console.warn('Unable to load QC 7 TOOL data:', error);
+            qc7CombinedRecords = [];
+            qc7DataLoaded = false;
+            return [];
+        } finally {
+            qc7DataLoading = false;
+            renderQC7Tools();
+        }
+    })();
+    qc7LoadPromise = load;
+    try {
+        return await load;
+    } finally {
+        if (qc7LoadPromise === load) qc7LoadPromise = null;
+    }
+}
 
 function openQC7Tools(event, element) {
     if (event) event.preventDefault();
@@ -1825,34 +1972,36 @@ function openQC7Tools(event, element) {
 }
 
 function qc7RecordDate(record) {
-    return getStandardISODate(record && (record.date || record.timestamp));
+    // QC 7 uses the work date from each sheet, never the upload timestamp:
+    // Inspection column A (วันที่) and outputdiary column B (Date) are mapped
+    // to the API field `date`.
+    return getStandardISODate(record && (record.date || record.Date));
 }
 
 function qc7RecordDefects(record) {
+    const explicit = Number(record && record.totalDefect);
+    if (Number.isFinite(explicit)) return explicit;
     return qc7DefectTypes.reduce((sum, type) => sum + (Number(record && record[type.key]) || 0), 0);
 }
 
 function qc7FilteredRecords() {
     const input = document.getElementById('qc7DateFilter');
     const filterDate = input ? String(input.value || '').trim() : '';
-    const rows = Array.isArray(inspectionRecords) ? inspectionRecords : [];
+    const rows = Array.isArray(qc7CombinedRecords) ? qc7CombinedRecords : [];
     return filterDate ? rows.filter(record => qc7RecordDate(record) === filterDate) : rows;
 }
 
 function showAllQC7Data() {
     const input = document.getElementById('qc7DateFilter');
     if (input) input.value = '';
-    if (typeof loadDataFromAPI === 'function') {
-        loadDataFromAPI(true, '').then(() => renderQC7Tools());
-    } else {
-        renderQC7Tools();
-    }
+    loadQC7Data(true);
 }
 
 function initQC7Tools() {
     const input = document.getElementById('qc7DateFilter');
     if (input && !input.value) input.value = getStandardISODate(new Date().toISOString());
     renderQC7Tools();
+    loadQC7Data();
 }
 
 function qc7DestroyCharts() {
@@ -1883,8 +2032,23 @@ function qc7ChartOptions(scales = {}) {
 
 function renderQC7Tools() {
     const records = qc7FilteredRecords();
+    const checkSheet = document.getElementById('qc7CheckSheet');
+    if (qc7DataLoading && !qc7DataLoaded) {
+        if (checkSheet) checkSheet.innerHTML = '<div class="qc7-empty-state">กำลังโหลดข้อมูลจาก outputdiary และ Inspection...</div>';
+        qc7DestroyCharts();
+        const stratificationBody = document.getElementById('qc7StratificationBody');
+        if (stratificationBody) stratificationBody.innerHTML = '<tr><td colspan="5" class="qc7-empty-state">กำลังโหลดข้อมูล...</td></tr>';
+        ['qc7SummaryInspections', 'qc7SummaryDefects', 'qc7SummaryProduction', 'qc7SummaryGood', 'qc7SummaryNgRate', 'qc7SummaryAverage'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = id === 'qc7SummaryNgRate' ? '0%' : '0';
+        });
+        return;
+    }
     const totals = qc7DefectTypes.map(type => ({ ...type, value: records.reduce((sum, record) => sum + (Number(record[type.key]) || 0), 0) }));
     const totalDefects = totals.reduce((sum, item) => sum + item.value, 0);
+    const totalProduction = records.reduce((sum, record) => sum + (Number(record.totalProduction) || 0), 0);
+    const totalGood = records.reduce((sum, record) => sum + (Number(record.goodQty) || 0), 0);
+    const ngRate = totalProduction > 0 ? ((totalDefects / totalProduction) * 100).toFixed(1) : '0.0';
     const average = records.length ? (totalDefects / records.length).toFixed(1) : '0';
     const top = [...totals].sort((a, b) => b.value - a.value)[0];
 
@@ -1894,11 +2058,13 @@ function renderQC7Tools() {
     };
     setText('qc7SummaryInspections', records.length);
     setText('qc7SummaryDefects', totalDefects);
+    setText('qc7SummaryProduction', totalProduction);
+    setText('qc7SummaryGood', totalGood);
+    setText('qc7SummaryNgRate', `${ngRate}%`);
     setText('qc7SummaryTopDefect', top && top.value > 0 ? top.label : '-');
     setText('qc7SummaryTopDefectCount', `${top && top.value ? top.value : 0} ชิ้น`);
     setText('qc7SummaryAverage', average);
 
-    const checkSheet = document.getElementById('qc7CheckSheet');
     if (checkSheet) {
         if (!records.length) {
             checkSheet.innerHTML = '<div class="qc7-empty-state">ไม่พบข้อมูลสำหรับช่วงที่เลือก</div>';
@@ -2055,7 +2221,7 @@ function renderQC7Stratification(records) {
     records.forEach(record => {
         const date = qc7RecordDate(record) || '-';
         if (!groups[date]) groups[date] = { count: 0, defects: 0, types: qc7DefectTypes.map(type => ({ ...type, value: 0 })) };
-        groups[date].count++;
+        groups[date].count += Number(record.recordCount) || 1;
         groups[date].defects += qc7RecordDefects(record);
         qc7DefectTypes.forEach((type, index) => { groups[date].types[index].value += Number(record[type.key]) || 0; });
     });

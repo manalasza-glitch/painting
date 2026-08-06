@@ -1537,7 +1537,7 @@
                     <div class="qc7-page-header">
                         <div>
                             <h1 class="page-title">QC 7 TOOL</h1>
-                            <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ สำหรับวิเคราะห์ข้อมูลการตรวจงาน</p>
+                            <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ รวมข้อมูลจาก outputdiary และ Inspection</p>
                         </div>
                         <div class="qc7-toolbar">
                             <label for="qc7DateFilter">วันที่วิเคราะห์</label>
@@ -1547,8 +1547,11 @@
                     </div>
 
                     <div class="qc7-summary-grid">
-                        <div class="qc7-summary-card"><span class="qc7-summary-label">รายการตรวจ</span><strong id="qc7SummaryInspections">0</strong><small>Records</small></div>
-                        <div class="qc7-summary-card"><span class="qc7-summary-label">ของเสียรวม</span><strong id="qc7SummaryDefects">0</strong><small>Defects</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">วันที่มีข้อมูล</span><strong id="qc7SummaryInspections">0</strong><small>Daily groups</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">ยอดผลิตรวม</span><strong id="qc7SummaryProduction">0</strong><small>ProdQty + คัดออกจากราว</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">ของเสียรวม</span><strong id="qc7SummaryDefects">0</strong><small>outputdiary + คัดออกจากราว</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">งานดีจริง</span><strong id="qc7SummaryGood">0</strong><small>ยอดผลิตรวม - ของเสียรวม</small></div>
+                        <div class="qc7-summary-card"><span class="qc7-summary-label">อัตรา NG</span><strong id="qc7SummaryNgRate">0%</strong><small>ของเสียรวม ÷ ยอดผลิตรวม</small></div>
                         <div class="qc7-summary-card"><span class="qc7-summary-label">ประเภทของเสียสูงสุด</span><strong id="qc7SummaryTopDefect">-</strong><small id="qc7SummaryTopDefectCount">0 ชิ้น</small></div>
                         <div class="qc7-summary-card"><span class="qc7-summary-label">ค่าเฉลี่ยต่อรายการ</span><strong id="qc7SummaryAverage">0</strong><small>ชิ้น / รายการ</small></div>
                     </div>
@@ -1974,7 +1977,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.24.0"></script>
+    <script src="js/app.js?v=96.25.0"></script>
     <script src="js/daily-report.js?v=93.9.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
