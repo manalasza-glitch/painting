@@ -1292,6 +1292,7 @@ async function renderDailyReportCharts() {
     });
 
     const dateGroupMap = {};
+    const dateModelDefectMap = {};
     const dateDefectsMap = {};
     const dateTotalProdMap = {};
 
@@ -1309,7 +1310,9 @@ async function renderDailyReportCharts() {
 
         if (!dateGroupMap[dStr]) {
             dateGroupMap[dStr] = {};
+            dateModelDefectMap[dStr] = {};
             activeModels.forEach(m => dateGroupMap[dStr][m] = 0);
+            activeModels.forEach(m => dateModelDefectMap[dStr][m] = 0);
             dateDefectsMap[dStr] = 0;
             dateTotalProdMap[dStr] = 0;
         }
@@ -1318,6 +1321,7 @@ async function renderDailyReportCharts() {
         const dQty = Number(r.totalDefect || r.TotalDefect || r.total_defect) || 0;
 
         dateGroupMap[dStr][mName] = (dateGroupMap[dStr][mName] || 0) + pQty;
+        dateModelDefectMap[dStr][mName] = (dateModelDefectMap[dStr][mName] || 0) + Math.min(dQty, pQty);
         dateDefectsMap[dStr] += dQty;
         dateTotalProdMap[dStr] += pQty;
     });
@@ -1333,15 +1337,16 @@ async function renderDailyReportCharts() {
     const maxDefectRate = Math.max(...defectRateList, 0);
     const defectRateAxisMax = Math.min(100, Math.max(5, Math.ceil((maxDefectRate * 1.25) / 5) * 5));
 
-    // Build Stacked Datasets: Red Line for Defects + Stacked Colored Bars for Specific Model Names
+    // Build stacked datasets: model-good segments plus the red defect segment.
     const stackedDatasets = [
         {
-            type: 'line',
+            type: 'bar',
             label: 'ของเสียรวม (ชิ้น)',
             data: defectsList,
-            yAxisID: 'yDefect',
+            yAxisID: 'y',
+            stack: 'prodStack',
             borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.25)',
+            backgroundColor: '#ef4444',
             borderWidth: 3,
             pointRadius: 4,
             fill: false,
@@ -1363,9 +1368,16 @@ async function renderDailyReportCharts() {
             order: 0
         }
     ];
+    // Put the red defect segment after the model segments so it appears as
+    // the final portion of each day's stacked production bar.
+    const defectStackDataset = stackedDatasets.shift();
 
     activeModels.forEach(mName => {
-        const qtyData = datesList.map(d => dateGroupMap[d][mName] || 0);
+        // ProdQty already includes defects. Subtract model defects so the
+        // separate red defect segment does not inflate the stacked total.
+        const qtyData = datesList.map(d => Math.max(0,
+            (dateGroupMap[d][mName] || 0) - (dateModelDefectMap[d][mName] || 0)
+        ));
         const sum = qtyData.reduce((a, b) => a + b, 0);
         if (sum > 0) {
             stackedDatasets.push({
@@ -1375,10 +1387,12 @@ async function renderDailyReportCharts() {
                 backgroundColor: modelColorMap[mName],
                 stack: 'prodStack',
                 borderRadius: 2,
-                order: 1
+                order: 2
             });
         }
     });
+
+    if (defectStackDataset) stackedDatasets.push(defectStackDataset);
 
     renderOutputDailyLegend(stackedDatasets);
 
