@@ -707,8 +707,13 @@ function resetInspectionDashboard() {
 }
 
 function renderDashboard() {
-    if (!inspectionRecords || inspectionRecords.length === 0) {
+    const hasInspectionRows = Array.isArray(inspectionRecords) && inspectionRecords.length > 0;
+    const hasCombinedRows = qc7DataLoaded && Array.isArray(qc7CombinedRecords) && qc7CombinedRecords.length > 0;
+    if (!hasInspectionRows && !hasCombinedRows) {
         resetInspectionDashboard();
+        if (!qc7DataLoaded && !qc7DataLoading && typeof loadQC7Data === 'function') {
+            loadQC7Data();
+        }
         return;
     }
 
