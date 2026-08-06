@@ -1540,8 +1540,10 @@
                             <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ รวมข้อมูลจาก outputdiary และ Inspection</p>
                         </div>
                         <div class="qc7-toolbar">
-                            <label for="qc7DateFilter">วันที่วิเคราะห์</label>
-                            <input type="date" id="qc7DateFilter" onchange="renderQC7Tools()" onclick="if(this.showPicker) this.showPicker();">
+                            <label for="qc7DateFilter">ตั้งแต่</label>
+                            <input type="date" id="qc7DateFilter" onchange="queueQC7DateRangeChange()" onclick="if(this.showPicker) this.showPicker();">
+                            <label for="qc7DateFilterEnd">ถึง</label>
+                            <input type="date" id="qc7DateFilterEnd" onchange="queueQC7DateRangeChange()" onclick="if(this.showPicker) this.showPicker();">
                             <button type="button" class="btn-primary-custom" onclick="showAllQC7Data()">ดูข้อมูลทั้งหมด</button>
                         </div>
                     </div>
@@ -1977,7 +1979,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=96.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.29.0"></script>
+    <script src="js/app.js?v=96.30.0"></script>
     <script src="js/daily-report.js?v=93.9.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>

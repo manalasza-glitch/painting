@@ -2004,22 +2004,52 @@ function qc7DefectTotals(records = []) {
     }));
 }
 
+function getQC7DateRange() {
+    const startInput = document.getElementById('qc7DateFilter');
+    const endInput = document.getElementById('qc7DateFilterEnd');
+    let start = getStandardISODate(startInput ? startInput.value : '');
+    let end = getStandardISODate(endInput ? endInput.value : '');
+
+    // Keep the legacy single-date control usable when the range end field is
+    // absent on an older cached page.
+    if (start && !end && !endInput) end = start;
+    if (start && end && start > end) [start, end] = [end, start];
+    return { start, end };
+}
+
+function qc7RecordInDateRange(record, range = getQC7DateRange()) {
+    const recordDate = qc7RecordDate(record);
+    if (!recordDate) return false;
+    if (range.start && recordDate < range.start) return false;
+    if (range.end && recordDate > range.end) return false;
+    return true;
+}
+
+function queueQC7DateRangeChange() {
+    clearTimeout(window.qc7DateRangeTimer);
+    window.qc7DateRangeTimer = setTimeout(() => renderQC7Tools(), 80);
+}
+
 function qc7FilteredRecords() {
-    const input = document.getElementById('qc7DateFilter');
-    const filterDate = input ? String(input.value || '').trim() : '';
     const rows = Array.isArray(qc7CombinedRecords) ? qc7CombinedRecords : [];
-    return filterDate ? rows.filter(record => qc7RecordDate(record) === filterDate) : rows;
+    const range = getQC7DateRange();
+    return range.start || range.end ? rows.filter(record => qc7RecordInDateRange(record, range)) : rows;
 }
 
 function showAllQC7Data() {
-    const input = document.getElementById('qc7DateFilter');
-    if (input) input.value = '';
+    const startInput = document.getElementById('qc7DateFilter');
+    const endInput = document.getElementById('qc7DateFilterEnd');
+    if (startInput) startInput.value = '';
+    if (endInput) endInput.value = '';
     loadQC7Data(true);
 }
 
 function initQC7Tools() {
-    const input = document.getElementById('qc7DateFilter');
-    if (input && !input.value) input.value = getStandardISODate(new Date().toISOString());
+    const today = getStandardISODate(new Date().toISOString());
+    const startInput = document.getElementById('qc7DateFilter');
+    const endInput = document.getElementById('qc7DateFilterEnd');
+    if (startInput && !startInput.value) startInput.value = today;
+    if (endInput && !endInput.value) endInput.value = startInput && startInput.value ? startInput.value : today;
     renderQC7Tools();
     loadQC7Data();
 }
