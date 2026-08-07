@@ -2127,7 +2127,6 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
                 thinPaint: 0,
                 thickPaint: 0,
                 waterStain: 0,
-                oil: 0,
                 dust: 0,
                 otherDefect: 0
             });
@@ -2161,12 +2160,13 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
         day.thickPaint += qc7Number(record, ['thickPaint']);
         day.waterStain += qc7Number(record, ['waterStain']);
         day.oil += qc7Number(record, ['oil']);
+        day.rust += qc7Number(record, ['rust']);
         day.dust += qc7Number(record, ['dust']);
         day.otherDefect += qc7Number(record, ['otherDefect']);
 
         // Keep the displayed defect categories consistent with the sheet's
         // explicit total, even when a legacy row omitted one category field.
-        const listedDefects = ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
+        const listedDefects = ['rust', 'dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
             .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
         day.otherDefect += Math.max(0, outputDefects - listedDefects);
     });

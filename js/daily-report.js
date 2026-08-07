@@ -592,6 +592,7 @@ function addDailyReportRecord({ silent = false } = {}) {
     const prodQty = Number(document.getElementById('drProdQty').value) || 0;
     
     // Defects
+    const rust = Number(document.getElementById('drRust').value) || 0;
     const dent = Number(document.getElementById('drDent').value) || 0;
     const colorDrop = Number(document.getElementById('drColorDrop').value) || 0;
     const thinPaint = Number(document.getElementById('drThinPaint').value) || 0;
@@ -606,12 +607,12 @@ function addDailyReportRecord({ silent = false } = {}) {
         return false;
     }
 
-    if (prodQty === 0 && (dent+colorDrop+thinPaint+thickPaint+waterStain+oil+dust+otherDefect) === 0) {
+    if (prodQty === 0 && (rust+dent+colorDrop+thinPaint+thickPaint+waterStain+oil+dust+otherDefect) === 0) {
         showToast("กรุณากรอกยอดผลิตหรือยอดของเสียอย่างน้อย 1 ชิ้น", "error");
         return false;
     }
 
-    const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + oil + dust + otherDefect;
+    const totalDefect = rust + dent + colorDrop + thinPaint + thickPaint + waterStain + oil + dust + otherDefect;
 
     dailyReportRecords.push({
         id: Date.now().toString(),
@@ -622,6 +623,7 @@ function addDailyReportRecord({ silent = false } = {}) {
         colorCode,
         timeSlot,
         prodQty,
+        rust,
         dent,
         colorDrop,
         thinPaint,
@@ -646,6 +648,7 @@ function addDailyReportRecord({ silent = false } = {}) {
     renderModelDropdownOptions("", "");
     renderColorDropdownUI("");
     document.getElementById('drProdQty').value = "";
+    document.getElementById('drRust').value = "";
     document.getElementById('drDent').value = "";
     document.getElementById('drColorDrop').value = "";
     document.getElementById('drThinPaint').value = "";
@@ -777,7 +780,7 @@ function getDailyReportDefectTotal(record) {
     const explicit = Number(record.totalDefect || record.TotalDefect || record.total_defect);
     if (Number.isFinite(explicit)) return explicit;
 
-    return ["dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "oil", "dust", "otherDefect"]
+    return ["rust", "dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "oil", "dust", "otherDefect"]
         .reduce((total, key) => total + (Number(record[key]) || 0), 0);
 }
 
@@ -870,6 +873,7 @@ async function submitDailyReport() {
     if (dailyReportRecords.length === 0) {
         const model = document.getElementById('drModel') ? document.getElementById('drModel').value : "";
         const prodQty = Number(document.getElementById('drProdQty').value) || 0;
+        const rust = Number(document.getElementById('drRust').value) || 0;
         const dent = Number(document.getElementById('drDent').value) || 0;
         const colorDrop = Number(document.getElementById('drColorDrop').value) || 0;
         const thinPaint = Number(document.getElementById('drThinPaint').value) || 0;
@@ -878,7 +882,7 @@ async function submitDailyReport() {
         const oil = Number(document.getElementById('drOil').value) || 0;
         const dust = Number(document.getElementById('drDust').value) || 0;
         const otherDefect = Number(document.getElementById('drOtherDefect').value) || 0;
-        const totalDefect = dent + colorDrop + thinPaint + thickPaint + waterStain + oil + dust + otherDefect;
+        const totalDefect = rust + dent + colorDrop + thinPaint + thickPaint + waterStain + oil + dust + otherDefect;
 
         if (model && (prodQty > 0 || totalDefect > 0)) {
             addDailyReportRecord({ silent: true });
@@ -952,6 +956,7 @@ async function submitDailyReport() {
                 colorCode: r.colorCode || "",
                 timeSlot: r.timeSlot,
                 prodQty: r.prodQty,
+                rust: r.rust,
                 dent: r.dent,
                 colorDrop: r.colorDrop,
                 thinPaint: r.thinPaint,
