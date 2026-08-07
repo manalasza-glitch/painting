@@ -1007,8 +1007,9 @@ function renderSeverityBars(defectsCategory, grandTotal) {
 // Compare the two separate waste stages by work date.  Inspection records
 // are rejects removed from the rack before painting is complete, while
 // outputdiary records are defects found during/after the painting process.
-// The bars show their combined waste total and the smooth lines keep both
-// sources visible so a high day can be explained by its actual stage.
+// The bars show total production for the day (completed outputdiary quantity
+// plus the separate rack rejects), while the smooth lines keep both waste
+// stages visible so a high day can be explained by where it was found.
 function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspectionRecords, range = getDashboardDateRange()) {
     const canvas = document.getElementById('inspectionVsOutputChart');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1026,13 +1027,16 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
     const daily = new Map();
     const ensureDay = date => {
         if (!date) return null;
-        if (!daily.has(date)) daily.set(date, { outputDefects: 0, rackRejects: 0 });
+        if (!daily.has(date)) daily.set(date, { prodQty: 0, outputDefects: 0, rackRejects: 0 });
         return daily.get(date);
     };
 
     filteredOutput.forEach(record => {
         const day = ensureDay(qc7RecordDate(record));
-        if (day) day.outputDefects += qc7OutputDefectTotal(record);
+        if (day) {
+            day.prodQty += qc7Number(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty']);
+            day.outputDefects += qc7OutputDefectTotal(record);
+        }
     });
     filteredInspection.forEach(record => {
         const day = ensureDay(qc7RecordDate(record));
@@ -1050,7 +1054,7 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
 
     const rackRejects = labels.map(date => daily.get(date).rackRejects);
     const outputDefects = labels.map(date => daily.get(date).outputDefects);
-    const totalDefects = labels.map((date, index) => rackRejects[index] + outputDefects[index]);
+    const totalProduction = labels.map((date, index) => daily.get(date).prodQty + rackRejects[index]);
 
     if (inspectionVsOutputChartInstance) inspectionVsOutputChartInstance.destroy();
     inspectionVsOutputChartInstance = new Chart(canvas, {
@@ -1060,8 +1064,8 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
             datasets: [
                 {
                     type: 'bar',
-                    label: 'ของเสียรวม',
-                    data: totalDefects,
+                    label: 'ยอดการผลิตทั้งหมด',
+                    data: totalProduction,
                     backgroundColor: 'rgba(56, 189, 248, 0.55)',
                     borderColor: '#38bdf8',
                     borderWidth: 1,
@@ -1119,7 +1123,9 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
                     callbacks: {
                         footer: items => {
                             const index = items && items[0] ? items[0].dataIndex : -1;
-                            return index >= 0 ? `ของเสียรวม: ${totalDefects[index].toLocaleString()} ชิ้น` : '';
+                            return index >= 0
+                                ? `ยอดการผลิตทั้งหมด: ${totalProduction[index].toLocaleString()} ชิ้น`
+                                : '';
                         }
                     }
                 },
