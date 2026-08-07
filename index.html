@@ -1416,7 +1416,8 @@
                                 <div class="form-group"><label>อื่นๆ</label><input type="number" id="drOtherDefect" class="form-control" min="0" placeholder="0"></div>
                             </div>
                         </div>
-                        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+                            <button type="button" class="btn-secondary-custom" onclick="addDailyReportRecord()" style="padding: 0.75rem 1.4rem !important; border-radius: 12px !important; font-size: 0.92rem !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; white-space: nowrap !important;">➕ เพิ่มรายการ</button>
                             <button type="button" class="btn-primary-custom" id="submitDailyBtn" onclick="submitDailyReport()" style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; padding: 0.75rem 1.8rem !important; border-radius: 12px !important; font-size: 0.92rem !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; white-space: nowrap !important; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;">
                                 💾 บันทึกข้อมูลทันที
                             </button>
@@ -1977,10 +1978,10 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=96.6.0"></script>
+    <script src="js/api.js?v=96.7.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.32.0"></script>
-    <script src="js/daily-report.js?v=93.9.0"></script>
+    <script src="js/daily-report.js?v=94.0.0"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
     <script src="js/events.js?v=89.4.0"></script>
