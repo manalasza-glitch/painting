@@ -1660,6 +1660,14 @@ button, input, textarea, select {
     width: 100% !important;
 }
 
+.dr-grid-8 {
+    display: grid !important;
+    grid-template-columns: repeat(8, 1fr) !important;
+    gap: 0.75rem !important;
+    align-items: end !important;
+    width: 100% !important;
+}
+
 .dr-grid-4 {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
@@ -1764,13 +1772,16 @@ button, input, textarea, select {
     .dr-grid-7 {
         grid-template-columns: repeat(3, 1fr) !important;
     }
+    .dr-grid-8 {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
     .dr-grid-4 {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
 @media (max-width: 500px) {
-    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6, .dr-grid-7 {
+    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6, .dr-grid-7, .dr-grid-8 {
         grid-template-columns: 1fr !important;
     }
     .dr-grid-3 .form-group:last-child {
@@ -2013,7 +2024,7 @@ button, input, textarea, select {
 }
 
 @media (max-width: 500px) {
-    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6, .dr-grid-7 {
+    .dr-grid-3, .dr-grid-2, .dr-grid-4, .dr-grid-6, .dr-grid-7, .dr-grid-8 {
         grid-template-columns: 1fr !important;
     }
     .dr-grid-3 .form-group:last-child {

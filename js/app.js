@@ -2097,7 +2097,7 @@ function qc7OutputDefectTotal(record) {
         return getDailyReportDefectTotal(record);
     }
     return qc7Number(record, ['totalDefect', 'TotalDefect', 'total_defect']) ||
-        ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'dust', 'otherDefect']
+        ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
             .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
 }
 
@@ -2127,6 +2127,7 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
                 thinPaint: 0,
                 thickPaint: 0,
                 waterStain: 0,
+                oil: 0,
                 dust: 0,
                 otherDefect: 0
             });
@@ -2159,12 +2160,13 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
         day.thinPaint += qc7Number(record, ['thinPaint']);
         day.thickPaint += qc7Number(record, ['thickPaint']);
         day.waterStain += qc7Number(record, ['waterStain']);
+        day.oil += qc7Number(record, ['oil']);
         day.dust += qc7Number(record, ['dust']);
         day.otherDefect += qc7Number(record, ['otherDefect']);
 
         // Keep the displayed defect categories consistent with the sheet's
         // explicit total, even when a legacy row omitted one category field.
-        const listedDefects = ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'dust', 'otherDefect']
+        const listedDefects = ['dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
             .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
         day.otherDefect += Math.max(0, outputDefects - listedDefects);
     });

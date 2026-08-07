@@ -5,6 +5,7 @@ const DAILY_REPORT_PRODUCT_GROUP_HEADER = "ProductGroup";
 const DAILY_REPORT_PART_CATEGORY_HEADER = "PartCategory";
 const DAILY_REPORT_COLOR_CODE_HEADER = "ColorCode";
 const DAILY_REPORT_DUST_HEADER = "Dust";
+const DAILY_REPORT_OIL_HEADER = "Oil";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
@@ -106,7 +107,7 @@ function ensureDailyReportColorColumn(sheet) {
 
 function ensureDailyReportCatalogColumns(sheet) {
   const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0].map(String);
-  const names = [DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER];
+  const names = [DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER, DAILY_REPORT_OIL_HEADER];
   names.forEach(name => {
     if (headers.indexOf(name) < 0) {
       sheet.getRange(1, sheet.getLastColumn() + 1).setValue(name);
@@ -539,7 +540,7 @@ function doPost(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER, DAILY_REPORT_OIL_HEADER
         ]);
       }
 
@@ -566,7 +567,7 @@ function doPost(e) {
       if (data.records && Array.isArray(data.records)) {
         data.records.forEach(r => {
           // Columns A-I (1-9): General Info & Downtime
-          // Column J (10) onwards: Model, TimeSlot, ProdQty, Dent, ColorDrop, ThinPaint, ThickPaint, WaterStain, OtherDefect, TotalDefect; catalog fields and Dust follow afterward.
+          // Column J (10) onwards: Model, TimeSlot, ProdQty, Dent, ColorDrop, ThinPaint, ThickPaint, WaterStain, OtherDefect, TotalDefect; catalog fields, Dust, and Oil follow afterward.
           prodSheet.appendRow([
             now,
             dateVal,
@@ -592,7 +593,8 @@ function doPost(e) {
             r.productGroup || "",    // Column V: product group
             r.partCategory || "",     // Column W: part category
             r.colorCode || "",        // Column X: color code
-            r.dust || 0                // Column Y: dust defect
+            r.dust || 0,               // Column Y: dust defect
+            r.oil || 0                 // Column Z: oil defect
           ]);
         });
       }
@@ -914,7 +916,7 @@ function doGet(e) {
         prodSheet.appendRow([
           "Timestamp", "Date", "Shift", "Recorder", "Checker", 
           "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note", 
-          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER
+          "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER, DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER, DAILY_REPORT_DUST_HEADER, DAILY_REPORT_OIL_HEADER
         ]);
       }
 
@@ -956,6 +958,7 @@ function doGet(e) {
           thinPaint: Number(e.parameter.thinPaint) || 0,
           thickPaint: Number(e.parameter.thickPaint) || 0,
           waterStain: Number(e.parameter.waterStain) || 0,
+          oil: Number(e.parameter.oil) || 0,
           dust: Number(e.parameter.dust) || 0,
           otherDefect: Number(e.parameter.otherDefect) || 0,
           totalDefect: Number(e.parameter.totalDefect) || 0,
@@ -972,7 +975,7 @@ function doGet(e) {
             now, dateVal, shiftVal, recorderVal, checkerVal,
             burner, wash, ovenEtc, dtNote,
             r.model, r.timeSlot, r.prodQty,
-             r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId, r.color || "", r.productGroup || "", r.partCategory || "", r.colorCode || "", r.dust || 0
+             r.dent, r.colorDrop, r.thinPaint, r.thickPaint, r.waterStain, r.otherDefect, r.totalDefect, submissionId, r.color || "", r.productGroup || "", r.partCategory || "", r.colorCode || "", r.dust || 0, r.oil || 0
           ]);
         });
       }
@@ -1099,7 +1102,8 @@ function doGet(e) {
         productGroup: String(r[21] || ""),
         partCategory: String(r[22] || ""),
         colorCode: String(r[23] || ""),
-        dust: Number(r[24]) || 0
+        dust: Number(r[24]) || 0,
+        oil: Number(r[25]) || 0
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
