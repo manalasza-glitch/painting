@@ -1007,9 +1007,8 @@ function renderSeverityBars(defectsCategory, grandTotal) {
 // Compare the two separate waste stages by work date.  Inspection records
 // are rejects removed from the rack before painting is complete, while
 // outputdiary records are defects found during/after the painting process.
-// The bars show total production for the day (completed outputdiary quantity
-// plus the separate rack rejects), while the smooth lines keep both waste
-// stages visible so a high day can be explained by where it was found.
+// The stacked bars split total production into good pieces and combined waste,
+// while the smooth percentage lines show where each waste stage was found.
 function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspectionRecords, range = getDashboardDateRange()) {
     const canvas = document.getElementById('inspectionVsOutputChart');
     if (!canvas || typeof Chart === 'undefined') return;
@@ -1055,6 +1054,14 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
     const rackRejects = labels.map(date => daily.get(date).rackRejects);
     const outputDefects = labels.map(date => daily.get(date).outputDefects);
     const totalProduction = labels.map((date, index) => daily.get(date).prodQty + rackRejects[index]);
+    const totalWaste = labels.map((date, index) => rackRejects[index] + outputDefects[index]);
+    const goodProduction = labels.map((date, index) => Math.max(0, totalProduction[index] - totalWaste[index]));
+    const rackRejectPercent = labels.map((date, index) => totalProduction[index] > 0
+        ? Number(((rackRejects[index] / totalProduction[index]) * 100).toFixed(2))
+        : 0);
+    const outputDefectPercent = labels.map((date, index) => totalProduction[index] > 0
+        ? Number(((outputDefects[index] / totalProduction[index]) * 100).toFixed(2))
+        : 0);
 
     if (inspectionVsOutputChartInstance) inspectionVsOutputChartInstance.destroy();
     inspectionVsOutputChartInstance = new Chart(canvas, {
@@ -1064,19 +1071,32 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
             datasets: [
                 {
                     type: 'bar',
-                    label: 'ยอดการผลิตทั้งหมด',
-                    data: totalProduction,
-                    backgroundColor: 'rgba(56, 189, 248, 0.55)',
-                    borderColor: '#38bdf8',
+                    label: 'ของดี',
+                    data: goodProduction,
+                    backgroundColor: 'rgba(16, 185, 129, 0.82)',
+                    borderColor: '#10b981',
                     borderWidth: 1,
                     borderRadius: 5,
                     yAxisID: 'y',
+                    stack: 'production',
+                    order: 2
+                },
+                {
+                    type: 'bar',
+                    label: 'ของเสียรวม',
+                    data: totalWaste,
+                    backgroundColor: 'rgba(239, 68, 68, 0.86)',
+                    borderColor: '#ef4444',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    yAxisID: 'y',
+                    stack: 'production',
                     order: 2
                 },
                 {
                     type: 'line',
-                    label: 'คัดออกจากราว (Inspection)',
-                    data: rackRejects,
+                    label: '% คัดออกจากราว (Inspection)',
+                    data: rackRejectPercent,
                     borderColor: '#ef4444',
                     backgroundColor: '#ef4444',
                     pointBackgroundColor: '#ef4444',
@@ -1085,13 +1105,13 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
                     borderWidth: 3,
                     tension: 0.35,
                     fill: false,
-                    yAxisID: 'y',
+                    yAxisID: 'y1',
                     order: 0
                 },
                 {
                     type: 'line',
-                    label: 'ของเสียหลังพ่นสี (outputdiary)',
-                    data: outputDefects,
+                    label: '% ของเสียหลังพ่นสี (outputdiary)',
+                    data: outputDefectPercent,
                     borderColor: '#facc15',
                     backgroundColor: '#facc15',
                     pointBackgroundColor: '#facc15',
@@ -1100,7 +1120,7 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
                     borderWidth: 3,
                     tension: 0.35,
                     fill: false,
-                    yAxisID: 'y',
+                    yAxisID: 'y1',
                     order: 1
                 }
             ]
@@ -1124,7 +1144,11 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
                         footer: items => {
                             const index = items && items[0] ? items[0].dataIndex : -1;
                             return index >= 0
-                                ? `ยอดการผลิตทั้งหมด: ${totalProduction[index].toLocaleString()} ชิ้น`
+                                ? [
+                                    `ยอดผลิตทั้งหมด: ${totalProduction[index].toLocaleString()} ชิ้น`,
+                                    `ของดี: ${goodProduction[index].toLocaleString()} ชิ้น`,
+                                    `ของเสียรวม: ${totalWaste[index].toLocaleString()} ชิ้น`
+                                ]
                                 : '';
                         }
                     }
@@ -1136,13 +1160,25 @@ function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspect
             },
             scales: {
                 x: {
+                    stacked: true,
                     ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                 },
                 y: {
+                    stacked: true,
                     beginAtZero: true,
+                    title: { display: true, text: 'จำนวนชิ้น', color: '#94a3b8' },
                     ticks: { color: '#94a3b8' },
                     grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                },
+                y1: {
+                    beginAtZero: true,
+                    min: 0,
+                    max: 100,
+                    position: 'right',
+                    title: { display: true, text: 'เปอร์เซ็นต์ของเสีย', color: '#facc15' },
+                    ticks: { color: '#facc15', callback: value => `${value}%` },
+                    grid: { drawOnChartArea: false }
                 }
             }
         }
