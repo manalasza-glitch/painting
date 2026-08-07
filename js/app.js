@@ -2,6 +2,7 @@ let inspectionRecords = [];
 let dailyChartInstance = null;
 let dailyByDayChartInstance = null;
 let donutChartInstance = null;
+let inspectionVsOutputChartInstance = null;
 let outputDailyChartInstance = null;
 let topModelsChartInstance = null;
 let qualityYieldChartInstance = null;
@@ -700,6 +701,7 @@ function resetInspectionDashboard() {
     if (dailyChartInstance) { dailyChartInstance.destroy(); dailyChartInstance = null; }
     if (dailyByDayChartInstance) { dailyByDayChartInstance.destroy(); dailyByDayChartInstance = null; }
     if (donutChartInstance) { donutChartInstance.destroy(); donutChartInstance = null; }
+    if (inspectionVsOutputChartInstance) { inspectionVsOutputChartInstance.destroy(); inspectionVsOutputChartInstance = null; }
     const severityList = document.getElementById("defectProgressList");
     if (severityList) severityList.innerHTML = "";
     renderRecentTable([]);
@@ -1002,6 +1004,145 @@ function renderSeverityBars(defectsCategory, grandTotal) {
     }).join('');
 }
 
+// Compare the two separate waste stages by work date.  Inspection records
+// are rejects removed from the rack before painting is complete, while
+// outputdiary records are defects found during/after the painting process.
+// The bars show their combined waste total and the smooth lines keep both
+// sources visible so a high day can be explained by its actual stage.
+function renderInspectionVsOutputChart(outputRows = [], inspectionRows = inspectionRecords, range = getDashboardDateRange()) {
+    const canvas = document.getElementById('inspectionVsOutputChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const hasDateFilter = Boolean(range && (range.start || range.end));
+    const outputData = Array.isArray(outputRows) ? outputRows : [];
+    const inspectionData = Array.isArray(inspectionRows) ? inspectionRows : [];
+    const filteredOutput = hasDateFilter
+        ? outputData.filter(record => dashboardRecordInDateRange(record, range))
+        : outputData;
+    const filteredInspection = hasDateFilter
+        ? inspectionData.filter(record => dashboardRecordInDateRange(record, range))
+        : inspectionData;
+
+    const daily = new Map();
+    const ensureDay = date => {
+        if (!date) return null;
+        if (!daily.has(date)) daily.set(date, { outputDefects: 0, rackRejects: 0 });
+        return daily.get(date);
+    };
+
+    filteredOutput.forEach(record => {
+        const day = ensureDay(qc7RecordDate(record));
+        if (day) day.outputDefects += qc7OutputDefectTotal(record);
+    });
+    filteredInspection.forEach(record => {
+        const day = ensureDay(qc7RecordDate(record));
+        if (day) day.rackRejects += qc7InspectionRejectTotal(record);
+    });
+
+    const labels = Array.from(daily.keys()).sort();
+    if (labels.length === 0) {
+        if (inspectionVsOutputChartInstance) {
+            inspectionVsOutputChartInstance.destroy();
+            inspectionVsOutputChartInstance = null;
+        }
+        return;
+    }
+
+    const rackRejects = labels.map(date => daily.get(date).rackRejects);
+    const outputDefects = labels.map(date => daily.get(date).outputDefects);
+    const totalDefects = labels.map((date, index) => rackRejects[index] + outputDefects[index]);
+
+    if (inspectionVsOutputChartInstance) inspectionVsOutputChartInstance.destroy();
+    inspectionVsOutputChartInstance = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: 'ของเสียรวม',
+                    data: totalDefects,
+                    backgroundColor: 'rgba(56, 189, 248, 0.55)',
+                    borderColor: '#38bdf8',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    yAxisID: 'y',
+                    order: 2
+                },
+                {
+                    type: 'line',
+                    label: 'คัดออกจากราว (Inspection)',
+                    data: rackRejects,
+                    borderColor: '#ef4444',
+                    backgroundColor: '#ef4444',
+                    pointBackgroundColor: '#ef4444',
+                    pointBorderColor: '#ef4444',
+                    pointRadius: 4,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: false,
+                    yAxisID: 'y',
+                    order: 0
+                },
+                {
+                    type: 'line',
+                    label: 'ของเสียหลังพ่นสี (outputdiary)',
+                    data: outputDefects,
+                    borderColor: '#facc15',
+                    backgroundColor: '#facc15',
+                    pointBackgroundColor: '#facc15',
+                    pointBorderColor: '#facc15',
+                    pointRadius: 4,
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: false,
+                    yAxisID: 'y',
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#e2e8f0',
+                        font: { family: 'Sarabun', size: window.innerWidth < 640 ? 10 : 12 },
+                        boxWidth: window.innerWidth < 640 ? 10 : 18,
+                        padding: window.innerWidth < 640 ? 5 : 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        footer: items => {
+                            const index = items && items[0] ? items[0].dataIndex : -1;
+                            return index >= 0 ? `ของเสียรวม: ${totalDefects[index].toLocaleString()} ชิ้น` : '';
+                        }
+                    }
+                },
+                zoom: {
+                    pan: { enabled: true, mode: 'x' },
+                    zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x' }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                }
+            }
+        }
+    });
+}
+
 function renderTables() {
     renderRecentTable(inspectionRecords);
     renderFullHistoryTable(inspectionRecords);
@@ -1196,6 +1337,10 @@ async function renderDailyReportCharts() {
     const hasDateFilter = Boolean(range.start || range.end);
     const apiDateFilter = range.start && range.end && range.start === range.end ? range.start : "";
     const data = await fetchDailyReportDataFromAPI(apiDateFilter);
+
+    // Render this comparison independently of the production KPI/chart data;
+    // it must still show Inspection-only days when outputdiary has no rows.
+    renderInspectionVsOutputChart(data || [], inspectionRecords, range);
     
     if (!data || data.length === 0) {
         // Reset KPI Elements to 0
