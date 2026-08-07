@@ -106,6 +106,7 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
 
 let PAINTING_MODEL_GROUPS = JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
 const PAINTING_PRODUCT_CATALOG_CACHE = "PAINTING_PRODUCT_CATALOG_CACHE_V2";
+const PAINTING_ADD_MODEL_VALUE = "__ADD_MODEL__";
 
 function escapeDailyReportHtml(value) {
     return String(value ?? "")
@@ -131,6 +132,28 @@ function normalizeProductCatalog(source) {
         if (Object.keys(categories).length) candidate[groupName] = { categories, colors };
     }
     return Object.keys(candidate).length ? candidate : JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
+}
+
+function mergeProductCatalog(base, extra) {
+    const merged = normalizeProductCatalog(base);
+    if (!extra || typeof extra !== 'object') return merged;
+    Object.entries(extra).forEach(([groupName, group]) => {
+        if (!group || typeof group !== 'object') return;
+        if (!merged[groupName]) merged[groupName] = { categories: {}, colors: [] };
+        if (!merged[groupName].categories) merged[groupName].categories = {};
+        Object.entries(group.categories || {}).forEach(([category, models]) => {
+            if (!Array.isArray(models)) return;
+            if (!merged[groupName].categories[category]) merged[groupName].categories[category] = [];
+            models.forEach(model => {
+                const item = typeof model === 'string' ? { value: model, label: model } : model;
+                if (!item || !item.value) return;
+                if (!merged[groupName].categories[category].some(existing => String(existing.value) === String(item.value))) {
+                    merged[groupName].categories[category].push({ value: String(item.value), label: String(item.label || item.value) });
+                }
+            });
+        });
+    });
+    return merged;
 }
 
 function selectedProductGroup() {
@@ -161,12 +184,50 @@ function renderPartGroupDropdownUI(productGroup = selectedProductGroup()) {
 function renderModelDropdownOptions(productGroup = selectedProductGroup(), category = document.getElementById('drPartGroup')?.value || "") {
     const models = PAINTING_MODEL_GROUPS[productGroup]?.categories?.[category] || [];
     const html = productGroup && category ? '<option value="">-- เลือกรุ่นงาน / รหัส --</option>' : '<option value="">-- เลือกประเภทชิ้นงานก่อน --</option>';
+    const addOption = productGroup && category
+        ? '<option value="' + PAINTING_ADD_MODEL_VALUE + '">➕ เพิ่มรายการ</option>'
+        : '';
     document.querySelectorAll('.model-select').forEach(select => {
         const previous = select.value;
-        select.innerHTML = html + models.map(item => `<option value="${escapeDailyReportHtml(item.value)}">${escapeDailyReportHtml(item.label)}</option>`).join('');
+        select.innerHTML = html + models.map(item => `<option value="${escapeDailyReportHtml(item.value)}">${escapeDailyReportHtml(item.label)}</option>`).join('') + addOption;
         select.disabled = !(productGroup && category);
         if (previous && models.some(item => item.value === previous)) select.value = previous;
     });
+}
+
+function handleModelSelect(select) {
+    if (!select || select.value !== PAINTING_ADD_MODEL_VALUE) return;
+
+    const productGroup = selectedProductGroup();
+    const category = document.getElementById('drPartGroup')?.value || '';
+    const models = PAINTING_MODEL_GROUPS[productGroup]?.categories?.[category];
+    if (!models) {
+        select.value = '';
+        return;
+    }
+
+    const modelName = window.prompt('ชื่อ/รายละเอียดรุ่นงานใหม่');
+    if (!modelName || !modelName.trim()) {
+        select.value = '';
+        return;
+    }
+    const modelCode = window.prompt('รหัสรุ่นงาน (ถ้ามี)') || '';
+    const name = modelName.trim();
+    const code = modelCode.trim();
+    const value = code || name;
+    if (models.some(item => String(item.value).trim().toLowerCase() === value.toLowerCase())) {
+        showToast('มีรายการรุ่นงานนี้อยู่แล้ว', 'error');
+        renderModelDropdownOptions(productGroup, category);
+        select.value = value;
+        return;
+    }
+
+    const entry = { value, label: code ? `${name} (${code})` : name };
+    models.push(entry);
+    localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
+    renderModelDropdownOptions(productGroup, category);
+    select.value = value;
+    showToast('เพิ่มรายการรุ่นงานแล้ว', 'success');
 }
 
 function renderColorDropdownUI(productGroup = selectedProductGroup()) {
@@ -201,9 +262,13 @@ function filterModelDropdown() {
 }
 
 async function loadPartModelsList() {
+    let localCatalog = null;
     const cached = localStorage.getItem(PAINTING_PRODUCT_CATALOG_CACHE);
     if (cached) {
-        try { PAINTING_MODEL_GROUPS = normalizeProductCatalog(JSON.parse(cached)); } catch (e) {}
+        try {
+            localCatalog = normalizeProductCatalog(JSON.parse(cached));
+            PAINTING_MODEL_GROUPS = localCatalog;
+        } catch (e) {}
     }
     renderProductGroupDropdownUI();
     filterProductGroupDropdown();
@@ -211,8 +276,8 @@ async function loadPartModelsList() {
         const cloudGroups = await fetchPartModelsFromAPI();
         if (cloudGroups && typeof cloudGroups === 'object') {
             const normalized = normalizeProductCatalog(cloudGroups);
-            PAINTING_MODEL_GROUPS = normalized;
-            localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(normalized));
+            PAINTING_MODEL_GROUPS = mergeProductCatalog(normalized, localCatalog);
+            localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
             renderProductGroupDropdownUI();
             filterProductGroupDropdown();
         }
