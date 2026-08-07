@@ -19,13 +19,23 @@ const PART_MODEL_CATALOG = {
   "LC600 Classic": { colors: [{ value: "GREY BUTTER", label: "GREY BUTTER (1025216PX20)", code: "1025216PX20" }], categories: {
     "Flat Door": [{ value: "7517016200", label: "Flat Door (7517016200)" }],
     "Gland Plate": [{ value: "7517014800", label: "Gland Plate (7517014800)" }],
-    "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+    "Cover (Four types)": [
+      { value: "75170152", label: "Cover (Four types) (75170152)" },
+      { value: "75170153", label: "Cover (Four types) (75170153)" },
+      { value: "75170154", label: "Cover (Four types) (75170154)" },
+      { value: "75170155", label: "Cover (Four types) (75170155)" }
+    ],
     "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
   } },
   "LC600 Visi-smart": { colors: [{ value: "WHITE", label: "WHITE (1003532PX20)", code: "1003532PX20" }], categories: {
     "Curve Door": [{ value: "7517016600", label: "Curve Door (7517016600)" }],
     "Gland Plate": [{ value: "7517014000", label: "Gland Plate (7517014000)" }],
-    "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+    "Cover (Four types)": [
+      { value: "75170152", label: "Cover (Four types) (75170152)" },
+      { value: "75170153", label: "Cover (Four types) (75170153)" },
+      { value: "75170154", label: "Cover (Four types) (75170154)" },
+      { value: "75170155", label: "Cover (Four types) (75170155)" }
+    ],
     "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
   } },
   "PDB": { colors: [{ value: "WHITE N-47", label: "WHITE N-47 (1214891PX20)", code: "1214891PX20" }], categories: {

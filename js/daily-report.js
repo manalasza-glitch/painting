@@ -7,7 +7,12 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
         categories: {
             "Flat Door": [{ value: "7517016200", label: "Flat Door (7517016200)" }],
             "Gland Plate": [{ value: "7517014800", label: "Gland Plate (7517014800)" }],
-            "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+            "Cover (Four types)": [
+                { value: "75170152", label: "Cover (Four types) (75170152)" },
+                { value: "75170153", label: "Cover (Four types) (75170153)" },
+                { value: "75170154", label: "Cover (Four types) (75170154)" },
+                { value: "75170155", label: "Cover (Four types) (75170155)" }
+            ],
             "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
         }
     },
@@ -16,7 +21,12 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
         categories: {
             "Curve Door": [{ value: "7517016600", label: "Curve Door (7517016600)" }],
             "Gland Plate": [{ value: "7517014000", label: "Gland Plate (7517014000)" }],
-            "Cover (Four types)": [{ value: "75170152/3/4/500", label: "Cover (Four types) (75170152/3/4/500)" }],
+            "Cover (Four types)": [
+                { value: "75170152", label: "Cover (Four types) (75170152)" },
+                { value: "75170153", label: "Cover (Four types) (75170153)" },
+                { value: "75170154", label: "Cover (Four types) (75170154)" },
+                { value: "75170155", label: "Cover (Four types) (75170155)" }
+            ],
             "Box": [{ value: "7517014500", label: "Box (7517014500)" }]
         }
     },
