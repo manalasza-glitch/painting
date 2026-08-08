@@ -738,6 +738,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path><path d="m16 16 1.5 1.5L21 14"></path></svg>
                     <span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
                 </a>
+                <a href="#" class="nav-link" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h16"></path><path d="m17 10 3 2-3 2"></path></svg>
+                    REWORK
+                </a>
                 <div id="checklist-submenu" class="sidebar-submenu" hidden>
                     <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)">
                         <span style="width:20px; text-align:center;">•</span>
@@ -1498,6 +1502,11 @@
                     </div>
                 </section>
 
+                <!-- TAB: REWORK (แยกเก็บในชีต REWORK) -->
+                <section id="rework-tab" class="tab-page" data-permission="rework.read" style="display: none;">
+                    <div id="reworkFormRoot"></div>
+                </section>
+
                 <!-- TAB 2: HISTORY TABLE -->
                 <section id="history-tab" class="tab-page" data-permission="history.read" style="display: none;">
                     <div class="section-title-bar">
@@ -1671,6 +1680,10 @@
             <div class="mobile-nav-item mobile-checklist-trigger" role="button" tabindex="0" data-mobile-checklist="true" data-permission="checklist.read" onclick="toggleMobileChecklistMenu(event, this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') toggleMobileChecklistMenu(event, this)" aria-expanded="false" aria-controls="mobile-checklist-menu">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m16 16 1.5 1.5L21 14"/></svg>
                 <span>เช็กลิสก่อนเริ่มงาน</span>
+            </div>
+            <div class="mobile-nav-item" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"/><path d="m17 10 3 2-3 2"/></svg>
+                <span>REWORK</span>
             </div>
             <div class="mobile-nav-item" data-permission="events.read" onclick="switchTab('event-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -2002,6 +2015,7 @@
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.32.0"></script>
     <script src="js/daily-report.js?v=94.1.0"></script>
+    <script src="js/rework.js?v=1.0.1"></script>
     <script src="js/parameter-checklist.js?v=1.12.0"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
     <script src="js/events.js?v=89.4.0"></script>

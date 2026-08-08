@@ -10,9 +10,10 @@ const DAILY_REPORT_RUST_HEADER = "Rust";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
+const REWORK_SHEET_NAME = "REWORK";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
-const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read", "users.manage"];
-const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "inspection.create", "daily_report.read", "checklist.read", "events.read", "history.read"];
+const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "checklist.read", "events.read", "history.read", "users.manage"];
+const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "checklist.read", "events.read", "history.read"];
 
 // Production catalog used by the daily report cascading selectors.
 const PART_MODEL_CATALOG = {
@@ -135,6 +136,87 @@ function hasDailyReportSubmission(sheet, submissionId, idColumn) {
   if (!submissionId || sheet.getLastRow() < 2) return false;
   const values = sheet.getRange(2, idColumn, sheet.getLastRow() - 1, 1).getValues();
   return values.some(row => String(row[0] || "").trim() === submissionId);
+}
+
+// REWORK intentionally uses its own sheet, while keeping the same row shape
+// as outputdiary so the production form can be reused without mixing data.
+function reworkReportHeaders_() {
+  return [
+    "Timestamp", "Date", "Shift", "Recorder", "Checker",
+    "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note",
+    "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint", "ThickPaint",
+    "WaterStain", "OtherDefect", "TotalDefect", DAILY_REPORT_ID_HEADER, DAILY_REPORT_COLOR_HEADER,
+    DAILY_REPORT_PRODUCT_GROUP_HEADER, DAILY_REPORT_PART_CATEGORY_HEADER, DAILY_REPORT_COLOR_CODE_HEADER,
+    DAILY_REPORT_DUST_HEADER, DAILY_REPORT_OIL_HEADER, DAILY_REPORT_RUST_HEADER
+  ];
+}
+
+function ensureReworkReportSheet_(ss) {
+  let sheet = ss.getSheetByName(REWORK_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(REWORK_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(reworkReportHeaders_());
+    sheet.setFrozenRows(1);
+  }
+  ensureDailyReportIdColumn(sheet);
+  ensureDailyReportColorColumn(sheet);
+  ensureDailyReportCatalogColumns(sheet);
+  return sheet;
+}
+
+function appendReworkReport_(ss, payload) {
+  const sheet = ensureReworkReportSheet_(ss);
+  const submissionId = String(payload.submissionId || "").trim();
+  const idColumn = ensureDailyReportIdColumn(sheet);
+  if (hasDailyReportSubmission(sheet, submissionId, idColumn)) return { duplicate: true };
+
+  const now = new Date();
+  const dateVal = String(payload.date || formatDateStr(now, false));
+  const shiftVal = String(payload.shift || "");
+  const recorderVal = String(payload.recorder || "");
+  const checkerVal = String(payload.checker || "");
+  const dt = payload.downtime || {};
+  const burner = Number(dt.burner) || 0;
+  const wash = Number(dt.wash) || 0;
+  const ovenEtc = (Number(dt.oven) || 0) + (Number(dt.gun) || 0) + (Number(dt.power) || 0) + (Number(dt.motor) || 0) + (Number(dt.other) || 0);
+  const dtNote = String(dt.note || "");
+  const records = Array.isArray(payload.records) ? payload.records : [];
+
+  records.forEach(r => {
+    const values = [
+      now, dateVal, shiftVal, recorderVal, checkerVal,
+      burner, wash, ovenEtc, dtNote,
+      String(r.model || ""), String(r.timeSlot || ""), Number(r.prodQty) || 0,
+      Number(r.dent) || 0, Number(r.colorDrop) || 0, Number(r.thinPaint) || 0,
+      Number(r.thickPaint) || 0, Number(r.waterStain) || 0, Number(r.otherDefect) || 0,
+      Number(r.totalDefect) || 0, submissionId, String(r.color || ""),
+      String(r.productGroup || ""), String(r.partCategory || ""), String(r.colorCode || ""),
+      Number(r.dust) || 0, Number(r.oil) || 0, Number(r.rust) || 0
+    ];
+    sheet.appendRow(values);
+  });
+  SpreadsheetApp.flush();
+  return { duplicate: false, rows: records.length };
+}
+
+function readReworkReports_(ss, requestedDate) {
+  const sheet = ss.getSheetByName(REWORK_SHEET_NAME);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const values = sheet.getDataRange().getValues();
+  values.shift();
+  const data = values.map(r => ({
+    timestamp: formatDateStr(r[0], true), date: formatDateStr(r[1], false), shift: String(r[2] || ""),
+    recorder: String(r[3] || ""), checker: String(r[4] || ""), downtimeBurner: Number(r[5]) || 0,
+    downtimeWash: Number(r[6]) || 0, downtimeOvenEtc: Number(r[7]) || 0, downtimeNote: String(r[8] || ""),
+    model: String(r[9] || ""), timeSlot: String(r[10] || ""), prodQty: Number(r[11]) || 0,
+    dent: Number(r[12]) || 0, colorDrop: Number(r[13]) || 0, thinPaint: Number(r[14]) || 0,
+    thickPaint: Number(r[15]) || 0, waterStain: Number(r[16]) || 0, otherDefect: Number(r[17]) || 0,
+    totalDefect: Number(r[18]) || 0, submissionId: String(r[19] || ""), color: String(r[20] || ""),
+    productGroup: String(r[21] || ""), partCategory: String(r[22] || ""), colorCode: String(r[23] || ""),
+    dust: Number(r[24]) || 0, oil: Number(r[25]) || 0, rust: Number(r[26]) || 0
+  }));
+  const filter = String(requestedDate || "").trim();
+  return filter ? data.filter(r => String(r.date || "").substring(0, 10) === filter) : data;
 }
 
 function ensureParameterChecklistSheet(ss, checklistType) {
@@ -538,6 +620,12 @@ function doPost(e) {
       }
     }
 
+    // Handle REWORK submissions in the separate REWORK sheet.
+    if (action === "submitReworkReport") {
+      const result = appendReworkReport_(ss, data || {});
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitReworkReport", duplicate: !!result.duplicate, rows: result.rows || 0 })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle submitDailyReport action
     if (action === "submitDailyReport") {
       const TARGET_SHEET_NAME = "outputdiary";
@@ -917,6 +1005,18 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "User not found" })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Handle REWORK submission via GET (fallback used by the static web app).
+    if (action === "submitReworkReport") {
+      let reworkPayload = {};
+      if (e && e.parameter && e.parameter.payload) {
+        try { reworkPayload = JSON.parse(e.parameter.payload); } catch (parseErr) {}
+      } else {
+        reworkPayload = e && e.parameter ? e.parameter : {};
+      }
+      const result = appendReworkReport_(ss, reworkPayload);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitReworkReport", duplicate: !!result.duplicate, rows: result.rows || 0 })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Handle submitDailyReport via GET (fallback)
     if (action === "submitDailyReport") {
       const TARGET_SHEET_NAME = "outputdiary";
@@ -1075,6 +1175,14 @@ function doGet(e) {
       });
       SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "submitEquipmentChecklist" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Handle REWORK history. Opening the menu creates the dedicated sheet
+    // without touching outputdiary.
+    if (action === "getReworkReportData") {
+      const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
+      ensureReworkReportSheet_(ss);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readReworkReports_(ss, requestedDate) })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getDailyReportData action (outputdiary sheet tab)

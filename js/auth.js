@@ -11,6 +11,7 @@ const PaintingAuth = {
         { key: "qc.read", label: "ดู QC" },
         { key: "inspection.create", label: "บันทึกงานตรวจ" },
         { key: "daily_report.read", label: "ดูรายงานรายวัน" },
+        { key: "rework.read", label: "ดู REWORK" },
         { key: "checklist.read", label: "ดูเช็กลิสก่อนเริ่มงาน" },
         { key: "events.read", label: "ดู Event (5M1E)" },
         { key: "history.read", label: "ดูประวัติย้อนหลัง" },

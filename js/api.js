@@ -341,6 +341,32 @@ async function sendDailyReportToAPI(payload) {
     }
 }
 
+// REWORK uses the same record payload as the daily form, but writes to its
+// dedicated REWORK sheet through a separate Apps Script action.
+async function sendReworkReportToAPI(payload) {
+    const baseUrl = getApiUrl();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitReworkReport';
+    try {
+        activeSyncRequests++;
+        updateSyncUI();
+        const response = await fetch(url, {
+            method: "POST",
+            cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        const result = await requireJsonResponse(response, "Submit REWORK report");
+        if (!result || result.status !== "success" || result.action !== "submitReworkReport") {
+            throw new Error("Submit REWORK report: backend did not confirm the save");
+        }
+        localStorage.removeItem("PAINTING_REWORK_CACHE");
+        return result;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
+    }
+}
+
 function getRealSheetData() {
     const realData = [
         { rowIndex: 2, date: "2026-07-25 17:00", rust: 29, dent: 0, weld: 0, chemical: 8, oil: 0, note: "", timestamp: "2026-07-25 17:00" },
@@ -488,6 +514,33 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
         } catch (e) {}
     }
 
+    return [];
+}
+
+async function fetchReworkReportDataFromAPI(dateFilter = "") {
+    const baseUrl = getApiUrl();
+    const requestedDate = String(dateFilter || "").trim();
+    const cacheKey = requestedDate ? `PAINTING_REWORK_CACHE_${requestedDate}` : "PAINTING_REWORK_CACHE";
+    if (baseUrl) {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getReworkReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
+        try {
+            const response = await fetch(url, { cache: "no-cache" });
+            const json = await response.json();
+            if (json && json.status === "success" && Array.isArray(json.data)) {
+                localStorage.setItem(cacheKey, JSON.stringify(json.data));
+                return json.data;
+            }
+        } catch (error) {
+            console.warn("Failed to fetch REWORK history from cloud, checking cache:", error);
+        }
+    }
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached !== null) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (_) {}
     return [];
 }
 
@@ -755,6 +808,7 @@ const USER_PERMISSION_KEYS = [
     "qc.read",
     "inspection.create",
     "daily_report.read",
+    "rework.read",
     "checklist.read",
     "events.read",
     "history.read",

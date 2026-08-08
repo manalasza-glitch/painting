@@ -132,6 +132,9 @@ async function initializePaintingApp() {
         if (hasAppPermission('daily_report.read') && typeof initDailyReportForm === 'function') {
             initDailyReportForm();
         }
+        if (hasAppPermission('rework.read') && typeof initReworkForm === 'function') {
+            initReworkForm();
+        }
         if (hasAppPermission('checklist.read') && typeof initParameterChecklist === 'function') {
             initParameterChecklist();
         }
@@ -347,6 +350,9 @@ function switchTab(tabId, element) {
         if (typeof renderDailyReportList === 'function') {
             renderDailyReportList();
         }
+    } else if (tabId === "rework-tab") {
+        if (typeof initReworkForm === 'function') initReworkForm();
+        if (typeof refreshReworkHistory === 'function') refreshReworkHistory();
     } else if (tabId === "parameter-checklist-tab") {
         if (typeof initParameterChecklist === 'function') {
             initParameterChecklist();
