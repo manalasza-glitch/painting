@@ -738,10 +738,6 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path><path d="m16 16 1.5 1.5L21 14"></path></svg>
                     <span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
                 </a>
-                <a href="#" class="nav-link" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4-5 5 5 5"></path><path d="M4 9h10a6 6 0 0 1 6 6v5"></path></svg>
-                    REWORK
-                </a>
                 <div id="checklist-submenu" class="sidebar-submenu" hidden>
                     <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)">
                         <span style="width:20px; text-align:center;">•</span>
@@ -756,6 +752,10 @@
                         ตรวจเช็กอุปกรณ์
                     </a>
                 </div>
+                <a href="#" class="nav-link" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4-5 5 5 5"></path><path d="M4 9h10a6 6 0 0 1 6 6v5"></path></svg>
+                    REWORK
+                </a>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
                     Event (บันทึก 5M1E)
