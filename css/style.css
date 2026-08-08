@@ -1746,6 +1746,34 @@ button, input, textarea, select {
     gap: 0.85rem;
     margin-left: auto;
 }
+.rework-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+.rework-history-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.rework-history-table .rw-col-date { width: 14%; }
+.rework-history-table .rw-col-model { width: 18%; }
+.rework-history-table .rw-col-time { width: 16%; }
+.rework-history-table .rw-col-color { width: 13%; }
+.rework-history-table .rw-col-output { width: 13%; }
+.rework-history-table .rw-col-defect { width: 13%; }
+.rework-history-table .rw-col-action { width: 13%; }
+.rework-history-table th,
+.rework-history-table td {
+    padding: 0.85rem 0.7rem;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rework-history-table td.empty-state {
+    white-space: normal;
+}
 .rework-form-card .btn-primary,
 .rework-form-card .btn-secondary,
 .rework-form-card .btn-danger {
@@ -1761,6 +1789,7 @@ button, input, textarea, select {
     .rework-form-actions, .rework-submit-actions { justify-content: stretch; }
     .rework-form-actions button, .rework-submit-actions button { width: 100%; }
     .rework-refresh-btn { width: 100%; }
+    .rework-history-table { min-width: 720px; }
 }
 
 .dashboard-date-range {

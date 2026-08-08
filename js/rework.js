@@ -148,7 +148,7 @@ function reworkFormMarkup() {
                     </button>
                 </div>
             </div>
-            <div class="table-responsive"><table class="data-table"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>ช่วงเวลา</th><th>สี</th><th>ยอดผลิต</th><th>ยอดเสีย</th><th>จัดการ</th></tr></thead><tbody id="reworkListBody"><tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr></tbody></table></div>
+            <div class="table-responsive rework-table-wrap"><table class="data-table rework-history-table"><colgroup><col class="rw-col-date"><col class="rw-col-model"><col class="rw-col-time"><col class="rw-col-color"><col class="rw-col-output"><col class="rw-col-defect"><col class="rw-col-action"></colgroup><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>ช่วงเวลา</th><th>สี</th><th>ยอดผลิต</th><th>ยอดเสีย</th><th>จัดการ</th></tr></thead><tbody id="reworkListBody"><tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr></tbody></table></div>
         </div>`;
 }
 
