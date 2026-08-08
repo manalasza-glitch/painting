@@ -2509,6 +2509,12 @@ button, input, textarea, select {
   width: 100% !important;
 }
 
+/* The REWORK report belongs at the very bottom of the Dashboard content. */
+#dashboard-tab.active > #dashboardReworkReport {
+  order: 6 !important;
+  width: 100% !important;
+}
+
 @media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
