@@ -1614,6 +1614,76 @@ button, input, textarea, select {
     justify-content: space-between;
 }
 
+/* QC daily report is shown as one table per product group. */
+.qc-daily-report-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.qc-daily-report-heading > span,
+.qc-daily-group-heading > span {
+    color: #38bdf8;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.qc-daily-report-groups {
+    display: grid;
+    gap: 1rem;
+}
+
+.qc-daily-group-card {
+    overflow: hidden;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.48);
+}
+
+.qc-daily-group-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+    background: rgba(30, 41, 59, 0.58);
+}
+
+.qc-daily-group-heading h4 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.qc-daily-group-table th,
+.qc-daily-group-table td {
+    padding: 0.75rem 0.85rem;
+}
+
+.qc-daily-report-empty {
+    padding: 2rem 1rem;
+    color: #94a3b8;
+    text-align: center;
+}
+
+@media (max-width: 700px) {
+    .qc-daily-report-heading,
+    .qc-daily-group-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .qc-daily-group-table {
+        min-width: 720px;
+    }
+}
+
 .dr-defect-label {
     color: #f8fafc;
     font-weight: 800;

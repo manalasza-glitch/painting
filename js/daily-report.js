@@ -1021,5 +1021,82 @@ async function generate1MonthMockData() {
 }
 
 function renderQCDailyReportHistory() {
-    renderDailyReportList('qcDailyReportListBody');
+    const container = document.querySelector('.qc-daily-report-history-card');
+    if (!container) return;
+
+    const existingTitle = container.querySelector('.dr-section-title')?.textContent?.trim() || 'รายการพ่นสีรายวัน';
+    const records = getSavedDailyReportRecords();
+
+    if (records.length === 0) {
+        container.innerHTML = `
+            <h3 class="dr-section-title" style="margin:0 0 1rem;">${escapeDailyReportHtml(existingTitle)}</h3>
+            <div class="qc-daily-report-empty">ยังไม่มีรายการพ่นสีรายวัน</div>
+        `;
+        return;
+    }
+
+    const grouped = new Map();
+    records.forEach(record => {
+        const group = getDailyReportProductGroup(record);
+        if (!grouped.has(group)) grouped.set(group, []);
+        grouped.get(group).push(record);
+    });
+
+    const groupNames = [
+        ...PAINTING_PRODUCT_GROUP_ORDER.filter(group => grouped.has(group)),
+        ...Array.from(grouped.keys()).filter(group => !PAINTING_PRODUCT_GROUP_ORDER.includes(group))
+    ];
+
+    const renderRows = rows => rows.map(record => `
+        <tr>
+            <td style="font-weight:700; white-space:nowrap;">${formatDailyReportDate(record.date || record.Date, record.timestamp || record.Timestamp)}</td>
+            <td style="font-weight:700;">${escapeDailyReportHtml(record.model || record.Model || '-')}</td>
+            <td><span class="badge" style="background:rgba(56,189,248,.15); color:#38bdf8; border:1px solid rgba(56,189,248,.3);">${escapeDailyReportHtml(record.timeSlot || record.TimeSlot || '-')}</span></td>
+            <td style="text-align:center;">${escapeDailyReportHtml(record.color || record.Color || 'ไม่ระบุ')}</td>
+            <td style="font-weight:800; color:#34d399; text-align:center;">${Number(record.prodQty || record.ProdQty || record.prod_qty || record.qty) || 0}</td>
+            <td style="text-align:center;"><span class="badge-defect ${getDailyReportDefectTotal(record) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(record)}</span></td>
+            <td style="text-align:center; font-size:.78rem; color:#38bdf8; font-weight:700;">บันทึกแล้ว</td>
+        </tr>
+    `).join('');
+
+    const groupTables = groupNames.map(group => {
+        const rows = grouped.get(group) || [];
+        return `
+            <section class="qc-daily-group-card">
+                <div class="qc-daily-group-heading">
+                    <h4>กลุ่มผลิตภัณฑ์: ${escapeDailyReportHtml(group)}</h4>
+                    <span>${rows.length} รายการ</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table qc-daily-group-table" style="width:100%; border-collapse:separate; border-spacing:0;">
+                        <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">สถานะ</th></tr></thead>
+                        <tbody>${renderRows(rows)}</tbody>
+                    </table>
+                </div>
+            </section>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="qc-daily-report-heading">
+            <h3 class="dr-section-title" style="margin:0;">${escapeDailyReportHtml(existingTitle)}</h3>
+            <span>${records.length} รายการทั้งหมด</span>
+        </div>
+        <div class="qc-daily-report-groups">${groupTables}</div>
+    `;
+}
+
+function getDailyReportProductGroup(record) {
+    const explicit = record?.productGroup || record?.ProductGroup || record?.product_group;
+    if (String(explicit || '').trim()) return String(explicit).trim();
+
+    const model = String(record?.model || record?.Model || '').trim();
+    if (model) {
+        for (const group of PAINTING_PRODUCT_GROUP_ORDER) {
+            const categories = PAINTING_MODEL_GROUPS[group]?.categories || {};
+            const matched = Object.values(categories).some(models => (models || []).some(item => String(item.value || item).trim() === model));
+            if (matched) return group;
+        }
+    }
+    return 'ไม่ระบุ';
 }
