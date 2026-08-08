@@ -23,7 +23,7 @@ const PARAMETER_CHECKLIST_SOURCE_ITEMS = [
     { itemNo: 24, process: "อบแห้ง", checkItem: "ตรวจสอบการรั่วของแก๊ส", standard: "ไม่มีการรั่ว" },
     { itemNo: 25, process: "พ่นสีอัตโนมัติ", checkItem: "แรงดันไฟฟ้า", standard: "40-80 KV" },
     { itemNo: 26, process: "พ่นสีอัตโนมัติ", checkItem: "กระแสไฟฟ้า", standard: "40-60 mA" },
-    { itemNo: 28, process: "พ่นสีอัตโนมัติ", checkItem: "แรงดันลม", standard: "2-4 M3/H" },
+    { itemNo: 28, process: "พ่นสีอัตโนมัติ", checkItem: "แรงดันลม", standard: "2-6 M3/H" },
     { itemNo: 29, process: "พ่นสีอัตโนมัติ", checkItem: "ปริมาณการจ่ายผงสี", standard: "50-70" },
     { itemNo: 30, process: "พ่นสีอัตโนมัติ", checkItem: "ระยะห่างปืนพ่นกับชิ้นงาน", standard: "100-300 mm" },
     { itemNo: 31, process: "พ่นสีอัตโนมัติ", checkItem: "มุมระหว่างปืนพ่นกับชิ้นงาน", standard: "90°" },
