@@ -1070,36 +1070,6 @@
                         </div>
                     </div>
 
-                    <!-- Dedicated REWORK report. Data comes only from the REWORK sheet. -->
-                    <div id="dashboardReworkReport" class="dashboard-rework-report-section">
-                        <div class="section-title-bar dashboard-rework-title-bar">
-                            <div>
-                                <h2>↩️ สถิติงาน REWORK</h2>
-                                <p>ข้อมูลจากชีต REWORK ตามช่วงวันที่ที่เลือกด้านบน</p>
-                            </div>
-                        </div>
-                        <div class="chart-card navy-theme dashboard-rework-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 7 7v4"/></svg>
-                                    <span>แนวโน้มงาน REWORK รายวัน</span>
-                                </div>
-                                <div class="dashboard-rework-chart-actions">
-                                    <span class="dashboard-rework-summary"><strong id="dashboardReworkTotal">0</strong> ชิ้น</span>
-                                    <span class="dashboard-rework-summary dashboard-rework-summary-defect">ของเสีย <strong id="dashboardReworkDefectTotal">0</strong> ชิ้น</span>
-                                    <button type="button" class="dashboard-rework-refresh" onclick="loadReworkDashboardChart(true)" title="รีเฟรชข้อมูล REWORK" aria-label="รีเฟรชข้อมูล REWORK">↻</button>
-                                    <button class="btn-chart-expand" onclick="openChartFullscreen('reworkDailyChart', 'แนวโน้มงาน REWORK รายวัน')" title="ขยายเต็มหน้าจอ">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="chart-container-wrapper dashboard-rework-chart-wrapper">
-                                <canvas id="reworkDailyChart"></canvas>
-                                <div id="reworkDailyChartEmpty" class="dashboard-rework-empty" hidden>ยังไม่มีข้อมูล REWORK ในช่วงวันที่ที่เลือก</div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div id="dashboardRecentInspectionCard" class="table-card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                             <h3 style="font-size: 1.1rem; font-weight: 800; color: #0e3a60; margin: 0;">📋 รายการตรวจเช็คล่าสุด</h3>
@@ -1232,6 +1202,36 @@
                                 </thead>
                                 <tbody id="parameterChecklistItemsBody"></tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Dedicated REWORK report. Data comes only from the REWORK sheet. -->
+                    <div id="dashboardReworkReport" class="dashboard-rework-report-section">
+                        <div class="section-title-bar dashboard-rework-title-bar">
+                            <div>
+                                <h2>↩️ สถิติงาน REWORK</h2>
+                                <p>ข้อมูลจากชีต REWORK ตามช่วงวันที่ที่เลือกด้านบน</p>
+                            </div>
+                        </div>
+                        <div class="chart-card navy-theme dashboard-rework-chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h9a7 7 0 0 1 7 7v4"/></svg>
+                                    <span>แนวโน้มงาน REWORK รายวัน</span>
+                                </div>
+                                <div class="dashboard-rework-chart-actions">
+                                    <span class="dashboard-rework-summary"><strong id="dashboardReworkTotal">0</strong> ชิ้น</span>
+                                    <span class="dashboard-rework-summary dashboard-rework-summary-defect">ของเสีย <strong id="dashboardReworkDefectTotal">0</strong> ชิ้น</span>
+                                    <button type="button" class="dashboard-rework-refresh" onclick="loadReworkDashboardChart(true)" title="รีเฟรชข้อมูล REWORK" aria-label="รีเฟรชข้อมูล REWORK">↻</button>
+                                    <button class="btn-chart-expand" onclick="openChartFullscreen('reworkDailyChart', 'แนวโน้มงาน REWORK รายวัน')" title="ขยายเต็มหน้าจอ">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="chart-container-wrapper dashboard-rework-chart-wrapper">
+                                <canvas id="reworkDailyChart"></canvas>
+                                <div id="reworkDailyChartEmpty" class="dashboard-rework-empty" hidden>ยังไม่มีข้อมูล REWORK ในช่วงวันที่ที่เลือก</div>
+                            </div>
                         </div>
                     </div>
 
