@@ -138,14 +138,17 @@ function reworkFormMarkup() {
         </div>
 
         <div class="dr-card rework-form-card">
-            <div class="rework-list-heading"><h2 class="dr-section-title">รายการ REWORK ที่เพิ่ม</h2><strong id="reworkTotalSummary">0 รายการ</strong></div>
-            <div class="table-responsive"><table class="data-table"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>ช่วงเวลา</th><th>สี</th><th>ยอดผลิต</th><th>ยอดเสีย</th><th>จัดการ</th></tr></thead><tbody id="reworkListBody"><tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr></tbody></table></div>
-            <div class="rework-submit-actions">
-                <button type="button" class="rework-refresh-btn" onclick="refreshReworkHistory()">
-                    <span class="rework-refresh-icon" aria-hidden="true">↻</span>
-                    <span>รีเฟรชประวัติ</span>
-                </button>
+            <div class="rework-list-heading">
+                <h2 class="dr-section-title">รายการ REWORK ที่เพิ่ม</h2>
+                <div class="rework-list-toolbar">
+                    <strong id="reworkTotalSummary">0 รายการ</strong>
+                    <button type="button" class="rework-refresh-btn" onclick="refreshReworkHistory()">
+                        <span class="rework-refresh-icon" aria-hidden="true">↻</span>
+                        <span>รีเฟรชประวัติ</span>
+                    </button>
+                </div>
             </div>
+            <div class="table-responsive"><table class="data-table"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>ช่วงเวลา</th><th>สี</th><th>ยอดผลิต</th><th>ยอดเสีย</th><th>จัดการ</th></tr></thead><tbody id="reworkListBody"><tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr></tbody></table></div>
         </div>`;
 }
 
