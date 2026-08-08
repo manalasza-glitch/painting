@@ -84,6 +84,42 @@ function renderReworkColors() {
     reworkOptions("rwColor", colors, "-- เลือกสี --");
 }
 
+// REWORK uses the same recorder source and add-name flow as the daily
+// production form. The form markup starts with a fallback input for older
+// cached builds; convert it to the shared dropdown when the form is mounted.
+function ensureReworkRecorderSelect() {
+    const current = document.getElementById("rwRecorder");
+    if (!current) return null;
+    if (current.tagName !== "SELECT") {
+        const select = document.createElement("select");
+        select.id = "rwRecorder";
+        select.className = current.className || "form-control";
+        select.required = true;
+        select.setAttribute("onchange", "handleStaffSelectChange(this, 'recorder')");
+        current.replaceWith(select);
+        return select;
+    }
+    current.required = true;
+    current.setAttribute("onchange", "handleStaffSelectChange(this, 'recorder')");
+    return current;
+}
+
+function renderReworkRecorderDropdownUI() {
+    const select = ensureReworkRecorderSelect();
+    if (!select) return;
+    const current = select.value;
+    const recorders = typeof PAINTING_RECORDERS_LIST !== "undefined"
+        ? PAINTING_RECORDERS_LIST
+        : (Array.isArray(window.PAINTING_RECORDERS_LIST) ? window.PAINTING_RECORDERS_LIST : []);
+    let html = '<option value="">-- เลือกผู้บันทึก --</option>';
+    recorders.forEach(name => {
+        html += `<option value="${reworkEsc(name)}">${reworkEsc(name)}</option>`;
+    });
+    html += '<option value="__ADD_NEW__">➕ + เพิ่มรายชื่อผู้บันทึกใหม่...</option>';
+    select.innerHTML = html;
+    if (current && recorders.includes(current)) select.value = current;
+}
+
 function reworkFormMarkup() {
     const sharedSlots = (typeof PAINTING_TIMESLOTS !== "undefined" && PAINTING_TIMESLOTS) || window.PAINTING_TIMESLOTS;
     const slots = Array.isArray(sharedSlots) && sharedSlots.length
@@ -161,6 +197,7 @@ function initReworkForm() {
     if (!root) return;
     if (!reworkFormInitialized) {
         root.innerHTML = reworkFormMarkup();
+        ensureReworkRecorderSelect();
         const date = document.getElementById("rwDate");
         if (date) date.value = reworkToday();
         reworkFormInitialized = true;
@@ -172,6 +209,8 @@ function initReworkForm() {
             if (id === "rwProductGroup") { renderReworkPartGroups(); renderReworkColors(); } else renderReworkModels();
         }));
         renderReworkProductGroups();
+        renderReworkRecorderDropdownUI();
+        if (typeof renderStaffDropdowns === "function") renderStaffDropdowns();
     } else if (typeof window.renderReworkList === "function") {
         renderReworkList();
     }

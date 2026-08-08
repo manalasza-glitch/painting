@@ -406,6 +406,9 @@ function renderStaffDropdownsUI() {
     if (typeof populateEventRecorderDropdown === 'function') {
         populateEventRecorderDropdown();
     }
+    if (typeof renderReworkRecorderDropdownUI === 'function') {
+        renderReworkRecorderDropdownUI();
+    }
 }
 
 function renderStaffDropdowns() {
@@ -515,6 +518,8 @@ async function saveNewStaff() {
     if (recorderSelect) recorderSelect.value = newName;
     const eventRecorderSelect = document.getElementById('eventRecorderSelect');
     if (eventRecorderSelect) eventRecorderSelect.value = newName;
+    const reworkRecorderSelect = document.getElementById('rwRecorder');
+    if (reworkRecorderSelect) reworkRecorderSelect.value = newName;
 
     input.value = "";
     showToast(`เพิ่มรายชื่อ "${newName}" เรียบร้อยแล้ว`, "success");
