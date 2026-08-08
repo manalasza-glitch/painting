@@ -2041,6 +2041,17 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Keep the Dashboard-only REWORK report inside the Dashboard tab. -->
+    <script>
+        (function placeDashboardReworkReport() {
+            const report = document.getElementById('dashboardReworkReport');
+            const dashboard = document.getElementById('dashboard-tab');
+            if (report && dashboard && report.parentElement !== dashboard) {
+                dashboard.appendChild(report);
+            }
+        })();
+    </script>
+
     <!-- JS Files -->
     <script src="js/api.js?v=96.7.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
