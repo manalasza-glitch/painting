@@ -91,10 +91,6 @@ function reworkFormMarkup() {
                 <h1 class="page-title">REWORK</h1>
                 <p class="page-subtitle">แบบฟอร์มบันทึกงานแก้ไข/ทำซ้ำ แยกจากแบบฟอร์มผลิตรายวัน</p>
             </div>
-            <button type="button" class="rework-refresh-btn" onclick="refreshReworkHistory()">
-                <span class="rework-refresh-icon" aria-hidden="true">↻</span>
-                <span>รีเฟรชประวัติ</span>
-            </button>
         </div>
 
         <div class="dr-card rework-form-card">
@@ -122,7 +118,7 @@ function reworkFormMarkup() {
             <div class="dr-grid-9 rework-defects-grid">
                 ${[["rwRust", "สนิม"], ["rwDent", "รอยบุบ"], ["rwColorDrop", "สะเก็ดรอยเชื่อม"], ["rwThinPaint", "สีหนา/สีปูด"], ["rwThickPaint", "คราบน้ำ/จาระบี"], ["rwWaterStain", "คราบน้ำยา"], ["rwOil", "คราบน้ำมัน"], ["rwDust", "เศษฝุ่น"], ["rwOtherDefect", "อื่นๆ"]].map(([id, label]) => `<div class="form-group"><label for="${id}">${label}</label><input id="${id}" class="form-control" type="number" min="0" value="0"></div>`).join("")}
             </div>
-            <div class="rework-form-actions"><button type="button" class="btn-secondary" onclick="addReworkRecord()">＋ เพิ่มรายการ</button></div>
+            <div class="rework-form-actions"><button id="reworkSubmitButton" type="button" class="btn-primary" onclick="submitReworkReport()">💾 บันทึกข้อมูล REWORK</button></div>
         </div>
 
         <div class="dr-card rework-form-card">
@@ -144,7 +140,12 @@ function reworkFormMarkup() {
         <div class="dr-card rework-form-card">
             <div class="rework-list-heading"><h2 class="dr-section-title">รายการ REWORK ที่เพิ่ม</h2><strong id="reworkTotalSummary">0 รายการ</strong></div>
             <div class="table-responsive"><table class="data-table"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>ช่วงเวลา</th><th>สี</th><th>ยอดผลิต</th><th>ยอดเสีย</th><th>จัดการ</th></tr></thead><tbody id="reworkListBody"><tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr></tbody></table></div>
-            <div class="rework-submit-actions"><button type="button" class="btn-primary" onclick="submitReworkReport()">💾 บันทึกข้อมูล REWORK</button></div>
+            <div class="rework-submit-actions">
+                <button type="button" class="rework-refresh-btn" onclick="refreshReworkHistory()">
+                    <span class="rework-refresh-icon" aria-hidden="true">↻</span>
+                    <span>รีเฟรชประวัติ</span>
+                </button>
+            </div>
         </div>`;
 }
 
@@ -240,7 +241,7 @@ async function submitReworkReport() {
         downtime: { burner: reworkNum("rwDtBurner"), wash: reworkNum("rwDtWash"), oven: reworkNum("rwDtOven"), gun: reworkNum("rwDtGun"), power: reworkNum("rwDtPower"), motor: reworkNum("rwDtMotor"), other: reworkNum("rwDtOther"), note: document.getElementById("rwDtNote")?.value || "" }
     };
     if (!payload.recorder) return showToast?.("กรุณาระบุชื่อผู้บันทึก", "error");
-    const button = document.querySelector('#rework-tab .rework-submit-actions button');
+    const button = document.getElementById("reworkSubmitButton");
     if (button) { button.disabled = true; button.textContent = "กำลังบันทึก..."; }
     try {
         await sendReworkReportToAPI(payload);
