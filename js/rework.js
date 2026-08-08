@@ -91,7 +91,10 @@ function reworkFormMarkup() {
                 <h1 class="page-title">REWORK</h1>
                 <p class="page-subtitle">แบบฟอร์มบันทึกงานแก้ไข/ทำซ้ำ แยกจากแบบฟอร์มผลิตรายวัน</p>
             </div>
-            <button type="button" class="btn-secondary" onclick="refreshReworkHistory()">↻ รีเฟรชประวัติ</button>
+            <button type="button" class="rework-refresh-btn" onclick="refreshReworkHistory()">
+                <span class="rework-refresh-icon" aria-hidden="true">↻</span>
+                <span>รีเฟรชประวัติ</span>
+            </button>
         </div>
 
         <div class="dr-card rework-form-card">
