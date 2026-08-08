@@ -120,6 +120,24 @@ function renderReworkRecorderDropdownUI() {
     if (current && recorders.includes(current)) select.value = current;
 }
 
+// Match the daily production form: numeric boxes start empty and show 0 as a
+// placeholder. If a browser restores a literal 0, clear it when the user
+// focuses the box so the first keystroke does not get appended to zero.
+function normalizeReworkNumericInputs() {
+    const root = document.getElementById("reworkFormRoot");
+    if (!root) return;
+    root.querySelectorAll('input[type="number"]').forEach(input => {
+        if (!input.dataset.reworkZeroClearBound) {
+            input.dataset.reworkZeroClearBound = "1";
+            if (!input.getAttribute("placeholder")) input.setAttribute("placeholder", "0");
+            input.addEventListener("focus", () => {
+                if (input.value === "0") input.value = "";
+            });
+        }
+        if (input.value === "0") input.value = "";
+    });
+}
+
 function reworkFormMarkup() {
     const sharedSlots = (typeof PAINTING_TIMESLOTS !== "undefined" && PAINTING_TIMESLOTS) || window.PAINTING_TIMESLOTS;
     const slots = Array.isArray(sharedSlots) && sharedSlots.length
@@ -210,6 +228,7 @@ function initReworkForm() {
         }));
         renderReworkProductGroups();
         renderReworkRecorderDropdownUI();
+        normalizeReworkNumericInputs();
         if (typeof renderStaffDropdowns === "function") renderStaffDropdowns();
     } else if (typeof window.renderReworkList === "function") {
         renderReworkList();
@@ -242,7 +261,7 @@ function addReworkRecord() {
     reworkDraftRecords.push(record);
     localStorage.setItem(REWORK_DRAFT_KEY, JSON.stringify(reworkDraftRecords));
     renderReworkList();
-    ["rwProdQty", "rwRust", "rwDent", "rwColorDrop", "rwThinPaint", "rwThickPaint", "rwWaterStain", "rwOil", "rwDust", "rwOtherDefect"].forEach(id => { const el = document.getElementById(id); if (el) el.value = "0"; });
+    ["rwProdQty", "rwRust", "rwDent", "rwColorDrop", "rwThinPaint", "rwThickPaint", "rwWaterStain", "rwOil", "rwDust", "rwOtherDefect"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
     showToast?.("เพิ่มรายการ REWORK แล้ว", "success");
 }
 
