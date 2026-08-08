@@ -715,6 +715,12 @@ function resetInspectionDashboard() {
 }
 
 function renderDashboard() {
+    // REWORK has its own sheet and chart. Load it independently so the chart
+    // still works even when the selected period has no Inspection rows.
+    if (typeof window.loadReworkDashboardChart === "function") {
+        window.loadReworkDashboardChart();
+    }
+
     const hasInspectionRows = Array.isArray(inspectionRecords) && inspectionRecords.length > 0;
     if (!hasInspectionRows) {
         resetInspectionDashboard();

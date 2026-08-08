@@ -5,6 +5,10 @@ let reworkDraftRecords = [];
 let reworkHistoryRecords = [];
 let reworkFormInitialized = false;
 let reworkCatalogListenersBound = false;
+let reworkDashboardChartInstance = null;
+let reworkDashboardRecordsCache = null;
+let reworkDashboardLoadPromise = null;
+let reworkDashboardLoadToken = 0;
 
 const REWORK_DRAFT_KEY = "PAINTING_REWORK_DRAFT";
 
@@ -224,10 +228,165 @@ async function refreshReworkHistory() {
     if (body && !reworkDraftRecords.length) body.innerHTML = `<tr><td colspan="7" class="empty-state">กำลังโหลดประวัติ REWORK...</td></tr>`;
     try {
         reworkHistoryRecords = await fetchReworkReportDataFromAPI();
+        reworkDashboardRecordsCache = reworkHistoryRecords.slice();
         renderReworkList();
     } catch (error) {
         console.error("REWORK history load failed", error);
         if (body && !reworkDraftRecords.length) body.innerHTML = `<tr><td colspan="7" class="empty-state error-text">โหลดประวัติ REWORK ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง</td></tr>`;
+    }
+}
+
+function reworkDashboardDateKey(value) {
+    const raw = String(value == null ? "" : value).trim();
+    if (!raw) return "";
+    const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
+    const thai = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (thai) return `${thai[3]}-${thai[2].padStart(2, "0")}-${thai[1].padStart(2, "0")}`;
+    return "";
+}
+
+function reworkDashboardDateLabel(dateKey) {
+    const parts = String(dateKey || "").split("-");
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateKey;
+}
+
+function reworkDashboardDefectTotal(row) {
+    const fields = ["rust", "dent", "colorDrop", "thinPaint", "thickPaint", "waterStain", "oil", "dust", "otherDefect"];
+    const calculated = fields.reduce((sum, field) => sum + (Number(row && row[field]) || 0), 0);
+    return Math.max(Number(row && row.totalDefect) || 0, calculated);
+}
+
+function renderReworkDashboardChart(records) {
+    const canvas = document.getElementById("reworkDailyChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const range = typeof getDashboardDateRange === "function"
+        ? getDashboardDateRange()
+        : { start: "", end: "" };
+    const grouped = new Map();
+
+    (Array.isArray(records) ? records : []).forEach(row => {
+        const dateKey = reworkDashboardDateKey(row && (row.date || row.Date));
+        if (!dateKey) return;
+        if (range.start && dateKey < range.start) return;
+        if (range.end && dateKey > range.end) return;
+        if (!grouped.has(dateKey)) grouped.set(dateKey, { output: 0, defects: 0, reports: 0 });
+        const daily = grouped.get(dateKey);
+        daily.output += Number(row && row.prodQty) || 0;
+        daily.defects += reworkDashboardDefectTotal(row);
+        daily.reports += 1;
+    });
+
+    const dates = [...grouped.keys()].sort();
+    const output = dates.map(date => grouped.get(date).output);
+    const defects = dates.map(date => grouped.get(date).defects);
+    const outputTotal = output.reduce((sum, value) => sum + value, 0);
+    const defectTotal = defects.reduce((sum, value) => sum + value, 0);
+    const outputSummary = document.getElementById("dashboardReworkTotal");
+    const defectSummary = document.getElementById("dashboardReworkDefectTotal");
+    const empty = document.getElementById("reworkDailyChartEmpty");
+    if (outputSummary) outputSummary.textContent = outputTotal.toLocaleString("th-TH");
+    if (defectSummary) defectSummary.textContent = defectTotal.toLocaleString("th-TH");
+    if (empty) empty.hidden = dates.length > 0;
+    canvas.style.visibility = dates.length ? "visible" : "hidden";
+
+    if (reworkDashboardChartInstance) reworkDashboardChartInstance.destroy();
+    reworkDashboardChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: dates.map(reworkDashboardDateLabel),
+            datasets: [
+                {
+                    type: "bar",
+                    label: "ยอด REWORK (ชิ้น)",
+                    data: output,
+                    backgroundColor: "rgba(56, 189, 248, 0.72)",
+                    borderColor: "#38bdf8",
+                    borderWidth: 1.5,
+                    borderRadius: 7,
+                    maxBarThickness: 54,
+                    order: 2
+                },
+                {
+                    type: "line",
+                    label: "ของเสียจากงาน REWORK (ชิ้น)",
+                    data: defects,
+                    borderColor: "#fb7185",
+                    backgroundColor: "rgba(251, 113, 133, 0.14)",
+                    pointBackgroundColor: "#fb7185",
+                    pointBorderColor: "#fecdd3",
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 3,
+                    tension: 0.32,
+                    fill: false,
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: {
+                        color: "#e2e8f0",
+                        usePointStyle: true,
+                        padding: 16,
+                        font: { family: "Sarabun", size: window.innerWidth < 640 ? 10 : 12, weight: "700" }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody(items) {
+                            const index = items && items[0] ? items[0].dataIndex : -1;
+                            const date = dates[index];
+                            return date && grouped.has(date) ? `จำนวนรายงาน: ${grouped.get(date).reports} รายการ` : "";
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "#94a3b8", maxRotation: window.innerWidth < 640 ? 45 : 0, minRotation: 0 },
+                    grid: { color: "rgba(255,255,255,0.05)" }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "จำนวน (ชิ้น)", color: "#94a3b8" },
+                    ticks: { color: "#94a3b8", precision: 0 },
+                    grid: { color: "rgba(255,255,255,0.08)" }
+                }
+            }
+        }
+    });
+}
+
+async function loadReworkDashboardChart(forceRefresh = false) {
+    if (!document.getElementById("reworkDailyChart")) return;
+    const token = ++reworkDashboardLoadToken;
+    if (forceRefresh) reworkDashboardRecordsCache = null;
+    try {
+        if (!reworkDashboardRecordsCache) {
+            if (!reworkDashboardLoadPromise) {
+                reworkDashboardLoadPromise = fetchReworkReportDataFromAPI()
+                    .then(rows => Array.isArray(rows) ? rows : [])
+                    .finally(() => { reworkDashboardLoadPromise = null; });
+            }
+            reworkDashboardRecordsCache = await reworkDashboardLoadPromise;
+        }
+        if (token !== reworkDashboardLoadToken) return;
+        renderReworkDashboardChart(reworkDashboardRecordsCache);
+    } catch (error) {
+        console.error("REWORK dashboard chart load failed", error);
+        const empty = document.getElementById("reworkDailyChartEmpty");
+        if (empty) {
+            empty.hidden = false;
+            empty.textContent = "โหลดข้อมูล REWORK ไม่สำเร็จ กรุณากดปุ่มรีเฟรช";
+        }
     }
 }
 
@@ -266,3 +425,11 @@ window.removeReworkRecord = removeReworkRecord;
 window.renderReworkList = renderReworkList;
 window.refreshReworkHistory = refreshReworkHistory;
 window.submitReworkReport = submitReworkReport;
+window.loadReworkDashboardChart = loadReworkDashboardChart;
+
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        const dashboard = document.getElementById("dashboard-tab");
+        if (dashboard && dashboard.classList.contains("active")) loadReworkDashboardChart();
+    }, 0);
+});

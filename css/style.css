@@ -3293,9 +3293,159 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   color: #fda4af;
 }
 
+.dashboard-rework-report-section {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 2rem;
+}
+
+.dashboard-rework-title-bar {
+  border-bottom: 2px solid rgba(203, 213, 225, 0.9);
+  padding-bottom: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-rework-title-bar h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.dashboard-rework-title-bar p {
+  margin: 0.25rem 0 0;
+  color: #94a3b8;
+  font-size: 0.86rem;
+}
+
+.dashboard-rework-chart-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-rework-chart-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-rework-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 30px;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #bae6fd;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dashboard-rework-summary strong {
+  color: #38bdf8;
+  font-size: 0.9rem;
+}
+
+.dashboard-rework-summary-defect {
+  border-color: rgba(251, 113, 133, 0.35);
+  background: rgba(251, 113, 133, 0.11);
+  color: #fecdd3;
+}
+
+.dashboard-rework-summary-defect strong {
+  color: #fb7185;
+}
+
+.dashboard-rework-refresh {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-size: 1.08rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.dashboard-rework-refresh:hover {
+  transform: translateY(-1px) rotate(-12deg);
+  background: rgba(56, 189, 248, 0.22);
+}
+
+.dashboard-rework-chart-wrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 290px;
+  max-height: 310px;
+  overflow: hidden;
+}
+
+.dashboard-rework-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: #94a3b8;
+  font-weight: 700;
+  text-align: center;
+}
+
 /* Mobile dashboard charts: keep long titles readable and keep every control
    inside the phone width instead of shrinking the title to single letters. */
 @media (max-width: 768px) {
+  .dashboard-rework-report-section,
+  .dashboard-rework-chart-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-rework-chart-card .chart-header {
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  .dashboard-rework-chart-card .chart-title {
+    flex: 1 1 100%;
+    min-width: 0;
+    font-size: 0.96rem;
+  }
+
+  .dashboard-rework-chart-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+
+  .dashboard-rework-summary {
+    padding-inline: 0.5rem;
+    font-size: 0.72rem;
+  }
+
+  .dashboard-rework-chart-actions .btn-chart-expand {
+    margin-left: auto;
+  }
+
+  .dashboard-rework-chart-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 235px !important;
+    max-height: 245px !important;
+  }
+
   #dashboardProductionReport {
     width: 100% !important;
     max-width: 100% !important;
