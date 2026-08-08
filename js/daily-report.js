@@ -1027,14 +1027,6 @@ function renderQCDailyReportHistory() {
     const existingTitle = container.querySelector('.dr-section-title')?.textContent?.trim() || 'รายการพ่นสีรายวัน';
     const records = getSavedDailyReportRecords();
 
-    if (records.length === 0) {
-        container.innerHTML = `
-            <h3 class="dr-section-title" style="margin:0 0 1rem;">${escapeDailyReportHtml(existingTitle)}</h3>
-            <div class="qc-daily-report-empty">ยังไม่มีรายการพ่นสีรายวัน</div>
-        `;
-        return;
-    }
-
     const grouped = new Map();
     records.forEach(record => {
         const group = getDailyReportProductGroup(record);
@@ -1043,7 +1035,7 @@ function renderQCDailyReportHistory() {
     });
 
     const groupNames = [
-        ...PAINTING_PRODUCT_GROUP_ORDER.filter(group => grouped.has(group)),
+        ...PAINTING_PRODUCT_GROUP_ORDER,
         ...Array.from(grouped.keys()).filter(group => !PAINTING_PRODUCT_GROUP_ORDER.includes(group))
     ];
 
@@ -1070,7 +1062,7 @@ function renderQCDailyReportHistory() {
                 <div class="table-responsive">
                     <table class="data-table qc-daily-group-table" style="width:100%; border-collapse:separate; border-spacing:0;">
                         <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">สถานะ</th></tr></thead>
-                        <tbody>${renderRows(rows)}</tbody>
+                        <tbody>${rows.length ? renderRows(rows) : '<tr><td colspan="7" class="qc-daily-group-empty">ยังไม่มีรายการ</td></tr>'}</tbody>
                     </table>
                 </div>
             </section>
