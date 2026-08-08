@@ -97,7 +97,7 @@ function reworkFormMarkup() {
             <h2 class="dr-section-title">ส่วนที่ 1: ข้อมูลการบันทึก REWORK</h2>
             <div class="dr-grid-3">
                 <div class="form-group"><label for="rwDate">วันที่</label><input id="rwDate" type="date" class="form-control"></div>
-                <div class="form-group"><label>กะ</label><div class="dr-radio-group"><label><input type="radio" name="reworkShift" value="Day" checked> กะเช้า</label><label><input type="radio" name="reworkShift" value="Night"> กะดึก</label></div></div>
+                <div class="form-group"><label>กะทำงาน (Shift)</label><div class="dr-radio-pills"><label><input type="radio" name="reworkShift" value="Day" checked> ☀️ Day</label><label><input type="radio" name="reworkShift" value="Night"> 🌙 Night</label></div></div>
                 <div class="form-group"><label for="rwRecorder">ผู้บันทึก</label><input id="rwRecorder" class="form-control" type="text" placeholder="ระบุชื่อผู้บันทึก"></div>
             </div>
         </div>
