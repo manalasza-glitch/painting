@@ -15,7 +15,7 @@ const PARAMETER_CHECKLIST_SOURCE_ITEMS = [
     { itemNo: 14, process: "เคลือบเซรามิก", checkItem: "ค่าความเป็นด่างอิสระ", standard: "0.6-1.2" },
     { itemNo: 15, process: "เคลือบเซรามิก", checkItem: "ความเข้มข้นของน้ำยา", standard: "4.8-5.2" },
     { itemNo: 16, process: "ล้างน้ำ 3", checkItem: "แรงดันทางออกปั๊มหมุนเวียน", standard: "0.05-0.1" },
-    { itemNo: 17, process: "ล้างน้ำ 3", checkItem: "ค่า pH", standard: "7-9" },
+    { itemNo: 17, process: "ล้างน้ำ 3", checkItem: "ค่า pH", standard: "6-7.5" },
     { itemNo: 19, process: "ล้างน้ำ 4", checkItem: "แรงดันทางออกปั๊มหมุนเวียน", standard: "0.05-0.1" },
     { itemNo: 20, process: "ล้างน้ำ 4", checkItem: "ค่า pH", standard: "6-7.5" },
     { itemNo: 21, process: "ล้างน้ำ 4", checkItem: "ค่าการนำไฟฟ้า", standard: "< 150 us/cm" },
