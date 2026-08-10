@@ -135,6 +135,9 @@ async function initializePaintingApp() {
         if (hasAppPermission('rework.read') && typeof initReworkForm === 'function') {
             initReworkForm();
         }
+        if (hasAppPermission('screen.read') && typeof initScreenForm === 'function') {
+            initScreenForm();
+        }
         if (hasAppPermission('checklist.read') && typeof initParameterChecklist === 'function') {
             initParameterChecklist();
         }
@@ -353,6 +356,9 @@ function switchTab(tabId, element) {
     } else if (tabId === "rework-tab") {
         if (typeof initReworkForm === 'function') initReworkForm();
         if (typeof refreshReworkHistory === 'function') refreshReworkHistory();
+    } else if (tabId === "screen-tab") {
+        if (typeof initScreenForm === 'function') initScreenForm();
+        if (typeof refreshScreenHistory === 'function') refreshScreenHistory();
     } else if (tabId === "parameter-checklist-tab") {
         if (typeof initParameterChecklist === 'function') {
             initParameterChecklist();

@@ -367,6 +367,31 @@ async function sendReworkReportToAPI(payload) {
     }
 }
 
+// SCREEN mirrors REWORK but writes to the dedicated SCREEN sheet.
+async function sendScreenReportToAPI(payload) {
+    const baseUrl = getApiUrl();
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=submitScreenReport';
+    try {
+        activeSyncRequests++;
+        updateSyncUI();
+        const response = await fetch(url, {
+            method: "POST",
+            cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+        const result = await requireJsonResponse(response, "Submit SCREEN report");
+        if (!result || result.status !== "success" || result.action !== "submitScreenReport") {
+            throw new Error("Submit SCREEN report: backend did not confirm the save");
+        }
+        localStorage.removeItem("PAINTING_SCREEN_CACHE");
+        return result;
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
+    }
+}
+
 function getRealSheetData() {
     const realData = [
         { rowIndex: 2, date: "2026-07-25 17:00", rust: 29, dent: 0, weld: 0, chemical: 8, oil: 0, note: "", timestamp: "2026-07-25 17:00" },
@@ -532,6 +557,33 @@ async function fetchReworkReportDataFromAPI(dateFilter = "") {
             }
         } catch (error) {
             console.warn("Failed to fetch REWORK history from cloud, checking cache:", error);
+        }
+    }
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached !== null) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (_) {}
+    return [];
+}
+
+async function fetchScreenReportDataFromAPI(dateFilter = "") {
+    const baseUrl = getApiUrl();
+    const requestedDate = String(dateFilter || "").trim();
+    const cacheKey = requestedDate ? `PAINTING_SCREEN_CACHE_${requestedDate}` : "PAINTING_SCREEN_CACHE";
+    if (baseUrl) {
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getScreenReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
+        try {
+            const response = await fetch(url, { cache: "no-cache" });
+            const json = await response.json();
+            if (json && json.status === "success" && Array.isArray(json.data)) {
+                localStorage.setItem(cacheKey, JSON.stringify(json.data));
+                return json.data;
+            }
+        } catch (error) {
+            console.warn("Failed to fetch SCREEN history from cloud, checking cache:", error);
         }
     }
     try {
