@@ -182,17 +182,35 @@ function mergeProductCatalog(base, extra) {
 // canonical BRU30890 model and every other catalog item.
 function removeMistypedCatalogEntries(catalog) {
     const targetLabel = "BRU30890 (BRU30892)";
+    const normalizeLabel = value => String(value || "").replace(/\s+/g, " ").trim().toUpperCase();
     Object.values(catalog || {}).forEach(group => {
         Object.values(group?.categories || {}).forEach(models => {
             if (!Array.isArray(models)) return;
             for (let i = models.length - 1; i >= 0; i -= 1) {
                 const item = models[i] || {};
-                if (String(item.label || "").trim() === targetLabel) models.splice(i, 1);
+                const label = normalizeLabel(item.label);
+                // Match the exact typo, including older cached labels that may
+                // contain an accidental leading marker or extra whitespace.
+                if (label === normalizeLabel(targetLabel)
+                    || (label.includes("BRU30890") && label.includes("BRU30892") && !label.includes("METAL COVER"))) {
+                    models.splice(i, 1);
+                }
             }
         });
     });
     return catalog;
 }
+
+// Screen can be opened without mounting the daily-report form. Clean the
+// shared browser catalog immediately so every form sees the corrected list.
+try {
+    const cachedCatalog = localStorage.getItem(PAINTING_PRODUCT_CATALOG_CACHE);
+    if (cachedCatalog) {
+        const cachedGroups = normalizeProductCatalog(JSON.parse(cachedCatalog));
+        PAINTING_MODEL_GROUPS = removeMistypedCatalogEntries(mergeProductCatalog(PAINTING_MODEL_GROUPS, cachedGroups));
+        localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
+    }
+} catch (_) {}
 
 function selectedProductGroup() {
     return document.getElementById('drProductGroup')?.value || "";

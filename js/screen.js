@@ -46,12 +46,18 @@ function screenOptions(selectId, options, placeholder) {
     const current = select.value;
     const includeAddOption = selectId === "scModel";
     const addValue = typeof PAINTING_ADD_MODEL_VALUE !== "undefined" ? PAINTING_ADD_MODEL_VALUE : "__ADD_MODEL__";
-    select.innerHTML = `<option value="">${screenEsc(placeholder)}</option>` + options.map(option => {
+    const visibleOptions = (Array.isArray(options) ? options : []).filter(option => {
+        const label = String(typeof option === "string" ? option : (option?.label ?? option?.value ?? option?.code ?? ""))
+            .replace(/\s+/g, " ").trim().toUpperCase();
+        return !(label === "BRU30890 (BRU30892)"
+            || (label.includes("BRU30890") && label.includes("BRU30892") && !label.includes("METAL COVER")));
+    });
+    select.innerHTML = `<option value="">${screenEsc(placeholder)}</option>` + visibleOptions.map(option => {
         const value = typeof option === "string" ? option : (option.value ?? option.code ?? "");
         const label = typeof option === "string" ? option : (option.label ?? option.value ?? option.code ?? "");
         return `<option value="${screenEsc(value)}">${screenEsc(label)}</option>`;
     }).join("") + (includeAddOption ? `<option value="${screenEsc(addValue)}">➕ เพิ่มรายการ</option>` : "");
-    if (options.some(option => String(typeof option === "string" ? option : (option.value ?? option.code ?? "")) === String(current))) {
+    if (visibleOptions.some(option => String(typeof option === "string" ? option : (option.value ?? option.code ?? "")) === String(current))) {
         select.value = current;
     }
 }
