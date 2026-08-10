@@ -315,10 +315,53 @@ function removeReworkRecord(index) {
     renderReworkList();
 }
 
+// Put the newest saved REWORK row at the top of the history table. Use the
+// sheet timestamp when available, with date and the first time in the slot as
+// a fallback for older records.
+function reworkHistorySortValue(row) {
+    const timestamp = String(row?.timestamp ?? row?.createdAt ?? row?.created ?? "").trim();
+    const direct = Date.parse(timestamp.replace(/\//g, "-"));
+    if (Number.isFinite(direct)) return direct;
+
+    const rawDate = String(row?.date ?? row?.Date ?? "").trim();
+    let year;
+    let month;
+    let day;
+    let dateMatch = rawDate.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (dateMatch) {
+        year = Number(dateMatch[1]);
+        month = Number(dateMatch[2]);
+        day = Number(dateMatch[3]);
+    } else {
+        dateMatch = rawDate.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+        if (!dateMatch) return 0;
+        day = Number(dateMatch[1]);
+        month = Number(dateMatch[2]);
+        year = Number(dateMatch[3]);
+    }
+
+    const slotMatch = String(row?.timeSlot ?? row?.time ?? "").match(/(\d{1,2})[.:](\d{2})/);
+    const hour = slotMatch ? Number(slotMatch[1]) : 0;
+    const minute = slotMatch ? Number(slotMatch[2]) : 0;
+    return Date.UTC(year, month - 1, day, hour, minute);
+}
+
+function sortReworkHistoryLatestFirst(records) {
+    return (Array.isArray(records) ? records : [])
+        .map((row, index) => ({ row, index }))
+        .sort((a, b) => {
+            const byDate = reworkHistorySortValue(b.row) - reworkHistorySortValue(a.row);
+            return byDate || (b.index - a.index);
+        })
+        .map(item => item.row);
+}
+
 function renderReworkList() {
     const body = document.getElementById("reworkListBody");
     if (!body) return;
-    const rows = reworkDraftRecords.length ? reworkDraftRecords : reworkHistoryRecords.slice(0, 20);
+    const rows = reworkDraftRecords.length
+        ? reworkDraftRecords
+        : sortReworkHistoryLatestFirst(reworkHistoryRecords).slice(0, 20);
     const summary = document.getElementById("reworkTotalSummary");
     if (summary) summary.textContent = `${rows.length} รายการ`;
     if (!rows.length) { body.innerHTML = `<tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr>`; return; }
@@ -329,7 +372,7 @@ async function refreshReworkHistory() {
     const body = document.getElementById("reworkListBody");
     if (body && !reworkDraftRecords.length) body.innerHTML = `<tr><td colspan="7" class="empty-state">กำลังโหลดประวัติ REWORK...</td></tr>`;
     try {
-        reworkHistoryRecords = await fetchReworkReportDataFromAPI();
+        reworkHistoryRecords = sortReworkHistoryLatestFirst(await fetchReworkReportDataFromAPI());
         reworkDashboardRecordsCache = reworkHistoryRecords.slice();
         renderReworkList();
     } catch (error) {
