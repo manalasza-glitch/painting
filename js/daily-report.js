@@ -116,7 +116,10 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
     // filled in later without hiding the group from the selector.
     "NMS": {
         colors: [],
-        categories: {}
+        categories: {
+            "Box": [],
+            "Cover": []
+        }
     }
 };
 
@@ -141,7 +144,7 @@ function normalizeProductCatalog(source) {
             if (!Array.isArray(models)) return;
             const list = models.map(item => typeof item === "string" ? { value: item, label: item } : item)
                 .filter(item => item && item.value).map(item => ({ value: String(item.value), label: String(item.label || item.value) }));
-            if (list.length) categories[String(category)] = list;
+            if (Array.isArray(models)) categories[String(category)] = list;
         });
         const colors = Array.isArray(raw.colors) ? raw.colors.map(item => typeof item === "string" ? { value: item, label: item } : item)
             .filter(item => item && item.value).map(item => ({ value: String(item.value), label: String(item.label || item.value), code: String(item.code || "") })) : [];

@@ -73,7 +73,7 @@ const PART_MODEL_CATALOG = {
     "Cover 250LUG": [["BRU53738", "Cover LUG250 450mm 12 way"], ["BRU53739", "Cover LUG250 600mm 18 way"], ["BRU53740", "Cover LUG250 600mm 24 way"], ["BRU53741", "Cover LUG250 600mm 30 way"], ["BRU53742", "Cover LUG250 750mm 36 way"], ["BRU53745", "Cover LUG250 750mm 42 way"], ["BRU53746", "Cover LUG250 900mm 48 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" }))
   } },
   // Keep NMS selectable while its part/model catalog is being prepared.
-  "NMS": { colors: [], categories: {} }
+  "NMS": { colors: [], categories: { "Box": [], "Cover": [] } }
 };
 
 function getDefaultPermissions(role) {
