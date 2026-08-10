@@ -43,6 +43,11 @@ jobs:
         env:
           APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.APPS_SCRIPT_DEPLOYMENT_ID }}
         run: |
-          test -n "$APPS_SCRIPT_DEPLOYMENT_ID"
+          # Keep the existing web-app deployment when the repository secret is
+          # unavailable. The public web-app URL in js/api.js uses this deployment.
+          DEPLOYMENT_ID="$APPS_SCRIPT_DEPLOYMENT_ID"
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            DEPLOYMENT_ID="AKfycbyURU3_RckS258UNTKzcICiq-XymrmC-CbZitxaQQOynPxozONY7hOxQwEvFWAKTYv5"
+          fi
           clasp push --force
-          clasp deploy --deploymentId "$APPS_SCRIPT_DEPLOYMENT_ID" --description "Auto-deployed via GitHub Actions"
+          clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "Auto-deployed via GitHub Actions"
