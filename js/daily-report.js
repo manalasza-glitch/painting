@@ -801,7 +801,11 @@ function renderDailyReportList(targetBodyId = 'dailyReportListBody') {
         return;
     }
 
-    tbody.innerHTML = savedRecords.map(r => `
+    // This is the five-row preview on the daily-production page. Keep the
+    // complete history in the separate history modal; QC tables have their
+    // own renderers and are not affected by this limit.
+    const recentRecords = savedRecords.slice(0, 5);
+    tbody.innerHTML = recentRecords.map(r => `
         <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(30, 41, 59, 0.7)'" onmouseout="this.style.background='transparent'">
             <td style="padding: 0.95rem 1.1rem; font-size: 0.85rem; font-weight: 700; color: #94a3b8; white-space: nowrap;">${formatDailyReportDate(r.date, r.timestamp)}</td>
             <td style="padding: 0.95rem 1.1rem; font-size: 0.92rem; font-weight: 700; color: #f8fafc;">${escapeDailyReportHtml(r.model || r.Model || '-')}</td>
