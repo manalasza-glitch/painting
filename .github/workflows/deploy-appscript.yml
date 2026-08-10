@@ -32,8 +32,12 @@ jobs:
         env:
           APPS_SCRIPT_ID: ${{ secrets.APPS_SCRIPT_ID }}
         run: |
-          test -n "$APPS_SCRIPT_ID"
-          printf '{"scriptId":"%s","rootDir":"./appscript"}\n' "$APPS_SCRIPT_ID" > .clasp.json
+          SCRIPT_ID="$APPS_SCRIPT_ID"
+          if [ -z "$SCRIPT_ID" ] && [ -f .clasp.json ]; then
+            SCRIPT_ID=$(node -e "const fs=require('fs'); const cfg=JSON.parse(fs.readFileSync('.clasp.json','utf8')); process.stdout.write(String(cfg.scriptId || '')); ")
+          fi
+          test -n "$SCRIPT_ID"
+          printf '{"scriptId":"%s","rootDir":"./appscript"}\n' "$SCRIPT_ID" > .clasp.json
 
       - name: Push and Deploy to Apps Script
         env:
