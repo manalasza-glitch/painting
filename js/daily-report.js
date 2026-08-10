@@ -177,6 +177,23 @@ function mergeProductCatalog(base, extra) {
     return merged;
 }
 
+// Remove a known mistyped locally-added catalog entry. User-added models are
+// kept in browser storage, so clean this exact label once while preserving the
+// canonical BRU30890 model and every other catalog item.
+function removeMistypedCatalogEntries(catalog) {
+    const targetLabel = "BRU30890 (BRU30892)";
+    Object.values(catalog || {}).forEach(group => {
+        Object.values(group?.categories || {}).forEach(models => {
+            if (!Array.isArray(models)) return;
+            for (let i = models.length - 1; i >= 0; i -= 1) {
+                const item = models[i] || {};
+                if (String(item.label || "").trim() === targetLabel) models.splice(i, 1);
+            }
+        });
+    });
+    return catalog;
+}
+
 function selectedProductGroup() {
     return document.getElementById('drProductGroup')?.value || "";
 }
@@ -288,6 +305,7 @@ async function loadPartModelsList() {
     if (cached) {
         try {
             localCatalog = normalizeProductCatalog(JSON.parse(cached));
+            removeMistypedCatalogEntries(localCatalog);
             PAINTING_MODEL_GROUPS = localCatalog;
         } catch (e) {}
     }
@@ -299,7 +317,7 @@ async function loadPartModelsList() {
             // Keep locally defined groups (including newly introduced NMS)
             // even when the deployed Apps Script catalog has not caught up.
             const normalized = mergeProductCatalog(PAINTING_PRODUCT_GROUPS_DEFAULT, cloudGroups);
-            PAINTING_MODEL_GROUPS = mergeProductCatalog(normalized, localCatalog);
+            PAINTING_MODEL_GROUPS = removeMistypedCatalogEntries(mergeProductCatalog(normalized, localCatalog));
             localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
             renderProductGroupDropdownUI();
             filterProductGroupDropdown();
