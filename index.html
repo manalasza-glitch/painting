@@ -722,7 +722,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"></path><path d="M4 19h16"></path><path d="M8 16v-4"></path><path d="M12 16V8"></path><path d="M16 16v-7"></path></svg>
                     QC 7 TOOL
                 </a>
-                <a href="#" class="nav-link" data-permission="qc.read" onclick="switchTab('qc-history-tab', this)">
+                <a href="#" class="nav-link" data-permission="qc.read" onclick="return openQCReviewView('pending', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h10M7 16h6"></path></svg>
                     QC
                 </a>
@@ -1705,7 +1705,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-7"/></svg>
                 <span>QC 7 TOOL</span>
             </div>
-            <div class="mobile-nav-item" data-permission="qc.read" onclick="switchTab('qc-history-tab', this)">
+            <div class="mobile-nav-item" data-permission="qc.read" onclick="return openQCReviewView('pending', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
                 <span>QC</span>
             </div>
@@ -2074,6 +2074,7 @@
     <script src="js/screen.js?v=1.0.1"></script>
     <script src="js/parameter-checklist.js?v=1.12.2"></script>
     <script src="js/equipment-checklist.js?v=1.4.0"></script>
+    <script src="js/qc-review.js?v=1.0.1"></script>
     <script src="js/events.js?v=89.4.0"></script>
 </body>
 

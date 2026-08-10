@@ -400,6 +400,64 @@ function formatDateStr(d, includeTime) {
   return str;
 }
 
+// QC review decisions are append-only and are stored separately from the
+// source tables.  A row is added only after a QC user explicitly clicks ✓/✕.
+function appendQCReviewRecord_(ss, payload) {
+  const sheetName = "finish cheak";
+  let reviewSheet = ss.getSheetByName(sheetName);
+  const headers = ["ReviewedAt", "Status", "SourceSheet", "ReviewKey", "ReviewedBy", "RecordJSON"];
+  if (!reviewSheet) {
+    reviewSheet = ss.insertSheet(sheetName);
+    reviewSheet.appendRow(headers);
+    reviewSheet.setFrozenRows(1);
+  } else if (reviewSheet.getLastRow() === 0) {
+    reviewSheet.appendRow(headers);
+    reviewSheet.setFrozenRows(1);
+  }
+
+  const reviewKey = String(payload && payload.reviewKey || "").trim();
+  if (reviewKey && reviewSheet.getLastRow() > 1) {
+    const keys = reviewSheet.getRange(2, 4, reviewSheet.getLastRow() - 1, 1).getValues();
+    if (keys.some(row => String(row[0] || "").trim() === reviewKey)) {
+      return { duplicate: true };
+    }
+  }
+
+  const reviewer = payload && payload.reviewedBy;
+  const reviewerName = typeof reviewer === "string"
+    ? reviewer
+    : String((reviewer && (reviewer.displayName || reviewer.name || reviewer.employeeId)) || "");
+  reviewSheet.appendRow([
+    new Date(),
+    String(payload && payload.status || "").trim(),
+    String(payload && payload.sourceSheet || "").trim(),
+    reviewKey,
+    reviewerName,
+    JSON.stringify((payload && payload.record) || {})
+  ]);
+  SpreadsheetApp.flush();
+  return { duplicate: false };
+}
+
+function readQCReviewRecords_(ss) {
+  const reviewSheet = ss.getSheetByName("finish cheak");
+  if (!reviewSheet || reviewSheet.getLastRow() <= 1) return [];
+  const values = reviewSheet.getDataRange().getValues();
+  values.shift();
+  return values.map(row => {
+    let record = {};
+    try { record = row[5] ? JSON.parse(String(row[5])) : {}; } catch (e) {}
+    return {
+      reviewedAt: formatDateStr(row[0], true),
+      status: String(row[1] || ""),
+      sourceSheet: String(row[2] || ""),
+      reviewKey: String(row[3] || ""),
+      reviewedBy: String(row[4] || ""),
+      record: record
+    };
+  });
+}
+
 function doPost(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -503,6 +561,13 @@ function doPost(e) {
 
     // Explicitly check URL parameter first, then JSON body
     const action = (e && e.parameter && e.parameter.action) || (data && data.action) || "create";
+
+    if (action === "submitQCReview") {
+      const result = appendQCReviewRecord_(ss, data || {});
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", action: "submitQCReview", duplicate: !!result.duplicate
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // Handle checkBootstrap
     if (action === "checkBootstrap") {
@@ -968,6 +1033,21 @@ function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
+
+    if (action === "submitQCReview") {
+      let payload = {};
+      try { payload = JSON.parse(String((e && e.parameter && e.parameter.payload) || "{}")); } catch (parseErr) {}
+      const result = appendQCReviewRecord_(ss, payload);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", action: "submitQCReview", duplicate: !!result.duplicate
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "getQCReviewData") {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", data: readQCReviewRecords_(ss)
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // Handle checkBootstrap
     if (action === "checkBootstrap") {

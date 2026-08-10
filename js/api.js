@@ -667,6 +667,38 @@ async function sendEquipmentChecklistToAPI(payload) {
     return result;
 }
 
+async function fetchQCReviewDataFromAPI(options = {}) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return [];
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=getQCReviewData";
+    try {
+        const result = await fetchAppsScriptJsonWithRetry(url, "Get QC review data", options.retryOptions || {});
+        if (result && result.status === "success" && Array.isArray(result.data)) return result.data;
+        if (Array.isArray(result)) return result;
+    } catch (error) {
+        console.warn("Failed to fetch QC review data:", error);
+        if (options && options.throwOnError) throw error;
+    }
+    return [];
+}
+
+async function sendQCChecklistReviewToAPI(payload) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) throw new Error("ไม่พบ URL ของระบบหลังบ้าน");
+    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=submitQCReview";
+    const response = await fetch(url, {
+        method: "POST",
+        cache: "no-cache",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload || {})
+    });
+    const result = await requireJsonResponse(response, "Submit QC review");
+    if (!result || result.status !== "success" || result.action !== "submitQCReview") {
+        throw new Error("ระบบหลังบ้านไม่ยืนยันการตรวจ QC");
+    }
+    return result;
+}
+
 async function verifyDailyReportSavedOnBackend(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl || !payload) return false;

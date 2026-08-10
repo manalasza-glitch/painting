@@ -1,0 +1,322 @@
+/* QC review queue and reviewed history.
+ * The source checklist rows remain in their original sheets.  A row is copied
+ * to `finish cheak` only after a QC user explicitly presses ✓ or ✕.
+ */
+(function () {
+    'use strict';
+
+    const STORAGE_KEY = 'PAINTING_QC_REVIEW_STATUS_V1';
+    const state = { view: 'pending', statuses: {}, loading: false, observerTimer: null };
+    const bodySources = {
+        qcParameterChecklistHistoryBody: 'ParameterChecklist',
+        qcWaterChecklistHistoryBody: 'WaterParameterChecklist',
+        qcEquipmentChecklistHistoryBody: 'EquipmentChecklist'
+    };
+
+    function readLocal() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+        catch (e) { return {}; }
+    }
+
+    function writeLocal() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.statuses)); } catch (e) {}
+    }
+
+    function currentReviewer() {
+        const user = window.PaintingAuth && PaintingAuth.currentUser;
+        return user ? {
+            employeeId: user.employeeId || '',
+            displayName: user.displayName || user.name || user.employeeId || ''
+        } : '';
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function normalizeStatus(value) {
+        const text = String(value || '').toLowerCase();
+        if (['approved', 'approve', 'pass', 'passed', 'ok', 'ผ่าน', 'ถูก'].includes(text)) return 'approved';
+        if (['rejected', 'reject', 'fail', 'failed', 'ng', 'ไม่ผ่าน', 'ผิด'].includes(text)) return 'rejected';
+        return text;
+    }
+
+    function loadLocalStatuses() {
+        const local = readLocal();
+        Object.keys(local).forEach(key => {
+            if (local[key] && local[key].status) state.statuses[key] = local[key];
+        });
+    }
+
+    async function loadReviewStatuses() {
+        loadLocalStatuses();
+        if (state.loading) return;
+        state.loading = true;
+        try {
+            if (typeof fetchQCReviewDataFromAPI === 'function') {
+                const rows = await fetchQCReviewDataFromAPI({ retryOptions: { maxRetries: 1 } });
+                (rows || []).forEach(row => {
+                    const key = String(row.reviewKey || '').trim();
+                    if (key) state.statuses[key] = { status: normalizeStatus(row.status), reviewedAt: row.reviewedAt, reviewedBy: row.reviewedBy };
+                });
+                writeLocal();
+            }
+        } catch (error) {
+            console.warn('QC review status loading failed:', error);
+        } finally {
+            state.loading = false;
+        }
+    }
+
+    function sourceForTable(table) {
+        const body = table && table.tBodies && table.tBodies[0];
+        if (body && body.id && bodySources[body.id]) return bodySources[body.id];
+        if (table && table.classList.contains('qc-daily-group-table')) return 'outputdiary';
+        return 'QC';
+    }
+
+    function tableRows(table) {
+        const body = table && table.tBodies && table.tBodies[0];
+        if (!body) return [];
+        return Array.from(body.rows).filter(row => {
+            if (!row.cells.length) return false;
+            if (row.cells.length === 1 && Number(row.cells[0].colSpan || 1) > 1) return false;
+            return !row.classList.contains('qc-review-detail-row')
+                && !row.classList.contains('qc-history-detail-row');
+        });
+    }
+
+    function reviewKey(source, row, index) {
+        const values = Array.from(row.cells)
+            .filter(cell => !cell.classList.contains('qc-review-cell'))
+            .map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim());
+        // Use the row's actual displayed values so a newly inserted record at
+        // the top does not change the review key of older records.
+        return `${source}|${values.join('|')}`;
+    }
+
+    function headerAndRows(table) {
+        const body = table && table.tBodies && table.tBodies[0];
+        const rows = tableRows(table);
+        if (!body || !rows.length) return;
+        const source = sourceForTable(table);
+        const headerRow = table.tHead && table.tHead.rows[0];
+        if (headerRow && !headerRow.querySelector('.qc-review-heading')) {
+            const th = document.createElement('th');
+            th.className = 'qc-review-heading';
+            th.textContent = 'QC ตรวจ';
+            th.style.textAlign = 'center';
+            headerRow.appendChild(th);
+        }
+
+        rows.forEach((row, index) => {
+            const key = reviewKey(source, row, index);
+            row.dataset.qcReviewKey = key;
+            const status = state.statuses[key] && normalizeStatus(state.statuses[key].status);
+            const detail = row.nextElementSibling && (
+                row.nextElementSibling.classList.contains('qc-review-detail-row')
+                || row.nextElementSibling.classList.contains('qc-history-detail-row')
+            ) ? row.nextElementSibling : null;
+            if (detail) {
+                const outerCell = detail.querySelector(':scope > td[colspan]');
+                if (outerCell && headerRow) outerCell.colSpan = headerRow.cells.length;
+            }
+            if (detail) detail.style.display = state.view === 'reviewed' && status ? '' : (state.view === 'pending' && !status ? '' : 'none');
+            row.style.display = (state.view === 'reviewed' ? !!status : !status) ? '' : 'none';
+            const old = row.querySelector('.qc-review-cell');
+            if (old) old.remove();
+            const cell = document.createElement('td');
+            cell.className = 'qc-review-cell';
+            cell.style.textAlign = 'center';
+            if (state.view === 'reviewed') {
+                cell.innerHTML = status === 'approved'
+                    ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
+                    : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
+            } else {
+                cell.innerHTML = '<button type="button" class="qc-review-action qc-review-approve" data-qc-status="approved" title="ตรวจผ่าน">✓</button>'
+                    + '<button type="button" class="qc-review-action qc-review-reject" data-qc-status="rejected" title="ไม่ผ่าน">✕</button>';
+                cell.querySelectorAll('button').forEach(button => button.addEventListener('click', event => decide(event, button, source, row, key)));
+            }
+            row.appendChild(cell);
+        });
+    }
+
+    async function decide(event, button, source, row, key) {
+        event.preventDefault();
+        event.stopPropagation();
+        const status = button.dataset.qcStatus;
+        const reviewer = currentReviewer();
+        const payload = {
+            action: 'submitQCReview',
+            reviewKey: key,
+            status,
+            sourceSheet: source,
+            reviewedBy: reviewer,
+            record: { cells: Array.from(row.cells).map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim()) }
+        };
+        row.querySelectorAll('button').forEach(item => { item.disabled = true; });
+        try {
+            if (typeof sendQCChecklistReviewToAPI === 'function') await sendQCChecklistReviewToAPI(payload);
+            state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || '' };
+            writeLocal();
+            if (typeof showToast === 'function') showToast(status === 'approved' ? 'บันทึกผลตรวจผ่านแล้ว' : 'บันทึกผลตรวจไม่ผ่านแล้ว', 'success');
+            enhanceAll();
+        } catch (error) {
+            row.querySelectorAll('button').forEach(item => { item.disabled = false; });
+            if (typeof showToast === 'function') showToast('บันทึกผลตรวจไม่สำเร็จ: ' + (error.message || error), 'error');
+        }
+    }
+
+    function enhanceAll() {
+        const root = document.getElementById('qc-history-tab');
+        if (!root || root.style.display === 'none') return;
+        Object.keys(bodySources).forEach(id => {
+            const body = document.getElementById(id);
+            if (body && body.closest('table')) headerAndRows(body.closest('table'));
+        });
+        root.querySelectorAll('table.qc-daily-group-table').forEach(headerAndRows);
+        const title = root.querySelector('.page-title');
+        const subtitle = root.querySelector('.section-title-bar span');
+        if (title) title.textContent = state.view === 'reviewed' ? 'QC — ตรวจแล้ว' : 'QC — รอตรวจ';
+        if (subtitle) subtitle.textContent = state.view === 'reviewed' ? 'รายการที่ QC ตรวจและบันทึกผลแล้ว' : 'รายการที่รอ QC ตรวจสอบ';
+    }
+
+    function scheduleEnhance() {
+        clearTimeout(state.observerTimer);
+        state.observerTimer = setTimeout(enhanceAll, 30);
+    }
+
+    function openQCReviewView(view, element) {
+        state.view = view === 'reviewed' ? 'reviewed' : 'pending';
+        if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
+        loadReviewStatuses().then(enhanceAll);
+        return false;
+    }
+
+    function addDesktopSubmenu(parent) {
+        if (!parent || document.getElementById('qc-review-submenu')) return;
+        const submenu = document.createElement('div');
+        submenu.id = 'qc-review-submenu';
+        submenu.className = 'sidebar-submenu qc-review-submenu';
+        submenu.innerHTML = '<a href="#" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="pending"><span style="width:20px;text-align:center;">•</span>รอตรวจ</a>'
+            + '<a href="#" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="reviewed"><span style="width:20px;text-align:center;">•</span>ตรวจแล้ว</a>';
+        parent.insertAdjacentElement('afterend', submenu);
+        submenu.querySelectorAll('[data-qc-review-view]').forEach(link => link.addEventListener('click', event => {
+            event.preventDefault();
+            openQCReviewView(link.dataset.qcReviewView, link);
+        }));
+    }
+
+    function addMobileSubmenu(parent) {
+        if (!parent || document.getElementById('mobile-qc-review-submenu')) return;
+        const menu = document.createElement('div');
+        menu.id = 'mobile-qc-review-submenu';
+        menu.className = 'mobile-qc-review-submenu';
+        menu.innerHTML = '<button type="button" data-qc-review-view="pending">รอตรวจ</button><button type="button" data-qc-review-view="reviewed">ตรวจแล้ว</button>';
+        parent.insertAdjacentElement('afterend', menu);
+        menu.querySelectorAll('[data-qc-review-view]').forEach(button => button.addEventListener('click', event => {
+            event.preventDefault();
+            openQCReviewView(button.dataset.qcReviewView, button);
+        }));
+    }
+
+    function injectStyles() {
+        if (document.getElementById('qc-review-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'qc-review-styles';
+        style.textContent = `
+            .qc-review-submenu {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                margin: -4px 0 6px 24px;
+                padding: 3px 0 3px 10px;
+                border-left: 1px solid rgba(48, 183, 255, .35);
+            }
+            .qc-review-submenu .submenu-item {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                min-height: 34px;
+                padding: 5px 10px;
+                border-radius: 8px;
+                font-size: .86rem;
+                white-space: nowrap;
+            }
+            .qc-review-submenu .submenu-item:hover,
+            .qc-review-submenu .submenu-item.active {
+                background: rgba(26, 126, 232, .18);
+            }
+            .mobile-qc-review-submenu {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+                overflow-x: auto;
+                padding: 5px 10px 7px;
+                background: #071322;
+                -webkit-overflow-scrolling: touch;
+            }
+            .mobile-qc-review-submenu button {
+                flex: 0 0 auto;
+                border: 1px solid rgba(48, 183, 255, .4);
+                border-radius: 8px;
+                background: #102442;
+                color: #eaf4ff;
+                padding: 7px 13px;
+                font: inherit;
+                white-space: nowrap;
+            }
+            .qc-review-cell { white-space: nowrap; min-width: 76px; }
+            .qc-review-action {
+                width: 30px;
+                height: 30px;
+                margin: 0 2px;
+                padding: 0;
+                border: 0;
+                border-radius: 8px;
+                color: #fff;
+                font-size: 1rem;
+                font-weight: 800;
+                line-height: 30px;
+                cursor: pointer;
+            }
+            .qc-review-action:disabled { opacity: .55; cursor: wait; }
+            .qc-review-approve { background: #10b981; }
+            .qc-review-reject { background: #ef4444; }
+            .qc-review-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                padding: 4px 8px;
+                border-radius: 999px;
+                font-size: .82rem;
+                white-space: nowrap;
+            }
+            .qc-review-pass { color: #10b981; background: rgba(16, 185, 129, .12); }
+            .qc-review-fail { color: #f87171; background: rgba(239, 68, 68, .12); }
+            @media (max-width: 700px) {
+                .qc-review-cell { min-width: 68px; }
+                .qc-review-action { width: 28px; height: 28px; line-height: 28px; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function init() {
+        injectStyles();
+        const desktop = document.querySelector('.sidebar-nav a.nav-link[data-permission="qc.read"]');
+        const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
+        addDesktopSubmenu(desktop);
+        addMobileSubmenu(mobile);
+        const root = document.getElementById('qc-history-tab');
+        if (root) new MutationObserver(scheduleEnhance).observe(root, { childList: true, subtree: true });
+        loadReviewStatuses().then(enhanceAll);
+    }
+
+    window.openQCReviewView = openQCReviewView;
+    window.refreshQCReviewStatuses = function () { loadReviewStatuses().then(enhanceAll); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
