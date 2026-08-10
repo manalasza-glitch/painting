@@ -11,6 +11,7 @@ const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const REWORK_SHEET_NAME = "REWORK";
+// Dedicated storage for the Screen checklist menu (created on first use).
 const SCREEN_SHEET_NAME = "SCREEN";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
