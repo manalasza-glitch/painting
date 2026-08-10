@@ -1,6 +1,6 @@
 // Canonical production catalog used by the daily production form.
 // Each selection is intentionally hierarchical: product group -> part category -> model/code -> color.
-const PAINTING_PRODUCT_GROUP_ORDER = ["LC600 Classic", "LC600 Visi-smart", "PDB", "CU (resi thai)", "NLC"];
+const PAINTING_PRODUCT_GROUP_ORDER = ["LC600 Classic", "LC600 Visi-smart", "PDB", "CU (resi thai)", "NLC", "NMS"];
 const PAINTING_PRODUCT_GROUPS_DEFAULT = {
     "LC600 Classic": {
         colors: [{ value: "GREY BUTTER", label: "GREY BUTTER (1025216PX20)", code: "1025216PX20" }],
@@ -111,6 +111,12 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
                 { value: "BRU53746", label: "Cover LUG250 900mm 48 way (BRU53746)" }
             ]
         }
+    },
+    // NMS is available as a product group now; its part/model catalog can be
+    // filled in later without hiding the group from the selector.
+    "NMS": {
+        colors: [],
+        categories: {}
     }
 };
 
@@ -139,7 +145,9 @@ function normalizeProductCatalog(source) {
         });
         const colors = Array.isArray(raw.colors) ? raw.colors.map(item => typeof item === "string" ? { value: item, label: item } : item)
             .filter(item => item && item.value).map(item => ({ value: String(item.value), label: String(item.label || item.value), code: String(item.code || "") })) : [];
-        if (Object.keys(categories).length) candidate[groupName] = { categories, colors };
+        // Keep an empty group as a valid selection. This lets NMS appear in
+        // the product-group selector before its model catalog is populated.
+        if (Object.keys(categories).length || Array.isArray(raw.colors)) candidate[groupName] = { categories, colors };
     }
     return Object.keys(candidate).length ? candidate : JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
 }

@@ -71,7 +71,9 @@ const PART_MODEL_CATALOG = {
     "Cover 100LUG": [["BRU53724", "Cover LUG100 450mm 12 way"], ["BRU53725", "Cover LUG100 450mm 18 way"], ["BRU53726", "Cover LUG100 600mm 24 way"], ["BRU53727", "Cover LUG100 600mm 30 way"], ["BRU53728", "Cover LUG100 600mm 36 way"], ["BRU53729", "Cover LUG100 750mm 42 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
     "Cover 250EZ": [["BRU53730", "Cover EZ250 600mm 12 way"], ["BRU53731", "Cover EZ250 600mm 18 way"], ["BRU53732", "Cover EZ250 750mm 24 way"], ["BRU53734", "Cover EZ250 750mm 30 way"], ["BRU53735", "Cover EZ250 900mm 36 way"], ["BRU53736", "Cover EZ250 900mm 42 way"], ["BRU53737", "Cover EZ250 900mm 48 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" })),
     "Cover 250LUG": [["BRU53738", "Cover LUG250 450mm 12 way"], ["BRU53739", "Cover LUG250 600mm 18 way"], ["BRU53740", "Cover LUG250 600mm 24 way"], ["BRU53741", "Cover LUG250 600mm 30 way"], ["BRU53742", "Cover LUG250 750mm 36 way"], ["BRU53745", "Cover LUG250 750mm 42 way"], ["BRU53746", "Cover LUG250 900mm 48 way"]].map(x => ({ value: x[0], label: x[1] + " (" + x[0] + ")" }))
-  } }
+  } },
+  // Keep NMS selectable while its part/model catalog is being prepared.
+  "NMS": { colors: [], categories: {} }
 };
 
 function getDefaultPermissions(role) {
