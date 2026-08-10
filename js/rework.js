@@ -346,7 +346,15 @@ function renderReworkDashboardChart(records) {
     const empty = document.getElementById("reworkDailyChartEmpty");
     if (outputSummary) outputSummary.textContent = outputTotal.toLocaleString("th-TH");
     if (defectSummary) defectSummary.textContent = defectTotal.toLocaleString("th-TH");
-    if (empty) empty.hidden = dates.length > 0;
+    if (empty) {
+        // The empty-state element has a grid display rule, so setting only
+        // the hidden attribute can leave it painted over a valid chart in
+        // some browsers. Keep the two states explicit and mutually exclusive.
+        const hasData = dates.length > 0;
+        empty.hidden = hasData;
+        empty.style.display = hasData ? "none" : "grid";
+        empty.textContent = "ยังไม่มีข้อมูล REWORK ในช่วงวันที่ที่เลือก";
+    }
     canvas.style.visibility = dates.length ? "visible" : "hidden";
 
     if (reworkDashboardChartInstance) reworkDashboardChartInstance.destroy();
@@ -443,6 +451,7 @@ async function loadReworkDashboardChart(forceRefresh = false) {
         const empty = document.getElementById("reworkDailyChartEmpty");
         if (empty) {
             empty.hidden = false;
+            empty.style.display = "grid";
             empty.textContent = "โหลดข้อมูล REWORK ไม่สำเร็จ กรุณากดปุ่มรีเฟรช";
         }
     }
