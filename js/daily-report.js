@@ -214,6 +214,21 @@ function renderModelDropdownOptions(productGroup = selectedProductGroup(), categ
         select.disabled = !(productGroup && category);
         if (previous && models.some(item => item.value === previous)) select.value = previous;
     });
+    updateDailyAddModelButton(productGroup, category);
+}
+
+function updateDailyAddModelButton(productGroup = selectedProductGroup(), category = document.getElementById('drPartGroup')?.value || '') {
+    const button = document.getElementById('drAddModelButton');
+    if (button) button.disabled = !(productGroup && category);
+}
+
+function addDailyModelFromButton() {
+    const select = document.getElementById('drModel');
+    if (!select || select.disabled) return;
+    const previous = select.value;
+    select.value = PAINTING_ADD_MODEL_VALUE;
+    handleModelSelect(select);
+    if (select.value === PAINTING_ADD_MODEL_VALUE) select.value = previous;
 }
 
 function handleModelSelect(select) {
