@@ -44,14 +44,57 @@ function reworkOptions(selectId, options, placeholder) {
     const select = document.getElementById(selectId);
     if (!select) return;
     const current = select.value;
+    const includeAddOption = selectId === "rwModel";
+    const addValue = typeof PAINTING_ADD_MODEL_VALUE !== "undefined" ? PAINTING_ADD_MODEL_VALUE : "__ADD_MODEL__";
     select.innerHTML = `<option value="">${reworkEsc(placeholder)}</option>` + options.map(option => {
         const value = typeof option === "string" ? option : (option.value ?? option.code ?? "");
         const label = typeof option === "string" ? option : (option.label ?? option.value ?? option.code ?? "");
         return `<option value="${reworkEsc(value)}">${reworkEsc(label)}</option>`;
-    }).join("");
+    }).join("") + (includeAddOption ? `<option value="${reworkEsc(addValue)}">➕ เพิ่มรายการ</option>` : "");
     if (options.some(option => String(typeof option === "string" ? option : (option.value ?? option.code ?? "")) === String(current))) {
         select.value = current;
     }
+}
+
+function handleReworkModelSelect(select) {
+    const addValue = typeof PAINTING_ADD_MODEL_VALUE !== "undefined" ? PAINTING_ADD_MODEL_VALUE : "__ADD_MODEL__";
+    if (!select || select.value !== addValue) return;
+    const { groups } = reworkCatalog();
+    const group = document.getElementById("rwProductGroup")?.value || "";
+    const part = document.getElementById("rwPartGroup")?.value || "";
+    const models = groups[group]?.categories?.[part];
+    if (!Array.isArray(models)) {
+        select.value = "";
+        return;
+    }
+
+    const modelName = window.prompt("ชื่อ/รายละเอียดรุ่นงานใหม่");
+    if (!modelName || !modelName.trim()) {
+        select.value = "";
+        return;
+    }
+    const modelCode = window.prompt("รหัสรุ่นงาน (ถ้ามี)") || "";
+    const name = modelName.trim();
+    const code = modelCode.trim();
+    const value = code || name;
+    const exists = models.some(item => String(typeof item === "string" ? item : (item.value ?? item.code ?? "")).trim().toLowerCase() === value.toLowerCase());
+    if (exists) {
+        showToast?.("มีรายการรุ่นงานนี้อยู่แล้ว", "error");
+        renderReworkModels();
+        select.value = value;
+        return;
+    }
+
+    models.push({ value, label: code ? `${name} (${code})` : name });
+    try {
+        const catalog = (typeof PAINTING_MODEL_GROUPS !== "undefined" && PAINTING_MODEL_GROUPS) || groups;
+        if (typeof PAINTING_PRODUCT_CATALOG_CACHE !== "undefined") {
+            localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(catalog));
+        }
+    } catch (_) {}
+    renderReworkModels();
+    select.value = value;
+    showToast?.("เพิ่มรายการรุ่นงานแล้ว", "success");
 }
 
 function renderReworkProductGroups() {
@@ -70,6 +113,7 @@ function renderReworkPartGroups() {
 }
 
 function renderReworkModels() {
+    document.getElementById("rwModel")?.setAttribute("onchange", "handleReworkModelSelect(this)");
     const { groups } = reworkCatalog();
     const group = document.getElementById("rwProductGroup")?.value || "";
     const part = document.getElementById("rwPartGroup")?.value || "";
