@@ -293,7 +293,9 @@ async function loadPartModelsList() {
     if (typeof fetchPartModelsFromAPI === 'function') {
         const cloudGroups = await fetchPartModelsFromAPI();
         if (cloudGroups && typeof cloudGroups === 'object') {
-            const normalized = normalizeProductCatalog(cloudGroups);
+            // Keep locally defined groups (including newly introduced NMS)
+            // even when the deployed Apps Script catalog has not caught up.
+            const normalized = mergeProductCatalog(PAINTING_PRODUCT_GROUPS_DEFAULT, cloudGroups);
             PAINTING_MODEL_GROUPS = mergeProductCatalog(normalized, localCatalog);
             localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
             renderProductGroupDropdownUI();
