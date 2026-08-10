@@ -321,10 +321,52 @@ function removeScreenRecord(index) {
     renderScreenList();
 }
 
+// Show the most recently saved SCREEN row first. Older rows may not have a
+// timestamp, so fall back to the date and first time in the selected slot.
+function screenHistorySortValue(row) {
+    const timestamp = String(row?.timestamp ?? row?.createdAt ?? row?.created ?? "").trim();
+    const direct = Date.parse(timestamp.replace(/\//g, "-"));
+    if (Number.isFinite(direct)) return direct;
+
+    const rawDate = String(row?.date ?? row?.Date ?? "").trim();
+    let year;
+    let month;
+    let day;
+    let dateMatch = rawDate.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (dateMatch) {
+        year = Number(dateMatch[1]);
+        month = Number(dateMatch[2]);
+        day = Number(dateMatch[3]);
+    } else {
+        dateMatch = rawDate.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+        if (!dateMatch) return 0;
+        day = Number(dateMatch[1]);
+        month = Number(dateMatch[2]);
+        year = Number(dateMatch[3]);
+    }
+
+    const slotMatch = String(row?.timeSlot ?? row?.time ?? "").match(/(\d{1,2})[.:](\d{2})/);
+    const hour = slotMatch ? Number(slotMatch[1]) : 0;
+    const minute = slotMatch ? Number(slotMatch[2]) : 0;
+    return Date.UTC(year, month - 1, day, hour, minute);
+}
+
+function sortScreenHistoryLatestFirst(records) {
+    return (Array.isArray(records) ? records : [])
+        .map((row, index) => ({ row, index }))
+        .sort((a, b) => {
+            const byDate = screenHistorySortValue(b.row) - screenHistorySortValue(a.row);
+            return byDate || (b.index - a.index);
+        })
+        .map(item => item.row);
+}
+
 function renderScreenList() {
     const body = document.getElementById("screenListBody");
     if (!body) return;
-    const rows = screenDraftRecords.length ? screenDraftRecords : screenHistoryRecords.slice(0, 20);
+    const rows = screenDraftRecords.length
+        ? screenDraftRecords
+        : sortScreenHistoryLatestFirst(screenHistoryRecords).slice(0, 20);
     const summary = document.getElementById("screenTotalSummary");
     if (summary) summary.textContent = `${rows.length} รายการ`;
     if (!rows.length) { body.innerHTML = `<tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr>`; return; }
@@ -335,7 +377,7 @@ async function refreshScreenHistory() {
     const body = document.getElementById("screenListBody");
     if (body && !screenDraftRecords.length) body.innerHTML = `<tr><td colspan="7" class="empty-state">กำลังโหลดประวัติ SCREEN...</td></tr>`;
     try {
-        screenHistoryRecords = await fetchScreenReportDataFromAPI();
+        screenHistoryRecords = sortScreenHistoryLatestFirst(await fetchScreenReportDataFromAPI());
         screenDashboardRecordsCache = screenHistoryRecords.slice();
         renderScreenList();
     } catch (error) {
