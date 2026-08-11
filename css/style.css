@@ -758,6 +758,7 @@ button, input, textarea, select {
 .qc-history-detail-table {
   width: 100%;
   min-width: 720px;
+  table-layout: fixed;
   border-collapse: collapse;
   background: rgba(15, 23, 42, 0.86);
   border: 1px solid rgba(56, 189, 248, 0.16);
@@ -779,6 +780,21 @@ button, input, textarea, select {
   background: rgba(56, 189, 248, 0.08);
   white-space: nowrap;
 }
+
+/* Keep the item number compact and give the text columns room to wrap. */
+.qc-history-detail-table th:nth-child(1),
+.qc-history-detail-table td:nth-child(1) { width: 6%; min-width: 38px; text-align: center; }
+.qc-history-detail-table th:nth-child(2),
+.qc-history-detail-table td:nth-child(2) { width: 30%; }
+.qc-history-detail-table th:nth-child(3),
+.qc-history-detail-table td:nth-child(3) { width: 19%; }
+.qc-history-detail-table th:nth-child(4),
+.qc-history-detail-table td:nth-child(4) { width: 17%; }
+.qc-history-detail-table th:nth-child(5),
+.qc-history-detail-table td:nth-child(5) { width: 10%; }
+.qc-history-detail-table th:nth-child(6),
+.qc-history-detail-table td:nth-child(6) { width: 18%; }
+.qc-history-detail-table td { overflow-wrap: anywhere; }
 
 .parameter-history-table th:nth-child(8),
 .parameter-history-table td:nth-child(8),

@@ -238,6 +238,7 @@ function toggleQCChecklistDetail(detailId, button) {
     const row = document.getElementById(detailId);
     if (!row) return;
     const isOpen = row.style.display === "table-row";
+    row.dataset.qcDetailExpanded = isOpen ? "false" : "true";
     row.style.display = isOpen ? "none" : "table-row";
     if (button) button.textContent = isOpen ? "ดูรายละเอียด" : "ซ่อนรายละเอียด";
 }

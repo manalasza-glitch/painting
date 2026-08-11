@@ -123,8 +123,12 @@
                 const outerCell = detail.querySelector(':scope > td[colspan]');
                 if (outerCell && headerRow) outerCell.colSpan = headerRow.cells.length;
             }
-            if (detail) detail.style.display = state.view === 'reviewed' && status ? '' : (state.view === 'pending' && !status ? '' : 'none');
-            row.style.display = (state.view === 'reviewed' ? !!status : !status) ? '' : 'none';
+            const rowVisible = state.view === 'reviewed' ? !!status : !status;
+            if (detail) {
+                const expanded = detail.dataset.qcDetailExpanded === 'true';
+                detail.style.display = rowVisible && expanded ? 'table-row' : 'none';
+            }
+            row.style.display = rowVisible ? '' : 'none';
             const old = row.querySelector('.qc-review-cell');
             if (old) old.remove();
             const cell = document.createElement('td');
