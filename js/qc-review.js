@@ -193,10 +193,14 @@
     }
 
     function openQCReviewView(view, element) {
+        // Submenu items carry the same qc.read permission as the parent QC
+        // link. Exclude them from the parent-toggle branch so clicking
+        // "รอตรวจ" or "ตรวจแล้ว" actually switches the view.
+        const isReviewSubmenuItem = !!(element && element.matches('[data-qc-review-view]'));
         const isQCParent = !!(element && (
             element.matches('.sidebar-nav a.nav-link[data-permission="qc.read"]')
             || element.matches('.mobile-nav-item[data-permission="qc.read"]')
-        ));
+        )) && !isReviewSubmenuItem;
         const isSubmenuOpen = !!document.querySelector('.qc-review-submenu.is-open, .mobile-qc-review-submenu.is-open');
         if (isQCParent && isSubmenuOpen) {
             setReviewSubmenuOpen(false);
