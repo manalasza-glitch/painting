@@ -366,7 +366,7 @@ function renderScreenList() {
     if (!body) return;
     const rows = screenDraftRecords.length
         ? screenDraftRecords
-        : sortScreenHistoryLatestFirst(screenHistoryRecords).slice(0, 20);
+        : sortScreenHistoryLatestFirst(screenHistoryRecords).slice(0, 5);
     const summary = document.getElementById("screenTotalSummary");
     if (summary) summary.textContent = `${rows.length} รายการ`;
     if (!rows.length) { body.innerHTML = `<tr><td colspan="7" class="empty-state">ยังไม่มีรายการ</td></tr>`; return; }
