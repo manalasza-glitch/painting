@@ -190,9 +190,22 @@
 
     function openQCReviewView(view, element) {
         state.view = view === 'reviewed' ? 'reviewed' : 'pending';
+        setReviewSubmenuOpen(true);
         if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
         loadReviewStatuses().then(enhanceAll);
         return false;
+    }
+
+    function setReviewSubmenuOpen(open) {
+        const expanded = !!open;
+        document.querySelectorAll('.qc-review-submenu, .mobile-qc-review-submenu').forEach(menu => {
+            menu.classList.toggle('is-open', expanded);
+            menu.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+        });
+        const desktop = document.querySelector('.sidebar-nav a.nav-link[data-permission="qc.read"]');
+        if (desktop) desktop.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
+        if (mobile) mobile.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     }
 
     function addDesktopSubmenu(parent) {
@@ -234,6 +247,18 @@
                 margin: -4px 0 6px 24px;
                 padding: 3px 0 3px 10px;
                 border-left: 1px solid rgba(48, 183, 255, .35);
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transform: translateY(-4px);
+                pointer-events: none;
+                transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
+            }
+            .qc-review-submenu.is-open {
+                max-height: 96px;
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
             }
             .qc-review-submenu .submenu-item {
                 display: flex;
@@ -257,6 +282,16 @@
                 padding: 5px 10px 7px;
                 background: #071322;
                 -webkit-overflow-scrolling: touch;
+                max-height: 0;
+                opacity: 0;
+                overflow-y: hidden;
+                pointer-events: none;
+                transition: max-height .22s ease, opacity .18s ease;
+            }
+            .mobile-qc-review-submenu.is-open {
+                max-height: 54px;
+                opacity: 1;
+                pointer-events: auto;
             }
             .mobile-qc-review-submenu button {
                 flex: 0 0 auto;
@@ -310,6 +345,10 @@
         const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
         addDesktopSubmenu(desktop);
         addMobileSubmenu(mobile);
+        setReviewSubmenuOpen(false);
+        document.querySelectorAll('.sidebar-nav a.nav-link:not([data-permission="qc.read"]), .mobile-nav-item:not([data-permission="qc.read"])').forEach(link => {
+            link.addEventListener('click', () => setReviewSubmenuOpen(false));
+        });
         const root = document.getElementById('qc-history-tab');
         if (root) new MutationObserver(scheduleEnhance).observe(root, { childList: true, subtree: true });
         loadReviewStatuses().then(enhanceAll);
