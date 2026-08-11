@@ -101,6 +101,7 @@
         const body = table && table.tBodies && table.tBodies[0];
         const rows = tableRows(table);
         if (!body || !rows.length) return;
+        table.classList.add('qc-review-table');
         const source = sourceForTable(table);
         const headerRow = table.tHead && table.tHead.rows[0];
         if (headerRow && !headerRow.querySelector('.qc-review-heading')) {
@@ -379,6 +380,59 @@
             @media (max-width: 700px) {
                 .qc-review-cell { min-width: 68px; }
                 .qc-review-action { width: 28px; height: 28px; line-height: 28px; }
+            }
+            /* Keep the QC decision column inside the history card.  The base
+               history tables have eight columns; the review action is added
+               dynamically as the ninth, so constrain only enhanced QC tables. */
+            .qc-review-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                table-layout: fixed !important;
+                box-sizing: border-box;
+            }
+            .qc-review-table th,
+            .qc-review-table td {
+                min-width: 0 !important;
+                box-sizing: border-box;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            .qc-review-table th:nth-child(1), .qc-review-table td:nth-child(1) { width: 13% !important; }
+            .qc-review-table th:nth-child(2), .qc-review-table td:nth-child(2) { width: 10% !important; }
+            .qc-review-table th:nth-child(3), .qc-review-table td:nth-child(3) { width: 13% !important; }
+            .qc-review-table th:nth-child(4), .qc-review-table td:nth-child(4) { width: 15% !important; }
+            .qc-review-table th:nth-child(5), .qc-review-table td:nth-child(5) { width: 11% !important; }
+            .qc-review-table th:nth-child(6), .qc-review-table td:nth-child(6) { width: 8% !important; }
+            .qc-review-table th:nth-child(7), .qc-review-table td:nth-child(7) { width: 8% !important; }
+            .qc-review-table th:nth-child(8), .qc-review-table td:nth-child(8) { width: 11% !important; }
+            .qc-review-table th:nth-child(9), .qc-review-table td:nth-child(9) { width: 11% !important; }
+            .qc-review-table .qc-review-cell {
+                width: 11% !important;
+                min-width: 0 !important;
+                padding: .35rem .2rem;
+                white-space: nowrap;
+                text-align: center;
+            }
+            .qc-review-table .qc-review-action {
+                width: 28px;
+                height: 28px;
+                margin: 0 1px;
+                line-height: 28px;
+                font-size: .9rem;
+            }
+            @media (max-width: 700px) {
+                .qc-review-table { font-size: .72rem; }
+                .qc-review-table th,
+                .qc-review-table td { padding: .35rem .18rem !important; }
+                .qc-review-table .qc-review-action {
+                    width: 24px;
+                    height: 24px;
+                    margin: 0;
+                    line-height: 24px;
+                    font-size: .8rem;
+                }
             }
         `;
         document.head.appendChild(style);
