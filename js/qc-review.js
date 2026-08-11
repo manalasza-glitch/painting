@@ -189,6 +189,15 @@
     }
 
     function openQCReviewView(view, element) {
+        const isQCParent = !!(element && (
+            element.matches('.sidebar-nav a.nav-link[data-permission="qc.read"]')
+            || element.matches('.mobile-nav-item[data-permission="qc.read"]')
+        ));
+        const isSubmenuOpen = !!document.querySelector('.qc-review-submenu.is-open, .mobile-qc-review-submenu.is-open');
+        if (isQCParent && isSubmenuOpen) {
+            setReviewSubmenuOpen(false);
+            return false;
+        }
         state.view = view === 'reviewed' ? 'reviewed' : 'pending';
         setReviewSubmenuOpen(true);
         if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
