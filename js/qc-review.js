@@ -217,6 +217,20 @@
         if (mobile) mobile.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     }
 
+    // Match the checklist menu affordance: a down caret when collapsed and
+    // an up caret while the QC review submenu is expanded.  The caret is
+    // injected here so both desktop and mobile navigation stay in sync with
+    // the dynamically-created review submenu.
+    function addQCCaret(parent) {
+        if (!parent || parent.querySelector('.qc-review-menu-caret')) return;
+        parent.classList.add('qc-review-menu-parent');
+        const caret = document.createElement('span');
+        caret.className = 'qc-review-menu-caret';
+        caret.setAttribute('aria-hidden', 'true');
+        caret.textContent = '▾';
+        parent.appendChild(caret);
+    }
+
     function addDesktopSubmenu(parent) {
         if (!parent || document.getElementById('qc-review-submenu')) return;
         const submenu = document.createElement('div');
@@ -312,6 +326,20 @@
                 font: inherit;
                 white-space: nowrap;
             }
+            .qc-review-menu-parent {
+                display: flex;
+                align-items: center;
+            }
+            .qc-review-menu-caret {
+                margin-left: auto;
+                flex: 0 0 auto;
+                font-size: .9rem;
+                opacity: .9;
+                transition: transform .2s ease;
+            }
+            .qc-review-menu-parent[aria-expanded="true"] .qc-review-menu-caret {
+                transform: rotate(180deg);
+            }
             .qc-review-cell { white-space: nowrap; min-width: 76px; }
             .qc-review-action {
                 width: 30px;
@@ -352,6 +380,8 @@
         injectStyles();
         const desktop = document.querySelector('.sidebar-nav a.nav-link[data-permission="qc.read"]');
         const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
+        addQCCaret(desktop);
+        addQCCaret(mobile);
         addDesktopSubmenu(desktop);
         addMobileSubmenu(mobile);
         setReviewSubmenuOpen(false);
