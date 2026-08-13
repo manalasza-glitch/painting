@@ -80,7 +80,7 @@ function waitBeforeApiRetry(delayMs) {
 }
 
 async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
-    return enqueueCloudRead(async () => {
+    const requestTask = async () => {
     const attempts = Math.max(1, Number(retryOptions.attempts ?? retryOptions.maxRetries) || 1);
     const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 12000);
     let lastError = null;
@@ -110,7 +110,8 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
     }
 
     throw lastError || new Error(`${operation}: ไม่สามารถโหลดข้อมูลได้`);
-    });
+    };
+    return retryOptions && retryOptions.skipQueue ? requestTask() : enqueueCloudRead(requestTask);
 }
 
 // Fetch historical inspection records from Google Sheet API
@@ -696,7 +697,8 @@ async function sendQCChecklistReviewToAPI(payload) {
         + "action=submitQCReview&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
     const result = await fetchAppsScriptJsonWithRetry(reviewUrl, "Submit QC review", {
         attempts: 2,
-        timeoutMs: 20000
+        timeoutMs: 20000,
+        skipQueue: true
     });
     if (!result || result.status !== "success" || result.action !== "submitQCReview") {
         throw new Error("ระบบหลังบ้านไม่ยืนยันการตรวจ QC");
