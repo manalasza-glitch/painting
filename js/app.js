@@ -2192,13 +2192,15 @@ async function loadQC7Data(force = false) {
     renderQC7Tools();
     const load = (async () => {
         try {
-            const inspectionPromise = typeof fetchInspectionDataFromAPI === 'function'
-                ? fetchInspectionDataFromAPI('')
-                : Promise.resolve(Array.isArray(inspectionRecords) ? inspectionRecords : []);
-            const outputPromise = typeof fetchDailyReportDataFromAPI === 'function'
-                ? fetchDailyReportDataFromAPI('')
-                : Promise.resolve(typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []);
-            const [inspectionRows, outputRows] = await Promise.all([inspectionPromise, outputPromise]);
+            // Apps Script web apps issue a redirect per request. Keep these
+            // sheet reads sequential so the browser does not open several
+            // redirects at once and overload the deployment.
+            const inspectionRows = typeof fetchInspectionDataFromAPI === 'function'
+                ? await fetchInspectionDataFromAPI('')
+                : (Array.isArray(inspectionRecords) ? inspectionRecords : []);
+            const outputRows = typeof fetchDailyReportDataFromAPI === 'function'
+                ? await fetchDailyReportDataFromAPI('')
+                : (typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []);
             qc7CombinedRecords = buildQC7CombinedRecords(inspectionRows, outputRows);
             qc7DataLoaded = true;
             return qc7CombinedRecords;

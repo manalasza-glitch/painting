@@ -42,6 +42,15 @@ function getApiUrl() {
     return API_URL;
 }
 
+// Apps Script first returns a short-lived redirect to googleusercontent.com.
+// Reusing the same URL can make Chrome keep an expired redirect and surface
+// an HTML 404 page instead of the JSON response. Every cloud request therefore
+// gets a unique query value and bypasses the browser cache.
+function withApiRequestNonce(url) {
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}_request=${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 async function requireJsonResponse(response, operation) {
     if (!response.ok) {
         throw new Error(`${operation}: HTTP ${response.status}`);
@@ -71,8 +80,7 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
         const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
         const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
-        const separator = url.includes("?") ? "&" : "?";
-        const requestUrl = `${url}${separator}_request=${Date.now()}-${attempt}`;
+        const requestUrl = withApiRequestNonce(url);
 
         try {
             const response = await fetch(requestUrl, {
@@ -105,8 +113,9 @@ async function fetchInspectionDataFromAPI(dateFilter = "") {
 
     try {
         const requestUrl = url + (url.includes('?') ? '&' : '?') + (requestedDate ? `date=${encodeURIComponent(requestedDate)}` : '');
-        const response = await fetch(requestUrl, {
+        const response = await fetch(withApiRequestNonce(requestUrl), {
             method: "GET",
+            cache: "no-store",
             headers: { "Accept": "application/json" }
         });
 
@@ -176,7 +185,7 @@ async function sendDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        const response = await fetch(withApiRequestNonce(url), { method: "GET", cache: "no-store" });
         const result = await requireJsonResponse(response, 'Create inspection');
         if (!result || result.status !== "success" || result.action !== "create") {
             throw new Error("Create inspection: backend did not confirm the save");
@@ -237,7 +246,7 @@ async function updateDataToAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        const response = await fetch(withApiRequestNonce(url), { method: "GET", cache: "no-store" });
         return await requireJsonResponse(response, 'Update inspection');
     } catch (err) {
         console.error("Update Error:", err);
@@ -265,7 +274,7 @@ async function deleteDataFromAPI(data) {
         activeSyncRequests++;
         updateSyncUI();
 
-        const response = await fetch(url, { method: "GET", cache: "no-cache" });
+        const response = await fetch(withApiRequestNonce(url), { method: "GET", cache: "no-store" });
         const result = await requireJsonResponse(response, 'Delete inspection');
         if (!result || result.status !== "success" || result.action !== "delete") {
             throw new Error("Delete inspection: backend did not confirm the deletion");
@@ -445,7 +454,7 @@ async function fetchRecordersFromAPI() {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getRecorders';
 
     try {
-        const res = await fetch(url);
+        const res = await fetch(withApiRequestNonce(url), { cache: "no-store", headers: { "Accept": "application/json" } });
         const data = await res.json();
         if (data && data.recorders && Array.isArray(data.recorders)) {
             return data.recorders;
@@ -467,7 +476,7 @@ async function addRecorderToAPI(name) {
 
     try {
         // The Apps Script endpoint handles recorder mutations through GET parameters.
-        await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+        await fetch(withApiRequestNonce(url), { method: "GET", mode: "no-cors", cache: "no-store" });
         return true;
     } catch (e) {
         console.warn("Failed to sync new recorder to cloud:", e);
@@ -486,7 +495,7 @@ async function deleteRecorderFromAPI(name) {
 
     try {
         // The Apps Script endpoint handles recorder mutations through GET parameters.
-        await fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
+        await fetch(withApiRequestNonce(url), { method: "GET", mode: "no-cors", cache: "no-store" });
         return true;
     } catch (e) {
         console.warn("Failed to delete recorder from cloud:", e);
@@ -504,8 +513,7 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
 
         try {
-            const res = await fetch(url);
-            const json = await res.json();
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load outputdiary", { attempts: 2, timeoutMs: 15000 });
             
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 lastDailyReportFetchSucceeded = true;
@@ -549,8 +557,7 @@ async function fetchReworkReportDataFromAPI(dateFilter = "") {
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getReworkReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
-            const response = await fetch(url, { cache: "no-cache" });
-            const json = await response.json();
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load REWORK history", { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
@@ -576,8 +583,7 @@ async function fetchScreenReportDataFromAPI(dateFilter = "") {
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getScreenReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
-            const response = await fetch(url, { cache: "no-cache" });
-            const json = await response.json();
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load SCREEN history", { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
@@ -1091,7 +1097,7 @@ async function getUsersAPI() {
         const timeoutId = setTimeout(() => controller.abort(), 15000);
         try {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
-            const res = await fetch(url, { cache: 'no-cache', signal: controller.signal });
+            const res = await fetch(withApiRequestNonce(url), { cache: 'no-store', signal: controller.signal, headers: { "Accept": "application/json" } });
             if (res.ok) {
                 const json = await res.json();
                 if (json && json.status === "success" && Array.isArray(json.users)) {
