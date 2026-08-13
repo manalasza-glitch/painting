@@ -149,9 +149,8 @@
                     ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
-                cell.innerHTML = '<button type="button" class="qc-review-action qc-review-approve" data-qc-status="approved" title="ตรวจผ่าน">✓</button>'
-                    + '<button type="button" class="qc-review-action qc-review-reject" data-qc-status="rejected" title="ไม่ผ่าน">✕</button>';
-                cell.querySelectorAll('button').forEach(button => button.addEventListener('click', event => decide(event, button, source, row, key)));
+                cell.innerHTML = '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
+                cell.querySelector('button').addEventListener('click', event => decide(event, cell.querySelector('button'), source, row, key));
             }
             row.appendChild(cell);
         });
@@ -377,8 +376,7 @@
                 cursor: pointer;
             }
             .qc-review-action:disabled { opacity: .55; cursor: wait; }
-            .qc-review-approve { background: #10b981; }
-            .qc-review-reject { background: #ef4444; }
+            .qc-review-complete { background: #10b981; min-width: 76px; padding: 0 10px; font-size: .8rem; }
             .qc-review-badge {
                 display: inline-flex;
                 align-items: center;
