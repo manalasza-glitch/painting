@@ -314,7 +314,7 @@ function ensureParameterChecklistSheet(ss, checklistType) {
     "CheckItem", "Standard", "ActualValue", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER, "ChecklistType"
   ];
   const headers = isWater ? baseHeaders.concat(["Time"]) : baseHeaders;
-  let sheet = ss.getSheetByName(sheetName);
+  let sheet = ss.getSheetByName(sheetName + QC_PENDING_SUFFIX);
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
     sheet.appendRow(headers);
@@ -345,7 +345,7 @@ function hasParameterChecklistSubmission(sheet, submissionId) {
 }
 
 function ensureEquipmentChecklistSheet(ss) {
-  let sheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME);
+  let sheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet) {
     sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME);
     sheet.appendRow([
