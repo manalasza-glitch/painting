@@ -552,20 +552,19 @@ function readQCReviewRecords_(ss) {
     const lastRow = sheet.getLastRow();
     const rowCount = Math.min(lastRow - 1, REPORT_READ_MAX_ROWS);
     const firstRow = lastRow - rowCount + 1;
-    const readColumn = index => sheet.getRange(firstRow, index + 1, rowCount, 1).getDisplayValues().map(row => row[0]);
-    const statuses = readColumn(map.statusIndex);
-    const reviewedAt = map.reviewedAtIndex >= 0 ? readColumn(map.reviewedAtIndex) : [];
-    const reviewers = map.reviewerIndex >= 0 ? readColumn(map.reviewerIndex) : [];
-    const keys = readColumn(map.keyIndex);
+    // One range read per reviewed sheet is substantially faster than four
+    // separate column reads through the Apps Script Spreadsheet service.
+    const rows = sheet.getRange(firstRow, 1, rowCount, Math.max(1, sheet.getLastColumn())).getDisplayValues();
     for (let i = 0; i < rowCount; i++) {
-      const reviewKey = String(keys[i] || "").trim();
+      const row = rows[i] || [];
+      const reviewKey = String(row[map.keyIndex] || "").trim();
       if (!reviewKey) continue;
       result.push({
-        reviewedAt: formatDateStr(reviewedAt[i], true),
-        status: String(statuses[i] || "").trim(),
+        reviewedAt: formatDateStr(row[map.reviewedAtIndex], true),
+        status: String(row[map.statusIndex] || "").trim(),
         sourceSheet: base,
         reviewKey: reviewKey,
-        reviewedBy: String(reviewers[i] || "").trim()
+        reviewedBy: String(row[map.reviewerIndex] || "").trim()
       });
     }
   });
