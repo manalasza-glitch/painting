@@ -168,7 +168,9 @@
             status,
             sourceSheet: source,
             reviewedBy: reviewer,
-            record: { cells: Array.from(row.cells).map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim()) }
+            record: { cells: Array.from(row.cells)
+                .filter(cell => !cell.classList.contains('qc-review-cell'))
+                .map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim()) }
         };
         row.querySelectorAll('button').forEach(item => { item.disabled = true; });
         try {

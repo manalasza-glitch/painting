@@ -454,7 +454,8 @@ function migrateExistingQCData_(ss) {
 }
 
 function appendQCReviewRecord_(ss, payload) {
-  const sourceName = String(payload && payload.sourceSheet || "QC").trim() || "QC";
+  let sourceName = String(payload && payload.sourceSheet || "QC").trim() || "QC";
+  if (sourceName === "ScreenReports") sourceName = "SCREEN";
   const record = payload && payload.record && Array.isArray(payload.record.cells) ? payload.record.cells : [];
   const mirrors = ensureQCMirrorSheets_(ss, sourceName, record);
   const sourceSheet = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX) || ss.getSheetByName(sourceName);
@@ -492,7 +493,7 @@ function appendQCReviewRecord_(ss, payload) {
 
 function readQCReviewRecords_(ss) {
   const result = [];
-  [PARAMETER_CHECKLIST_SHEET_NAME, WATER_PARAMETER_CHECKLIST_SHEET_NAME, EQUIPMENT_CHECKLIST_SHEET_NAME].forEach(base => {
+  QC_MIGRATION_SOURCES.forEach(base => {
     const sheet = ss.getSheetByName(base + QC_REVIEWED_SUFFIX);
     if (!sheet || sheet.getLastRow() <= 1) return;
     const values = sheet.getDataRange().getValues();
