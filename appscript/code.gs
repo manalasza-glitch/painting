@@ -573,13 +573,13 @@ function deleteQCSourceRows_(sheet, rows) {
 
 function ensureQCReviewMetadataHeaders_(sheet) {
   if (!sheet) return;
-  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(value => String(value || "").trim());
-  ["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"].forEach(name => {
-    if (headers.indexOf(name) < 0) {
-      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(name);
-      headers.push(name);
-    }
-  });
+  const metadata = ["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"];
+  const currentLastColumn = Math.max(1, sheet.getLastColumn());
+  const currentHeaders = sheet.getRange(1, 1, 1, currentLastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
+  const hasTrailingMetadata = currentLastColumn >= 4 && metadata.every((name, index) => currentHeaders[currentLastColumn - 4 + index] === name);
+  const dataColumnCount = hasTrailingMetadata ? currentLastColumn - 4 : currentLastColumn;
+  if (!hasTrailingMetadata) sheet.insertColumnsAfter(currentLastColumn, metadata.length);
+  sheet.getRange(1, dataColumnCount + 1, 1, metadata.length).setValues([metadata]);
 }
 
 function qcReviewDataRow_(row, dataColumnCount) {
@@ -633,6 +633,15 @@ function appendQCReviewRecord_(ss, payload) {
 function getQCReviewColumnMap_(sheet, base) {
   const lastColumn = Math.max(1, sheet.getLastColumn());
   const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
+  // Mirror tabs always store the four QC metadata fields in the final four
+  // columns. Prefer this invariant over legacy header layouts created by
+  // earlier versions of the migration.
+  if (lastColumn >= 4) {
+    const metadataStart = lastColumn - 4;
+    if (headers[metadataStart] === "QCStatus" && headers[metadataStart + 1] === "QCReviewedAt" && headers[metadataStart + 2] === "QCReviewedBy" && headers[metadataStart + 3] === "QCReviewKey") {
+      return { statusIndex: metadataStart, reviewedAtIndex: metadataStart + 1, reviewerIndex: metadataStart + 2, keyIndex: metadataStart + 3 };
+    }
+  }
   const map = {
     statusIndex: headers.indexOf("QCStatus"),
     reviewedAtIndex: headers.indexOf("QCReviewedAt"),
@@ -672,6 +681,7 @@ function readQCReviewRecords_(ss) {
   QC_MIGRATION_SOURCES.forEach(base => {
     const sheet = ss.getSheetByName(base + QC_REVIEWED_SUFFIX);
     if (!sheet || sheet.getLastRow() <= 1) return;
+    ensureQCReviewMetadataHeaders_(sheet);
     const map = getQCReviewColumnMap_(sheet, base);
     if (map.statusIndex < 0 || map.keyIndex < 0) return;
     const lastRow = sheet.getLastRow();
