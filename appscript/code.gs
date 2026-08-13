@@ -452,7 +452,7 @@ function appendQCReviewRecord_(ss, payload) {
   reviewedSheet.appendRow(record.concat([status, reviewedAt, reviewerName, reviewKey]));
   // Copy-first, delete-second: the source row is removed only after the reviewed copy exists.
   if (sourceSheet && sourceSheet.getLastRow() > 1 && record.length) {
-    const values = sourceSheet.getDataRange().getValues();
+    const values = sourceSheet.getDataRange().getDisplayValues();
     for (let i = values.length - 1; i >= 1; i--) {
       const row = values[i].map(v => String(v == null ? "" : v).trim());
       const wanted = record.map(v => String(v == null ? "" : v).trim());
