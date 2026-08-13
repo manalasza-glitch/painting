@@ -64,8 +64,8 @@ function waitBeforeApiRetry(delayMs) {
 }
 
 async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
-    const attempts = Math.max(1, Number(retryOptions.attempts) || 3);
-    const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 20000);
+    const attempts = Math.max(1, Number(retryOptions.attempts ?? retryOptions.maxRetries) || 1);
+    const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 12000);
     let lastError = null;
 
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -686,13 +686,24 @@ async function sendQCChecklistReviewToAPI(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl) throw new Error("ไม่พบ URL ของระบบหลังบ้าน");
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=submitQCReview";
-    const response = await fetch(url, {
-        method: "POST",
-        cache: "no-cache",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload || {})
-    });
-    const result = await requireJsonResponse(response, "Submit QC review");
+    let result;
+    try {
+        const response = await fetch(url, {
+            method: "POST", cache: "no-cache",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload || {}),
+            signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+        });
+        result = await requireJsonResponse(response, "Submit QC review");
+    } catch (postError) {
+        const fallbackUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?')
+            + "action=submitQCReview&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
+        const fallbackResponse = await fetch(fallbackUrl, {
+            method: "GET", cache: "no-cache", headers: { "Accept": "application/json" },
+            signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+        });
+        result = await requireJsonResponse(fallbackResponse, "Submit QC review");
+    }
     if (!result || result.status !== "success" || result.action !== "submitQCReview") {
         throw new Error("ระบบหลังบ้านไม่ยืนยันการตรวจ QC");
     }

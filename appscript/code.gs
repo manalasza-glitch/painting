@@ -516,6 +516,22 @@ function readQCReviewRecords_(ss) {
 function doPost(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // QC review writes must not initialize/read the legacy inspection sheet.
+    // That unnecessary operation was making the button wait or time out.
+    const earlyAction = (e && e.parameter && e.parameter.action) || "";
+    if (earlyAction === "submitQCReview") {
+      let earlyPayload = {};
+      try {
+        earlyPayload = e && e.postData && e.postData.contents
+          ? JSON.parse(e.postData.contents) : (e.parameter || {});
+      } catch (parseErr) { earlyPayload = e.parameter || {}; }
+      const earlyResult = appendQCReviewRecord_(ss, earlyPayload || {});
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", action: "submitQCReview", duplicate: !!earlyResult.duplicate
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     let sheet = ss.getSheetByName(SHEET_NAME);
 
     /* Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.

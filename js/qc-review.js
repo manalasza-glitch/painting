@@ -56,7 +56,7 @@
         state.loading = true;
         try {
             if (typeof fetchQCReviewDataFromAPI === 'function') {
-                const rows = await fetchQCReviewDataFromAPI({ retryOptions: { maxRetries: 1 } });
+                const rows = await fetchQCReviewDataFromAPI({ retryOptions: { attempts: 1, timeoutMs: 8000 } });
                 (rows || []).forEach(row => {
                     const key = String(row.reviewKey || '').trim();
                     if (key) state.statuses[key] = { status: normalizeStatus(row.status), reviewedAt: row.reviewedAt, reviewedBy: row.reviewedBy };
