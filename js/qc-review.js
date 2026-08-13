@@ -376,7 +376,18 @@
                 cursor: pointer;
             }
             .qc-review-action:disabled { opacity: .55; cursor: wait; }
-            .qc-review-complete { background: #10b981; min-width: 76px; padding: 0 10px; font-size: .8rem; }
+            .qc-review-complete {
+                background: #10b981;
+                min-width: 76px;
+                padding: 0 10px;
+                font-size: .8rem;
+                transition: background-color .15s ease, transform .15s ease;
+            }
+            .qc-review-complete:hover,
+            .qc-review-complete:focus-visible {
+                background: #047857;
+                transform: translateY(-1px);
+            }
             .qc-review-badge {
                 display: inline-flex;
                 align-items: center;
