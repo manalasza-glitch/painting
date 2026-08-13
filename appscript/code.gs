@@ -425,7 +425,7 @@ function ensureQCMirrorSheets_(ss, sourceSheetName, rowValues) {
 }
 
 function ensureAllQCMirrorSheets_(ss) {
-  [PARAMETER_CHECKLIST_SHEET_NAME, WATER_PARAMETER_CHECKLIST_SHEET_NAME, EQUIPMENT_CHECKLIST_SHEET_NAME].forEach(name => {
+  QC_MIGRATION_SOURCES.forEach(name => {
     ensureQCMirrorSheets_(ss, name, []);
   });
 }
@@ -1107,7 +1107,8 @@ function doGet(e) {
     const action = (e && e.parameter && e.parameter.action) || "";
 
     if (action === "migrateQCData") {
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: action, moved: migrateExistingQCData_(ss) })).setMimeType(ContentService.MimeType.JSON);
+      ensureAllQCMirrorSheets_(ss);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: action, moved: migrateExistingQCData_(ss), sheets: QC_MIGRATION_SOURCES.map(name => ({ pending: name + QC_PENDING_SUFFIX, reviewed: name + QC_REVIEWED_SUFFIX })) })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "submitQCReview") {
