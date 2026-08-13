@@ -16,6 +16,7 @@ const SCREEN_SHEET_NAME = "SCREEN";
 const QC_PENDING_SUFFIX = "_Pending";
 const QC_REVIEWED_SUFFIX = "_Reviewed";
 const QC_MIGRATION_SOURCES = ["ParameterChecklist", "WaterParameterChecklist", "EquipmentChecklist", "SCREEN", "REWORK", "outputdiary"];
+const REPORT_READ_MAX_ROWS = 5000;
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
@@ -145,6 +146,20 @@ function hasDailyReportSubmission(sheet, submissionId, idColumn) {
   return values.some(row => String(row[0] || "").trim() === submissionId);
 }
 
+// Read only recent data rows. getDataRange() can include a large formatted
+// area and make a web-app request time out before it returns JSON.
+function readRecentDataRows_(sheet, maxRows) {
+  if (!sheet || sheet.getLastRow() <= 1) return { values: [], firstRow: 2 };
+  const lastRow = sheet.getLastRow();
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const rowCount = Math.min(lastRow - 1, Number(maxRows) || REPORT_READ_MAX_ROWS);
+  const firstRow = lastRow - rowCount + 1;
+  return {
+    values: sheet.getRange(firstRow, 1, rowCount, lastColumn).getValues(),
+    firstRow: firstRow
+  };
+}
+
 // REWORK intentionally uses its own sheet, while keeping the same row shape
 // as outputdiary so the production form can be reused without mixing data.
 function reworkReportHeaders_() {
@@ -209,8 +224,7 @@ function appendReworkReport_(ss, payload) {
 function readReworkReports_(ss, requestedDate) {
   const sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  const values = sheet.getDataRange().getValues();
-  values.shift();
+  const values = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS).values;
   const data = values.map(r => ({
     timestamp: formatDateStr(r[0], true), date: formatDateStr(r[1], false), shift: String(r[2] || ""),
     recorder: String(r[3] || ""), checker: String(r[4] || ""), downtimeBurner: Number(r[5]) || 0,
@@ -287,8 +301,7 @@ function appendScreenReport_(ss, payload) {
 function readScreenReports_(ss, requestedDate) {
   const sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  const values = sheet.getDataRange().getValues();
-  values.shift();
+  const values = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS).values;
   const data = values.map(r => ({
     timestamp: formatDateStr(r[0], true), date: formatDateStr(r[1], false), shift: String(r[2] || ""),
     recorder: String(r[3] || ""), checker: String(r[4] || ""), downtimeBurner: Number(r[5]) || 0,
@@ -461,8 +474,9 @@ function appendQCReviewRecord_(ss, payload) {
   const sourceSheet = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX) || ss.getSheetByName(sourceName);
   const reviewedSheet = mirrors.reviewed;
   const reviewKey = String(payload && payload.reviewKey || "").trim();
-  if (reviewKey && reviewedSheet.getLastRow() > 1) {
-    const keys = reviewedSheet.getRange(2, reviewedSheet.getLastColumn(), reviewedSheet.getLastRow() - 1, 1).getValues();
+  const columnMap = getQCReviewColumnMap_(reviewedSheet, sourceName);
+  if (reviewKey && reviewedSheet.getLastRow() > 1 && columnMap.keyIndex >= 0) {
+    const keys = reviewedSheet.getRange(2, columnMap.keyIndex + 1, reviewedSheet.getLastRow() - 1, 1).getDisplayValues();
     if (keys.some(row => String(row[0] || "").trim() === reviewKey)) {
       return { duplicate: true };
     }
@@ -491,25 +505,69 @@ function appendQCReviewRecord_(ss, payload) {
   return { duplicate: false };
 }
 
+function getQCReviewColumnMap_(sheet, base) {
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
+  const map = {
+    statusIndex: headers.indexOf("QCStatus"),
+    reviewedAtIndex: headers.indexOf("QCReviewedAt"),
+    reviewerIndex: headers.indexOf("QCReviewedBy"),
+    keyIndex: headers.indexOf("QCReviewKey")
+  };
+  if (sheet.getLastRow() <= 1 || (map.statusIndex >= 0 && map.reviewedAtIndex >= 0 && map.reviewerIndex >= 0 && map.keyIndex >= 0)) {
+    return map;
+  }
+
+  // Some mirror tabs were created before the QC metadata headers existed.
+  // Inspect a small sample and infer the metadata columns from the review key.
+  const sampleCount = Math.min(sheet.getLastRow() - 1, 50);
+  const sampleRows = sheet.getRange(2, 1, sampleCount, lastColumn).getDisplayValues();
+  const keyPrefix = String(base || "").trim() + "|";
+  sampleRows.forEach(row => {
+    if (map.statusIndex < 0) {
+      const statusIndex = row.findIndex(value => ["approved", "rejected"].indexOf(String(value || "").trim().toLowerCase()) >= 0);
+      if (statusIndex >= 0) map.statusIndex = statusIndex;
+    }
+    if (map.keyIndex < 0) {
+      const keyIndex = row.findIndex(value => String(value || "").trim().indexOf(keyPrefix) === 0);
+      if (keyIndex >= 0) map.keyIndex = keyIndex;
+    }
+  });
+  if (map.keyIndex >= 0 && map.statusIndex < 0 && map.keyIndex >= 3) map.statusIndex = map.keyIndex - 3;
+  if (map.statusIndex >= 0) {
+    if (map.reviewedAtIndex < 0 && map.statusIndex + 1 < lastColumn) map.reviewedAtIndex = map.statusIndex + 1;
+    if (map.reviewerIndex < 0 && map.statusIndex + 2 < lastColumn) map.reviewerIndex = map.statusIndex + 2;
+    if (map.keyIndex < 0 && map.statusIndex + 3 < lastColumn) map.keyIndex = map.statusIndex + 3;
+  }
+  return map;
+}
+
 function readQCReviewRecords_(ss) {
   const result = [];
   QC_MIGRATION_SOURCES.forEach(base => {
     const sheet = ss.getSheetByName(base + QC_REVIEWED_SUFFIX);
     if (!sheet || sheet.getLastRow() <= 1) return;
-    const values = sheet.getDataRange().getValues();
-    const headers = values.shift().map(String);
-    const statusIndex = headers.indexOf("QCStatus");
-    const reviewedAtIndex = headers.indexOf("QCReviewedAt");
-    const reviewerIndex = headers.indexOf("QCReviewedBy");
-    const keyIndex = headers.indexOf("QCReviewKey");
-    values.forEach(row => result.push({
-      reviewedAt: formatDateStr(row[reviewedAtIndex], true),
-      status: String(row[statusIndex] || ""),
-      sourceSheet: base,
-      reviewKey: String(row[keyIndex] || ""),
-      reviewedBy: String(row[reviewerIndex] || ""),
-      record: { cells: row.slice(0, statusIndex) }
-    }));
+    const map = getQCReviewColumnMap_(sheet, base);
+    if (map.statusIndex < 0 || map.keyIndex < 0) return;
+    const lastRow = sheet.getLastRow();
+    const rowCount = Math.min(lastRow - 1, REPORT_READ_MAX_ROWS);
+    const firstRow = lastRow - rowCount + 1;
+    const readColumn = index => sheet.getRange(firstRow, index + 1, rowCount, 1).getDisplayValues().map(row => row[0]);
+    const statuses = readColumn(map.statusIndex);
+    const reviewedAt = map.reviewedAtIndex >= 0 ? readColumn(map.reviewedAtIndex) : [];
+    const reviewers = map.reviewerIndex >= 0 ? readColumn(map.reviewerIndex) : [];
+    const keys = readColumn(map.keyIndex);
+    for (let i = 0; i < rowCount; i++) {
+      const reviewKey = String(keys[i] || "").trim();
+      if (!reviewKey) continue;
+      result.push({
+        reviewedAt: formatDateStr(reviewedAt[i], true),
+        status: String(statuses[i] || "").trim(),
+        sourceSheet: base,
+        reviewKey: reviewKey,
+        reviewedBy: String(reviewers[i] || "").trim()
+      });
+    }
   });
   return result;
 }
@@ -1451,17 +1509,19 @@ function doGet(e) {
 
     // Handle getDailyReportData action (outputdiary sheet tab)
     if (action === "getDailyReportData") {
-      let prodSheet = ss.getSheetByName("outputdiary");
+      // New submissions are stored in outputdiary_Pending. Keep the legacy
+      // tab as a fallback so records written before the migration remain visible.
+      let prodSheet = ss.getSheetByName("outputdiary" + QC_PENDING_SUFFIX);
+      if (!prodSheet || prodSheet.getLastRow() <= 1) prodSheet = ss.getSheetByName("outputdiary");
       if (!prodSheet) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      const values = prodSheet.getDataRange().getValues();
-      if (!values || values.length <= 1) {
+      const values = readRecentDataRows_(prodSheet, REPORT_READ_MAX_ROWS).values;
+      if (!values || values.length === 0) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      values.shift(); // remove header row
       const data = values.map(r => ({
         timestamp: formatDateStr(r[0], true),
         date: formatDateStr(r[1], false),
@@ -1574,18 +1634,19 @@ function doGet(e) {
     // the related catalog is stored in a dedicated PartModelCatalog sheet.
     if (action === "getPartModels") {
       let catalogSheet = ss.getSheetByName("PartModelCatalog");
-      if (!catalogSheet) {
-        catalogSheet = ss.insertSheet("PartModelCatalog");
-        catalogSheet.appendRow(["ProductGroup", "PartCategory", "ModelCode", "ModelName", "ColorName", "ColorCode"]);
+      if (!catalogSheet) catalogSheet = ss.insertSheet("PartModelCatalog");
+      if (catalogSheet.getLastRow() <= 1) {
+        const catalogRows = [["ProductGroup", "PartCategory", "ModelCode", "ModelName", "ColorName", "ColorCode"]];
         Object.keys(PART_MODEL_CATALOG).forEach(groupName => {
           const group = PART_MODEL_CATALOG[groupName];
           const firstColor = (group.colors || [])[0] || {};
           Object.keys(group.categories || {}).forEach(category => {
             (group.categories[category] || []).forEach(model => {
-              catalogSheet.appendRow([groupName, category, model.value, model.label, firstColor.value || "", firstColor.code || ""]);
+              catalogRows.push([groupName, category, model.value, model.label, firstColor.value || "", firstColor.code || ""]);
             });
           });
         });
+        catalogSheet.getRange(1, 1, catalogRows.length, catalogRows[0].length).setValues(catalogRows);
         catalogSheet.setFrozenRows(1);
         SpreadsheetApp.flush();
       }
