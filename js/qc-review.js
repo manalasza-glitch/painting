@@ -527,7 +527,10 @@
         });
         const root = document.getElementById('qc-history-tab');
         if (root) new MutationObserver(scheduleEnhance).observe(root, { childList: true, subtree: true });
-        loadReviewStatuses().then(enhanceAll);
+        // Pending rows are read directly from *_Pending sheets by the QC
+        // history loader. Do not block that page on the slower six-sheet
+        // Reviewed metadata request; it is only needed for the Reviewed view.
+        enhanceAll();
     }
 
     window.openQCReviewView = openQCReviewView;
