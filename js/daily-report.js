@@ -126,6 +126,7 @@ const PAINTING_PRODUCT_GROUPS_DEFAULT = {
 let PAINTING_MODEL_GROUPS = JSON.parse(JSON.stringify(PAINTING_PRODUCT_GROUPS_DEFAULT));
 const PAINTING_PRODUCT_CATALOG_CACHE = "PAINTING_PRODUCT_CATALOG_CACHE_V2";
 const PAINTING_ADD_MODEL_VALUE = "__ADD_MODEL__";
+const PAINTING_ADD_CATEGORY_VALUE = "__ADD_CATEGORY__";
 
 function escapeDailyReportHtml(value) {
     return String(value ?? "")
@@ -232,9 +233,31 @@ function renderPartGroupDropdownUI(productGroup = selectedProductGroup()) {
     const categories = PAINTING_MODEL_GROUPS[productGroup]?.categories || {};
     const previous = select.value;
     select.innerHTML = '<option value="">-- เลือกประเภทชิ้นงาน --</option>' + Object.keys(categories)
-        .map(name => `<option value="${escapeDailyReportHtml(name)}">${escapeDailyReportHtml(name)}</option>`).join('');
+        .map(name => `<option value="${escapeDailyReportHtml(name)}">${escapeDailyReportHtml(name)}</option>`).join('')
+        + (productGroup ? '<option value="' + PAINTING_ADD_CATEGORY_VALUE + '">➕ เพิ่มรายการใหม่</option>' : '');
     select.disabled = !productGroup;
     if (previous && categories[previous]) select.value = previous;
+}
+
+function handlePartCategorySelect(select) {
+    if (!select || select.value !== PAINTING_ADD_CATEGORY_VALUE) return;
+    const productGroup = selectedProductGroup();
+    const categories = PAINTING_MODEL_GROUPS[productGroup]?.categories;
+    if (!categories) { select.value = ''; return; }
+    const name = String(window.prompt('ชื่อประเภทชิ้นงานใหม่') || '').trim();
+    if (!name) { select.value = ''; return; }
+    if (Object.keys(categories).some(item => item.toLowerCase() === name.toLowerCase())) {
+        showToast('มีประเภทชิ้นงานนี้อยู่แล้ว', 'error');
+        renderPartGroupDropdownUI(productGroup);
+        select.value = name;
+        return;
+    }
+    categories[name] = [];
+    localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(PAINTING_MODEL_GROUPS));
+    renderPartGroupDropdownUI(productGroup);
+    select.value = name;
+    renderModelDropdownOptions(productGroup, name);
+    showToast('เพิ่มประเภทชิ้นงานใหม่แล้ว', 'success');
 }
 
 function renderModelDropdownOptions(productGroup = selectedProductGroup(), category = document.getElementById('drPartGroup')?.value || "") {
