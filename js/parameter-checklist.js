@@ -454,7 +454,9 @@ async function refreshQCChecklistHistory(showFeedback = false) {
     }
     qcChecklistRefreshInFlight = (async () => {
         const failures = [];
-        const retryOptions = { attempts: 2, timeoutMs: 9000 };
+        // QC is a dashboard view: fail fast and let the user retry instead of
+        // blocking the whole page behind several long Apps Script retries.
+        const retryOptions = { attempts: 1, timeoutMs: 6000 };
         setQCChecklistRefreshButtonLoading(true);
         renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
