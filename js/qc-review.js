@@ -263,11 +263,12 @@
         const submenu = document.createElement('div');
         submenu.id = 'qc-review-submenu';
         submenu.className = 'sidebar-submenu qc-review-submenu';
-        submenu.innerHTML = '<a href="#" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="pending"><span style="width:20px;text-align:center;">•</span>รอตรวจ</a>'
-            + '<a href="#" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="reviewed"><span style="width:20px;text-align:center;">•</span>ตรวจแล้ว</a>';
+        submenu.innerHTML = '<a href="javascript:void(0)" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="pending"><span style="width:20px;text-align:center;">•</span>รอตรวจ</a>'
+            + '<a href="javascript:void(0)" class="nav-link submenu-item" data-permission="qc.read" data-qc-review-view="reviewed"><span style="width:20px;text-align:center;">•</span>ตรวจแล้ว</a>';
         parent.insertAdjacentElement('afterend', submenu);
         submenu.querySelectorAll('[data-qc-review-view]').forEach(link => link.addEventListener('click', event => {
             event.preventDefault();
+            event.stopPropagation();
             openQCReviewView(link.dataset.qcReviewView, link);
         }));
     }
