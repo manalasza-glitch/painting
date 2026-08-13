@@ -75,6 +75,7 @@
         if (body && body.id && bodySources[body.id]) return bodySources[body.id];
         if (table && table.classList.contains('qc-screen-group-table')) return 'ScreenReports';
         if (table && table.classList.contains('qc-daily-group-table')) return 'outputdiary';
+        if (table && table.classList.contains('qc-rework-group-table')) return 'REWORK';
         return 'QC';
     }
 
@@ -96,7 +97,10 @@
         // Use the row's actual displayed values so a newly inserted record at
         // the top does not change the review key of older records.
         const table = row.closest('table');
-        const group = table && table.classList.contains('qc-screen-group-table')
+        const group = table && (
+            table.classList.contains('qc-screen-group-table')
+            || table.classList.contains('qc-rework-group-table')
+        )
             ? String(table.dataset.qcGroup || '').trim()
             : '';
         return `${group ? `${source}|${group}` : source}|${values.join('|')}`;
@@ -188,6 +192,7 @@
         });
         root.querySelectorAll('table.qc-daily-group-table').forEach(headerAndRows);
         root.querySelectorAll('table.qc-screen-group-table').forEach(headerAndRows);
+        root.querySelectorAll('table.qc-rework-group-table').forEach(headerAndRows);
         const title = root.querySelector('.page-title');
         const subtitle = root.querySelector('.section-title-bar span');
         if (title) title.textContent = state.view === 'reviewed' ? 'QC — ตรวจแล้ว' : 'QC — รอตรวจ';

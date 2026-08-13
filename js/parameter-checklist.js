@@ -373,6 +373,52 @@ function renderQCScreenHistory(records = []) {
     }).join("");
 }
 
+function renderQCReworkHistoryMessage(message, isError = false) {
+    const root = document.getElementById("qcReworkHistoryGroups");
+    if (!root) return;
+    root.innerHTML = `<div style="text-align:center; color:${isError ? "#fb7185" : "#94a3b8"}; padding:1.5rem;">${parameterChecklistEscape(message)}</div>`;
+}
+
+function renderQCReworkHistory(records = []) {
+    const root = document.getElementById("qcReworkHistoryGroups");
+    if (!root) return;
+    const rows = Array.isArray(records) ? records : (Array.isArray(records && records.data) ? records.data : []);
+    if (!rows.length) {
+        renderQCReworkHistoryMessage("ยังไม่มีรายการ REWORK ที่รอตรวจ");
+        return;
+    }
+    const groups = new Map();
+    rows.forEach(row => {
+        const group = String(screenHistoryValue(row, ["productGroup", "ProductGroup", "group"], "ไม่ระบุกลุ่ม")).trim() || "ไม่ระบุกลุ่ม";
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push(row);
+    });
+    const preferred = Array.isArray(window.PAINTING_PRODUCT_GROUP_ORDER) && window.PAINTING_PRODUCT_GROUP_ORDER.length
+        ? window.PAINTING_PRODUCT_GROUP_ORDER
+        : ["LC600 Classic", "LC600 Visi-smart", "PDB", "CU (resi thai)", "NLC", "NMS"];
+    const order = [...groups.keys()].sort((a, b) => {
+        const ai = preferred.indexOf(a), bi = preferred.indexOf(b);
+        if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        return a.localeCompare(b, "th");
+    });
+    root.innerHTML = order.map(group => {
+        const detailRows = groups.get(group).slice().sort((a, b) => screenHistorySortKey(b) - screenHistorySortKey(a));
+        const body = detailRows.map(row => {
+            const date = screenHistoryValue(row, ["date", "Date", "reworkDate", "recordDate", "timestamp", "Timestamp"], "-");
+            const time = screenHistoryValue(row, ["timeSlot", "TimeSlot", "time", "Time"], "-");
+            const model = screenHistoryValue(row, ["model", "Model", "partNo", "PartNo"], "-");
+            const color = screenHistoryValue(row, ["color", "Color", "colour"], "ไม่ระบุ");
+            const qty = screenHistoryNumber(row, ["prodQty", "ProdQty", "prod_qty", "qty", "quantity"]);
+            const defect = screenHistoryDefectTotal(row);
+            const recorder = screenHistoryValue(row, ["recorder", "RecordedBy", "recordedBy", "operator", "Operator"], "-");
+            const shownDate = typeof formatDailyReportDate === "function" ? formatDailyReportDate(date) : date;
+            const shownTime = typeof formatParameterChecklistTime === "function" ? formatParameterChecklistTime(time) : time;
+            return `<tr><td>${parameterChecklistEscape(shownDate)}</td><td>${parameterChecklistEscape(model)}</td><td>${parameterChecklistEscape(shownTime)}</td><td style="text-align:center;">${parameterChecklistEscape(color)}</td><td style="text-align:center;">${qty}</td><td style="text-align:center; color:${defect ? "#fb7185" : "#94a3b8"}; font-weight:800;">${defect}</td><td>${parameterChecklistEscape(recorder)}</td><td style="text-align:center; color:#94a3b8;">รอตรวจ</td></tr>`;
+        }).join("");
+        return `<div class="dr-card qc-daily-group-card" style="padding:1rem; margin:0 0 1rem; overflow:hidden;"><h4 class="qc-daily-group-heading" style="margin:0 0 .75rem;">${parameterChecklistEscape(group)}</h4><div class="table-responsive"><table class="data-table qc-rework-group-table" data-qc-group="${parameterChecklistEscape(group)}" style="width:100%; border-collapse:separate; border-spacing:0;"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th>ผู้บันทึก</th><th style="text-align:center;">สถานะ</th></tr></thead><tbody>${body}</tbody></table></div></div>`;
+    }).join("");
+}
+
 function setQCChecklistRefreshButtonLoading(isLoading) {
     const button = document.getElementById("qcHistoryRefreshBtn");
     if (!button) return;
@@ -414,6 +460,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
         renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "กำลังโหลดประวัติเช็กลิสอุปกรณ์...");
         renderQCScreenHistoryMessage("กำลังโหลดประวัติ SCREEN...");
+        renderQCReworkHistoryMessage("กำลังโหลดประวัติ REWORK...");
         const dailyReportPromise = typeof refreshDailyReportHistory === "function"
             ? refreshDailyReportHistory()
             : Promise.resolve();
@@ -430,6 +477,15 @@ async function refreshQCChecklistHistory(showFeedback = false) {
             } catch (error) {
                 failures.push("SCREEN");
                 renderQCScreenHistoryMessage("โหลดประวัติ SCREEN ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
+            }
+            try {
+                const reworkRecords = typeof fetchReworkReportDataFromAPI === "function"
+                    ? await fetchReworkReportDataFromAPI("")
+                    : [];
+                renderQCReworkHistory(reworkRecords);
+            } catch (error) {
+                failures.push("REWORK");
+                renderQCReworkHistoryMessage("โหลดประวัติ REWORK ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
             }
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
                 // Load the two populated history sheets first. The parameter
