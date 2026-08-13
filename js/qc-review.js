@@ -157,9 +157,28 @@
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
                 cell.innerHTML = '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
-                cell.querySelector('button').addEventListener('click', event => decide(event, cell.querySelector('button'), source, row, key, readRecordRef(row)));
             }
             row.appendChild(cell);
+        });
+    }
+
+    function bindReviewClicks(root) {
+        if (!root || root.dataset.qcReviewClickBound === 'true') return;
+        root.dataset.qcReviewClickBound = 'true';
+        // Delegate from the stable tab root. Tables are rebuilt while each
+        // checklist loads, so per-button listeners can disappear with a
+        // freshly rendered row even though the button remains visible.
+        root.addEventListener('click', event => {
+            const button = event.target && event.target.closest
+                ? event.target.closest('button.qc-review-action')
+                : null;
+            if (!button || !root.contains(button) || button.disabled) return;
+            const row = button.closest('tr');
+            const table = button.closest('table');
+            if (!row || !table) return;
+            const source = sourceForTable(table);
+            const key = row.dataset.qcReviewKey || reviewKey(source, row, 0);
+            decide(event, button, source, row, key, readRecordRef(row));
         });
     }
 
@@ -201,6 +220,7 @@
     function enhanceAll() {
         const root = document.getElementById('qc-history-tab');
         if (!root || root.style.display === 'none') return;
+        bindReviewClicks(root);
         Object.keys(bodySources).forEach(id => {
             const body = document.getElementById(id);
             if (body && body.closest('table')) headerAndRows(body.closest('table'));
