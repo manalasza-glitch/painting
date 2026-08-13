@@ -171,7 +171,10 @@
                 .filter(cell => !cell.classList.contains('qc-review-cell'))
                 .map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim()) }
         };
-        row.querySelectorAll('button').forEach(item => { item.disabled = true; });
+        row.querySelectorAll('button').forEach(item => {
+            item.disabled = true;
+            if (item.classList.contains('qc-review-complete')) item.textContent = 'กำลังบันทึก...';
+        });
         try {
             if (typeof sendQCChecklistReviewToAPI === 'function') await sendQCChecklistReviewToAPI(payload);
             state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || 'ไม่ระบุผู้ตรวจ' };
@@ -179,7 +182,10 @@
             if (typeof showToast === 'function') showToast(status === 'approved' ? 'บันทึกผลตรวจผ่านแล้ว' : 'บันทึกผลตรวจไม่ผ่านแล้ว', 'success');
             enhanceAll();
         } catch (error) {
-            row.querySelectorAll('button').forEach(item => { item.disabled = false; });
+            row.querySelectorAll('button').forEach(item => {
+                item.disabled = false;
+                if (item.classList.contains('qc-review-complete')) item.textContent = 'ตรวจแล้ว';
+            });
             if (typeof showToast === 'function') showToast('บันทึกผลตรวจไม่สำเร็จ: ' + (error.message || error), 'error');
         }
     }
