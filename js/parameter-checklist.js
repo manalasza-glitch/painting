@@ -499,7 +499,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         const failures = [];
         // QC is a dashboard view: fail fast and let the user retry instead of
         // blocking the whole page behind several long Apps Script retries.
-        const retryOptions = { attempts: 2, timeoutMs: 15000 };
+        const retryOptions = { attempts: 1, timeoutMs: 12000, skipQueue: true };
         setQCChecklistRefreshButtonLoading(true);
         renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
@@ -510,7 +510,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         try {
             try {
                 const screenRecords = typeof fetchScreenReportDataFromAPI === "function"
-                    ? await fetchScreenReportDataFromAPI("")
+                    ? await fetchScreenReportDataFromAPI("", { retryOptions })
                     : [];
                 renderQCScreenHistory(screenRecords);
             } catch (error) {
@@ -519,7 +519,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
             }
             try {
                 const reworkRecords = typeof fetchReworkReportDataFromAPI === "function"
-                    ? await fetchReworkReportDataFromAPI("")
+                    ? await fetchReworkReportDataFromAPI("", { retryOptions })
                     : [];
                 renderQCReworkHistory(reworkRecords);
             } catch (error) {
@@ -567,7 +567,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
             // must never start it alongside SCREEN/REWORK/checklist requests.
             if (typeof refreshDailyReportHistory === "function") {
                 try {
-                    await refreshDailyReportHistory();
+                    await refreshDailyReportHistory({ retryOptions });
                     if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
                 } catch (error) {
                     failures.push("พ่นสีรายวัน");

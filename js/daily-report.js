@@ -896,10 +896,10 @@ function escapeDailyReportHtml(value) {
     })[char]);
 }
 
-async function refreshDailyReportHistory() {
+async function refreshDailyReportHistory(options = {}) {
     try {
         if (typeof fetchDailyReportDataFromAPI === "function") {
-            const records = await fetchDailyReportDataFromAPI();
+            const records = await fetchDailyReportDataFromAPI("", options);
             if (typeof lastDailyReportFetchSucceeded === "undefined" || lastDailyReportFetchSucceeded) {
                 dailyReportHistoryRecords = Array.isArray(records) ? records : [];
                 dailyReportHistoryLoaded = true;

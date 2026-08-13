@@ -503,7 +503,7 @@ async function deleteRecorderFromAPI(name) {
 }
 
 // Fetch outputdiary daily production report data from Cloud Google Sheet
-async function fetchDailyReportDataFromAPI(dateFilter = "") {
+async function fetchDailyReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
     lastDailyReportFetchSucceeded = false;
@@ -512,7 +512,7 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
 
         try {
-            const json = await fetchAppsScriptJsonWithRetry(url, "Load outputdiary", { attempts: 2, timeoutMs: 15000 });
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load outputdiary", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
             
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 lastDailyReportFetchSucceeded = true;
@@ -549,14 +549,14 @@ async function fetchDailyReportDataFromAPI(dateFilter = "") {
     return [];
 }
 
-async function fetchReworkReportDataFromAPI(dateFilter = "") {
+async function fetchReworkReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
     const cacheKey = requestedDate ? `PAINTING_REWORK_CACHE_${requestedDate}` : "PAINTING_REWORK_CACHE";
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getReworkReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
-            const json = await fetchAppsScriptJsonWithRetry(url, "Load REWORK history", { attempts: 2, timeoutMs: 15000 });
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load REWORK history", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
@@ -575,14 +575,14 @@ async function fetchReworkReportDataFromAPI(dateFilter = "") {
     return [];
 }
 
-async function fetchScreenReportDataFromAPI(dateFilter = "") {
+async function fetchScreenReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
     const cacheKey = requestedDate ? `PAINTING_SCREEN_CACHE_${requestedDate}` : "PAINTING_SCREEN_CACHE";
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getScreenReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
-            const json = await fetchAppsScriptJsonWithRetry(url, "Load SCREEN history", { attempts: 2, timeoutMs: 15000 });
+            const json = await fetchAppsScriptJsonWithRetry(url, "Load SCREEN history", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
                 localStorage.setItem(cacheKey, JSON.stringify(json.data));
                 return json.data;
