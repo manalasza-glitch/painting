@@ -157,6 +157,16 @@
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
                 cell.innerHTML = '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
+                const actionButton = cell.querySelector('button');
+                const handleReviewPointer = event => {
+                    if (actionButton.disabled) return;
+                    decide(event, actionButton, source, row, key, readRecordRef(row));
+                };
+                // Handle both physical mouse release and the final click.
+                // The pointer handler runs first and disables the button, so
+                // the delegated click handler cannot submit the same review twice.
+                actionButton.addEventListener('pointerup', handleReviewPointer, true);
+                actionButton.addEventListener('click', handleReviewPointer, true);
             }
             row.appendChild(cell);
         });
