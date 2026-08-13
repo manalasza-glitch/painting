@@ -13,6 +13,8 @@ const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const REWORK_SHEET_NAME = "REWORK";
 // Dedicated storage for the Screen checklist menu (created on first use).
 const SCREEN_SHEET_NAME = "SCREEN";
+const QC_PENDING_SUFFIX = "_Pending";
+const QC_REVIEWED_SUFFIX = "_Reviewed";
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
@@ -402,22 +404,40 @@ function formatDateStr(d, includeTime) {
 
 // QC review decisions are append-only and are stored separately from the
 // source tables.  A row is added only after a QC user explicitly clicks ✓/✕.
-function appendQCReviewRecord_(ss, payload) {
-  const sheetName = "finish cheak";
-  let reviewSheet = ss.getSheetByName(sheetName);
-  const headers = ["ReviewedAt", "Status", "SourceSheet", "ReviewKey", "ReviewedBy", "RecordJSON"];
-  if (!reviewSheet) {
-    reviewSheet = ss.insertSheet(sheetName);
-    reviewSheet.appendRow(headers);
-    reviewSheet.setFrozenRows(1);
-  } else if (reviewSheet.getLastRow() === 0) {
-    reviewSheet.appendRow(headers);
-    reviewSheet.setFrozenRows(1);
-  }
+function ensureQCMirrorSheets_(ss, sourceSheetName, rowValues) {
+  const base = String(sourceSheetName || "QC").trim() || "QC";
+  const pendingName = base + QC_PENDING_SUFFIX;
+  const reviewedName = base + QC_REVIEWED_SUFFIX;
+  [pendingName, reviewedName].forEach(name => {
+    let sheet = ss.getSheetByName(name);
+    if (!sheet) sheet = ss.insertSheet(name);
+    if (sheet.getLastRow() === 0) {
+      const source = ss.getSheetByName(base);
+      const headers = source && source.getLastColumn() > 0
+        ? source.getRange(1, 1, 1, source.getLastColumn()).getValues()[0]
+        : (Array.isArray(rowValues) ? rowValues.map((_, i) => "Column" + (i + 1)) : []);
+      sheet.appendRow(headers.concat(["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"]));
+      sheet.setFrozenRows(1);
+    }
+  });
+  return { pending: ss.getSheetByName(pendingName), reviewed: ss.getSheetByName(reviewedName) };
+}
 
+function ensureAllQCMirrorSheets_(ss) {
+  [PARAMETER_CHECKLIST_SHEET_NAME, WATER_PARAMETER_CHECKLIST_SHEET_NAME, EQUIPMENT_CHECKLIST_SHEET_NAME].forEach(name => {
+    ensureQCMirrorSheets_(ss, name, []);
+  });
+}
+
+function appendQCReviewRecord_(ss, payload) {
+  const sourceName = String(payload && payload.sourceSheet || "QC").trim() || "QC";
+  const record = payload && payload.record && Array.isArray(payload.record.cells) ? payload.record.cells : [];
+  const mirrors = ensureQCMirrorSheets_(ss, sourceName, record);
+  const sourceSheet = ss.getSheetByName(sourceName);
+  const reviewedSheet = mirrors.reviewed;
   const reviewKey = String(payload && payload.reviewKey || "").trim();
-  if (reviewKey && reviewSheet.getLastRow() > 1) {
-    const keys = reviewSheet.getRange(2, 4, reviewSheet.getLastRow() - 1, 1).getValues();
+  if (reviewKey && reviewedSheet.getLastRow() > 1) {
+    const keys = reviewedSheet.getRange(2, reviewedSheet.getLastColumn(), reviewedSheet.getLastRow() - 1, 1).getValues();
     if (keys.some(row => String(row[0] || "").trim() === reviewKey)) {
       return { duplicate: true };
     }
@@ -427,40 +447,52 @@ function appendQCReviewRecord_(ss, payload) {
   const reviewerName = typeof reviewer === "string"
     ? reviewer
     : String((reviewer && (reviewer.displayName || reviewer.name || reviewer.employeeId)) || "");
-  reviewSheet.appendRow([
-    new Date(),
-    String(payload && payload.status || "").trim(),
-    String(payload && payload.sourceSheet || "").trim(),
-    reviewKey,
-    reviewerName,
-    JSON.stringify((payload && payload.record) || {})
-  ]);
+  const status = String(payload && payload.status || "").trim();
+  const reviewedAt = new Date();
+  reviewedSheet.appendRow(record.concat([status, reviewedAt, reviewerName, reviewKey]));
+  // Copy-first, delete-second: the source row is removed only after the reviewed copy exists.
+  if (sourceSheet && sourceSheet.getLastRow() > 1 && record.length) {
+    const values = sourceSheet.getDataRange().getValues();
+    for (let i = values.length - 1; i >= 1; i--) {
+      const row = values[i].map(v => String(v == null ? "" : v).trim());
+      const wanted = record.map(v => String(v == null ? "" : v).trim());
+      if (row.length >= wanted.length && wanted.every((v, idx) => row[idx] === v)) {
+        sourceSheet.deleteRow(i + 1);
+        break;
+      }
+    }
+  }
   SpreadsheetApp.flush();
   return { duplicate: false };
 }
 
 function readQCReviewRecords_(ss) {
-  const reviewSheet = ss.getSheetByName("finish cheak");
-  if (!reviewSheet || reviewSheet.getLastRow() <= 1) return [];
-  const values = reviewSheet.getDataRange().getValues();
-  values.shift();
-  return values.map(row => {
-    let record = {};
-    try { record = row[5] ? JSON.parse(String(row[5])) : {}; } catch (e) {}
-    return {
-      reviewedAt: formatDateStr(row[0], true),
-      status: String(row[1] || ""),
-      sourceSheet: String(row[2] || ""),
-      reviewKey: String(row[3] || ""),
-      reviewedBy: String(row[4] || ""),
-      record: record
-    };
+  const result = [];
+  [PARAMETER_CHECKLIST_SHEET_NAME, WATER_PARAMETER_CHECKLIST_SHEET_NAME, EQUIPMENT_CHECKLIST_SHEET_NAME].forEach(base => {
+    const sheet = ss.getSheetByName(base + QC_REVIEWED_SUFFIX);
+    if (!sheet || sheet.getLastRow() <= 1) return;
+    const values = sheet.getDataRange().getValues();
+    const headers = values.shift().map(String);
+    const statusIndex = headers.indexOf("QCStatus");
+    const reviewedAtIndex = headers.indexOf("QCReviewedAt");
+    const reviewerIndex = headers.indexOf("QCReviewedBy");
+    const keyIndex = headers.indexOf("QCReviewKey");
+    values.forEach(row => result.push({
+      reviewedAt: formatDateStr(row[reviewedAtIndex], true),
+      status: String(row[statusIndex] || ""),
+      sourceSheet: base,
+      reviewKey: String(row[keyIndex] || ""),
+      reviewedBy: String(row[reviewerIndex] || ""),
+      record: { cells: row.slice(0, statusIndex) }
+    }));
   });
+  return result;
 }
 
 function doPost(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    ensureAllQCMirrorSheets_(ss);
     let sheet = ss.getSheetByName(SHEET_NAME);
 
     /* Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.
@@ -1032,6 +1064,7 @@ function getOrCreateUsersSheet(ss) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    ensureAllQCMirrorSheets_(ss);
     const action = (e && e.parameter && e.parameter.action) || "";
 
     if (action === "submitQCReview") {
