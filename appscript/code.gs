@@ -159,8 +159,8 @@ function reworkReportHeaders_() {
 }
 
 function ensureReworkReportSheet_(ss) {
-  let sheet = ss.getSheetByName(REWORK_SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(REWORK_SHEET_NAME);
+  let sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
+  if (!sheet) sheet = ss.insertSheet(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(reworkReportHeaders_());
     sheet.setFrozenRows(1);
@@ -207,7 +207,7 @@ function appendReworkReport_(ss, payload) {
 }
 
 function readReworkReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(REWORK_SHEET_NAME);
+  const sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const values = sheet.getDataRange().getValues();
   values.shift();
@@ -239,8 +239,8 @@ function screenReportHeaders_() {
 }
 
 function ensureScreenReportSheet_(ss) {
-  let sheet = ss.getSheetByName(SCREEN_SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(SCREEN_SHEET_NAME);
+  let sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
+  if (!sheet) sheet = ss.insertSheet(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(screenReportHeaders_());
     sheet.setFrozenRows(1);
@@ -285,7 +285,7 @@ function appendScreenReport_(ss, payload) {
 }
 
 function readScreenReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME);
+  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const values = sheet.getDataRange().getValues();
   values.shift();
@@ -316,7 +316,7 @@ function ensureParameterChecklistSheet(ss, checklistType) {
   const headers = isWater ? baseHeaders.concat(["Time"]) : baseHeaders;
   let sheet = ss.getSheetByName(sheetName + QC_PENDING_SUFFIX);
   if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
+    sheet = ss.insertSheet(sheetName + QC_PENDING_SUFFIX);
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   } else if (sheet.getLastRow() === 0) {
@@ -347,7 +347,7 @@ function hasParameterChecklistSubmission(sheet, submissionId) {
 function ensureEquipmentChecklistSheet(ss) {
   let sheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet) {
-    sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME);
+    sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
     sheet.appendRow([
       "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "CheckItem",
       "Method", "Standard", "ImageUrl", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
@@ -837,7 +837,7 @@ function doPost(e) {
 
     // Handle submitDailyReport action
     if (action === "submitDailyReport") {
-      const TARGET_SHEET_NAME = "outputdiary";
+      const TARGET_SHEET_NAME = "outputdiary" + QC_PENDING_SUFFIX;
       let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
       if (!prodSheet) {
         prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
@@ -1260,7 +1260,7 @@ function doGet(e) {
 
     // Handle submitDailyReport via GET (fallback)
     if (action === "submitDailyReport") {
-      const TARGET_SHEET_NAME = "outputdiary";
+      const TARGET_SHEET_NAME = "outputdiary" + QC_PENDING_SUFFIX;
       let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
       if (!prodSheet) {
         prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
