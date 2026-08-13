@@ -1,4 +1,4 @@
-const SHEET_NAME = "Inspection";
+﻿const SHEET_NAME = "Inspection";
 const DAILY_REPORT_ID_HEADER = "SubmissionId";
 const DAILY_REPORT_COLOR_HEADER = "Color";
 const DAILY_REPORT_PRODUCT_GROUP_HEADER = "ProductGroup";
@@ -159,8 +159,8 @@ function reworkReportHeaders_() {
 }
 
 function ensureReworkReportSheet_(ss) {
-  let sheet = ss.getSheetByName(REWORK_SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(REWORK_SHEET_NAME);
+  let sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
+  if (!sheet) sheet = ss.insertSheet(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(reworkReportHeaders_());
     sheet.setFrozenRows(1);
@@ -207,7 +207,7 @@ function appendReworkReport_(ss, payload) {
 }
 
 function readReworkReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(REWORK_SHEET_NAME);
+  const sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const values = sheet.getDataRange().getValues();
   values.shift();
@@ -239,8 +239,8 @@ function screenReportHeaders_() {
 }
 
 function ensureScreenReportSheet_(ss) {
-  let sheet = ss.getSheetByName(SCREEN_SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(SCREEN_SHEET_NAME);
+  let sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
+  if (!sheet) sheet = ss.insertSheet(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(screenReportHeaders_());
     sheet.setFrozenRows(1);
@@ -285,7 +285,7 @@ function appendScreenReport_(ss, payload) {
 }
 
 function readScreenReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME);
+  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const values = sheet.getDataRange().getValues();
   values.shift();
@@ -316,7 +316,7 @@ function ensureParameterChecklistSheet(ss, checklistType) {
   const headers = isWater ? baseHeaders.concat(["Time"]) : baseHeaders;
   let sheet = ss.getSheetByName(sheetName + QC_PENDING_SUFFIX);
   if (!sheet) {
-    sheet = ss.insertSheet(sheetName);
+    sheet = ss.insertSheet(sheetName + QC_PENDING_SUFFIX);
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   } else if (sheet.getLastRow() === 0) {
@@ -347,7 +347,7 @@ function hasParameterChecklistSubmission(sheet, submissionId) {
 function ensureEquipmentChecklistSheet(ss) {
   let sheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
   if (!sheet) {
-    sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME);
+    sheet = ss.insertSheet(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
     sheet.appendRow([
       "Timestamp", "Date", "Operator", "TeamLeader", "ItemNo", "CheckItem",
       "Method", "Standard", "ImageUrl", "Status", "Note", PARAMETER_CHECKLIST_ID_HEADER
@@ -404,7 +404,7 @@ function formatDateStr(d, includeTime) {
 }
 
 // QC review decisions are append-only and are stored separately from the
-// source tables.  A row is added only after a QC user explicitly clicks ✓/✕.
+// source tables.  A row is added only after a QC user explicitly clicks โ“/โ•.
 function ensureQCMirrorSheets_(ss, sourceSheetName, rowValues) {
   const base = String(sourceSheetName || "QC").trim() || "QC";
   const pendingName = base + QC_PENDING_SUFFIX;
@@ -644,14 +644,14 @@ function doPost(e) {
         const rowHash = String(values[i][3] || "").trim();
         if (rowEmpId === empId) {
           if (rowHash !== passHash) {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
           const status = String(values[i][5] || "Pending").trim();
           if (status === "Pending") {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณกำลังรอการอนุมัติสิทธิ์จากผู้ดูแลระบบ" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธเธฑเธเธเธตเธเธญเธเธเธธเธ“เธเธณเธฅเธฑเธเธฃเธญเธเธฒเธฃเธญเธเธธเธกเธฑเธ•เธดเธชเธดเธ—เธเธดเนเธเธฒเธเธเธนเนเธ”เธนเนเธฅเธฃเธฐเธเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
           if (status === "Disabled") {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณถูกระงับการใช้งาน" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธเธฑเธเธเธตเธเธญเธเธเธธเธ“เธ–เธนเธเธฃเธฐเธเธฑเธเธเธฒเธฃเนเธเนเธเธฒเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
 
           // Update Last Login
@@ -672,7 +672,7 @@ function doPost(e) {
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" })).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เนเธกเนเธเธเธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธเธเธตเนเนเธเธฃเธฐเธเธ" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle register
@@ -686,7 +686,7 @@ function doPost(e) {
       const values = uSheet.getDataRange().getValues();
       for (let i = 1; i < values.length; i++) {
         if (String(values[i][0]).trim() === empId) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" })).setMimeType(ContentService.MimeType.JSON);
+          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธเธเธตเนเธฅเธเธ—เธฐเน€เธเธตเธขเธเนเธงเนเนเธฅเนเธง" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
 
@@ -837,7 +837,7 @@ function doPost(e) {
 
     // Handle submitDailyReport action
     if (action === "submitDailyReport") {
-      const TARGET_SHEET_NAME = "outputdiary";
+      const TARGET_SHEET_NAME = "outputdiary" + QC_PENDING_SUFFIX;
       let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
       if (!prodSheet) {
         prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
@@ -1129,14 +1129,14 @@ function doGet(e) {
         const rowHash = String(values[i][3] || "").trim();
         if (rowEmpId === empId) {
           if (rowHash !== passHash) {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสผ่านไม่ถูกต้อง" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
           const status = String(values[i][5] || "Pending").trim();
           if (status === "Pending") {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณกำลังรอการอนุมัติสิทธิ์จากผู้ดูแลระบบ" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธเธฑเธเธเธตเธเธญเธเธเธธเธ“เธเธณเธฅเธฑเธเธฃเธญเธเธฒเธฃเธญเธเธธเธกเธฑเธ•เธดเธชเธดเธ—เธเธดเนเธเธฒเธเธเธนเนเธ”เธนเนเธฅเธฃเธฐเธเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
           if (status === "Disabled") {
-            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "บัญชีของคุณถูกระงับการใช้งาน" })).setMimeType(ContentService.MimeType.JSON);
+            return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธเธฑเธเธเธตเธเธญเธเธเธธเธ“เธ–เธนเธเธฃเธฐเธเธฑเธเธเธฒเธฃเนเธเนเธเธฒเธ" })).setMimeType(ContentService.MimeType.JSON);
           }
 
           // Update Last Login
@@ -1157,7 +1157,7 @@ function doGet(e) {
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" })).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เนเธกเนเธเธเธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธเธเธตเนเนเธเธฃเธฐเธเธ" })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle register
@@ -1165,13 +1165,13 @@ function doGet(e) {
       let uSheet = getOrCreateUsersSheet(ss);
       const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
       const name = String((e && e.parameter && e.parameter.displayName) || "").trim();
-      const dept = String((e && e.parameter && e.parameter.department) || "แผนกพ่นสี").trim();
+      const dept = String((e && e.parameter && e.parameter.department) || "เนเธเธเธเธเนเธเธชเธต").trim();
       const passHash = String((e && e.parameter && e.parameter.passwordHash) || "").trim();
 
       const values = uSheet.getDataRange().getValues();
       for (let i = 1; i < values.length; i++) {
         if (String(values[i][0]).trim() === empId) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" })).setMimeType(ContentService.MimeType.JSON);
+          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "เธฃเธซเธฑเธชเธเธเธฑเธเธเธฒเธเธเธตเนเธฅเธเธ—เธฐเน€เธเธตเธขเธเนเธงเนเนเธฅเนเธง" })).setMimeType(ContentService.MimeType.JSON);
         }
       }
 
@@ -1260,7 +1260,7 @@ function doGet(e) {
 
     // Handle submitDailyReport via GET (fallback)
     if (action === "submitDailyReport") {
-      const TARGET_SHEET_NAME = "outputdiary";
+      const TARGET_SHEET_NAME = "outputdiary" + QC_PENDING_SUFFIX;
       let prodSheet = ss.getSheetByName(TARGET_SHEET_NAME);
       if (!prodSheet) {
         prodSheet = ss.insertSheet(TARGET_SHEET_NAME);
@@ -1435,7 +1435,7 @@ function doGet(e) {
 
     // Handle getDailyReportData action (outputdiary sheet tab)
     if (action === "getDailyReportData") {
-      let prodSheet = ss.getSheetByName("outputdiary");
+      let prodSheet = ss.getSheetByName("outputdiary" + QC_PENDING_SUFFIX);
       if (!prodSheet) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -1582,7 +1582,7 @@ function doGet(e) {
       }
 
       // Remove only the old sample names from the Recorders sheet. Other sheets are untouched.
-      const mockRecorders = ["สมชาย ใจดี", "วิชัย มีสุข", "สมศักดิ์ ขยันงาน", "อนันต์ ราบรื่น", "ประเสริฐ ดีเยี่ยม"];
+      const mockRecorders = ["เธชเธกเธเธฒเธข เนเธเธ”เธต", "เธงเธดเธเธฑเธข เธกเธตเธชเธธเธ", "เธชเธกเธจเธฑเธเธ”เธดเน เธเธขเธฑเธเธเธฒเธ", "เธญเธเธฑเธเธ•เน เธฃเธฒเธเธฃเธทเนเธ", "เธเธฃเธฐเน€เธชเธฃเธดเธ เธ”เธตเน€เธขเธตเนเธขเธก"];
       const valuesBeforeCleanup = recSheet.getDataRange().getValues();
       for (let i = valuesBeforeCleanup.length - 1; i >= 1; i--) {
         const name = String(valuesBeforeCleanup[i][0] || "").trim();
@@ -1658,7 +1658,7 @@ function doGet(e) {
         rowIndex: i + 2,
         date: formatDateStr(r[0], false),
         time: String(r[1] || ""),
-        shift: String(r[2] || "กะเช้า"),
+        shift: String(r[2] || "เธเธฐเน€เธเนเธฒ"),
         category: String(r[3] || "Machine"),
         process: String(r[4] || ""),
         title: String(r[5] || ""),
@@ -1678,7 +1678,7 @@ function doGet(e) {
       let evtSheet = getOrCreateEventsSheet(ss);
       const eDate = String((e && e.parameter && e.parameter.date) || "").trim();
       const eTime = String((e && e.parameter && e.parameter.time) || "").trim();
-      const eShift = String((e && e.parameter && e.parameter.shift) || "กะเช้า").trim();
+      const eShift = String((e && e.parameter && e.parameter.shift) || "เธเธฐเน€เธเนเธฒ").trim();
       const eCat = String((e && e.parameter && e.parameter.category) || "Machine").trim();
       const eProc = String((e && e.parameter && e.parameter.process) || "").trim();
       const eTitle = String((e && e.parameter && e.parameter.title) || "").trim();
@@ -1848,3 +1848,4 @@ function getOrCreateEventsSheet(ss) {
   }
   return evtSheet;
 }
+
