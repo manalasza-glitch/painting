@@ -681,7 +681,6 @@ function readQCReviewRecords_(ss) {
   QC_MIGRATION_SOURCES.forEach(base => {
     const sheet = ss.getSheetByName(base + QC_REVIEWED_SUFFIX);
     if (!sheet || sheet.getLastRow() <= 1) return;
-    ensureQCReviewMetadataHeaders_(sheet);
     const map = getQCReviewColumnMap_(sheet, base);
     if (map.statusIndex < 0 || map.keyIndex < 0) return;
     const lastRow = sheet.getLastRow();
@@ -1710,10 +1709,10 @@ function doGet(e) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      const values = checklistSheet.getDataRange().getValues();
-      values.shift();
+      const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
+      const values = recent.values;
       const data = values.map((r, i) => ({
-        rowIndex: i + 2,
+        rowIndex: recent.firstRow + i,
         timestamp: formatDateStr(r[0], true),
         date: formatDateStr(r[1], false),
         operator: String(r[2] || ""),
@@ -1745,10 +1744,10 @@ function doGet(e) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      const values = checklistSheet.getDataRange().getValues();
-      values.shift();
+      const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
+      const values = recent.values;
       const data = values.map((r, i) => ({
-        rowIndex: i + 2,
+        rowIndex: recent.firstRow + i,
         timestamp: formatDateStr(r[0], true),
         date: formatDateStr(r[1], false),
         operator: String(r[2] || ""),
