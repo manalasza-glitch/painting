@@ -1502,7 +1502,9 @@ function doGet(e) {
     // Handle parameter checklist history and create its sheet on first access
     if (action === "getParameterChecklistData") {
       const requestedType = String((e && e.parameter && e.parameter.type) || "full").toLowerCase() === "water" ? "water" : "full";
-      const checklistSheet = ensureParameterChecklistSheet(ss, requestedType);
+      const checklistName = requestedType === "water" ? WATER_PARAMETER_CHECKLIST_SHEET_NAME : PARAMETER_CHECKLIST_SHEET_NAME;
+      const checklistSheet = ss.getSheetByName(checklistName + QC_PENDING_SUFFIX) || ss.getSheetByName(checklistName);
+      if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -1536,7 +1538,8 @@ function doGet(e) {
 
     // Handle equipment checklist history and create its sheet on first access
     if (action === "getEquipmentChecklistData") {
-      const checklistSheet = ensureEquipmentChecklistSheet(ss);
+      const checklistSheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX) || ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME);
+      if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
