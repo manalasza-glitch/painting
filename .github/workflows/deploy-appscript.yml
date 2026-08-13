@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -24,9 +24,13 @@ jobs:
         run: npm install -g @google/clasp
 
       - name: Create clasprc.json Credentials
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
+          test -n "$CLASPRC_JSON" || (echo "Missing GitHub secret: CLASPRC_JSON" && exit 1)
           mkdir -p ~/.config/clasp
-          echo '${{ secrets.CLASPRC_JSON }}' > ~/.clasprc.json
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          test -s ~/.clasprc.json
 
       - name: Configure Apps Script project
         env:

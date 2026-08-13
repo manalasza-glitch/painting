@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw-AUsJbDa3oJCKtGmL-tZ5voEPxS3cx9ajPG2ToLEgZgCKTNWzBpgZRTx7ZHDF6g8U/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbw5JCzW3__JRyNTn28WeUGCBIJZHNNnP0874rqi7QyYc5QQbanuvr76jJCPygUU7XnR/exec";
 
 let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
@@ -26,7 +26,7 @@ function updateSyncUI() {
 }
 
 // Force reset to active Anyone deployment URL
-if (!API_URL.includes("AKfycbw-AUsJbDa3oJCKtGmL-tZ5voEPxS3cx9ajPG2ToLEgZgCKTNWzBpgZRTx7ZHDF6g8U")) {
+if (!API_URL.includes("AKfycbw5JCzW3__JRyNTn28WeUGCBIJZHNNnP0874rqi7QyYc5QQbanuvr76jJCPygUU7XnR")) {
     API_URL = DEFAULT_API_URL;
     localStorage.setItem("PAINTING_API_URL", DEFAULT_API_URL);
 }
