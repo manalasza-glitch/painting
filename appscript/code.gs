@@ -15,6 +15,7 @@ const REWORK_SHEET_NAME = "REWORK";
 const SCREEN_SHEET_NAME = "SCREEN";
 const QC_PENDING_SUFFIX = "_Pending";
 const QC_REVIEWED_SUFFIX = "_Reviewed";
+const QC_MIGRATION_SOURCES = ["ParameterChecklist", "WaterParameterChecklist", "EquipmentChecklist", "SCREEN", "REWORK", "outputdiary"];
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
@@ -427,6 +428,29 @@ function ensureAllQCMirrorSheets_(ss) {
   [PARAMETER_CHECKLIST_SHEET_NAME, WATER_PARAMETER_CHECKLIST_SHEET_NAME, EQUIPMENT_CHECKLIST_SHEET_NAME].forEach(name => {
     ensureQCMirrorSheets_(ss, name, []);
   });
+}
+
+function migrateExistingQCData_(ss) {
+  const moved = [];
+  QC_MIGRATION_SOURCES.forEach(base => {
+    const source = ss.getSheetByName(base);
+    if (!source || source.getLastRow() <= 1) return;
+    const pendingName = base + QC_PENDING_SUFFIX;
+    let pending = ss.getSheetByName(pendingName);
+    if (!pending) pending = ss.insertSheet(pendingName);
+    const sourceValues = source.getDataRange().getValues();
+    if (pending.getLastRow() === 0) {
+      pending.getRange(1, 1, sourceValues.length, sourceValues[0].length).setValues(sourceValues);
+    } else {
+      const existing = pending.getLastRow();
+      const rows = sourceValues.slice(1);
+      if (rows.length) pending.getRange(existing + 1, 1, rows.length, rows[0].length).setValues(rows);
+    }
+    source.deleteRows(2, source.getLastRow() - 1);
+    moved.push({ source: base, pending: pendingName, rows: sourceValues.length - 1 });
+  });
+  SpreadsheetApp.flush();
+  return moved;
 }
 
 function appendQCReviewRecord_(ss, payload) {
@@ -1066,6 +1090,10 @@ function doGet(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     ensureAllQCMirrorSheets_(ss);
     const action = (e && e.parameter && e.parameter.action) || "";
+
+    if (action === "migrateQCData") {
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", action: action, moved: migrateExistingQCData_(ss) })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     if (action === "submitQCReview") {
       let payload = {};
