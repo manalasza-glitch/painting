@@ -162,11 +162,15 @@
                     if (actionButton.disabled) return;
                     decide(event, actionButton, source, row, key, readRecordRef(row));
                 };
-                // Handle both physical mouse release and the final click.
-                // The pointer handler runs first and disables the button, so
-                // the delegated click handler cannot submit the same review twice.
+                // Start on pointerdown so the user gets immediate feedback even
+                // when the browser does not synthesize a later click event.
+                // The button is disabled synchronously by decide(), preventing
+                // pointerup/click/delegated handlers from submitting twice.
+                actionButton.addEventListener('pointerdown', handleReviewPointer, true);
                 actionButton.addEventListener('pointerup', handleReviewPointer, true);
                 actionButton.addEventListener('click', handleReviewPointer, true);
+                actionButton.onpointerdown = handleReviewPointer;
+                actionButton.onclick = handleReviewPointer;
             }
             row.appendChild(cell);
         });
