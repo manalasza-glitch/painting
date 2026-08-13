@@ -463,12 +463,6 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "กำลังโหลดประวัติเช็กลิสอุปกรณ์...");
         renderQCScreenHistoryMessage("กำลังโหลดประวัติ SCREEN...");
         renderQCReworkHistoryMessage("กำลังโหลดประวัติ REWORK...");
-        const dailyReportPromise = typeof refreshDailyReportHistory === "function"
-            ? refreshDailyReportHistory()
-            : Promise.resolve();
-        dailyReportPromise.then(() => {
-            if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
-        }).catch(() => {});
         if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
         try {
             try {
@@ -524,6 +518,17 @@ async function refreshQCChecklistHistory(showFeedback = false) {
                     renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "โหลดประวัติการตรวจพารามิเตอร์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
                 }
 
+            }
+
+            // Keep the daily-production request last and await it. This page
+            // must never start it alongside SCREEN/REWORK/checklist requests.
+            if (typeof refreshDailyReportHistory === "function") {
+                try {
+                    await refreshDailyReportHistory();
+                    if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
+                } catch (error) {
+                    failures.push("พ่นสีรายวัน");
+                }
             }
 
             if (showFeedback && typeof showToast === "function") {
