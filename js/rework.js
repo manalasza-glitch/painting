@@ -45,12 +45,14 @@ function reworkOptions(selectId, options, placeholder) {
     if (!select) return;
     const current = select.value;
     const includeAddOption = selectId === "rwModel";
+    const includeAddCategory = selectId === "rwPartGroup";
     const addValue = typeof PAINTING_ADD_MODEL_VALUE !== "undefined" ? PAINTING_ADD_MODEL_VALUE : "__ADD_MODEL__";
     select.innerHTML = `<option value="">${reworkEsc(placeholder)}</option>` + options.map(option => {
         const value = typeof option === "string" ? option : (option.value ?? option.code ?? "");
         const label = typeof option === "string" ? option : (option.label ?? option.value ?? option.code ?? "");
         return `<option value="${reworkEsc(value)}">${reworkEsc(label)}</option>`;
     }).join("") + (includeAddOption ? `<option value="${reworkEsc(addValue)}">➕ เพิ่มรายการ</option>` : "");
+    if (includeAddCategory) select.insertAdjacentHTML("beforeend", '<option value="__ADD_CATEGORY__">➕ เพิ่มรายการใหม่</option>');
     if (options.some(option => String(typeof option === "string" ? option : (option.value ?? option.code ?? "")) === String(current))) {
         select.value = current;
     }
@@ -97,6 +99,20 @@ function handleReworkModelSelect(select) {
     showToast?.("เพิ่มรายการรุ่นงานแล้ว", "success");
 }
 
+function handleReworkPartCategorySelect(select) {
+    if (!select || select.value !== "__ADD_CATEGORY__") return;
+    const { groups } = reworkCatalog();
+    const group = document.getElementById("rwProductGroup")?.value || "";
+    const categories = groups[group]?.categories;
+    const name = String(window.prompt("ชื่อประเภทชิ้นงานใหม่") || "").trim();
+    if (!categories || !name) { select.value = ""; return; }
+    if (Object.keys(categories).some(item => item.toLowerCase() === name.toLowerCase())) { showToast?.("มีประเภทชิ้นงานนี้อยู่แล้ว", "error"); select.value = name; return; }
+    categories[name] = [];
+    localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(groups));
+    renderReworkPartGroups(); select.value = name; renderReworkModels();
+    showToast?.("เพิ่มประเภทชิ้นงานใหม่แล้ว", "success");
+}
+
 function renderReworkProductGroups() {
     const { groups, order } = reworkCatalog();
     reworkOptions("rwProductGroup", order.filter(key => groups[key]), "-- เลือกกลุ่มผลิตภัณฑ์ --");
@@ -109,6 +125,7 @@ function renderReworkPartGroups() {
     const group = document.getElementById("rwProductGroup")?.value || "";
     const categories = groups[group]?.categories || {};
     reworkOptions("rwPartGroup", Object.keys(categories), "-- เลือกประเภทชิ้นงาน --");
+    document.getElementById("rwPartGroup")?.setAttribute("onchange", "handleReworkPartCategorySelect(this)");
     renderReworkModels();
 }
 

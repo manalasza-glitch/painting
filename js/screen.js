@@ -45,6 +45,7 @@ function screenOptions(selectId, options, placeholder) {
     if (!select) return;
     const current = select.value;
     const includeAddOption = selectId === "scModel";
+    const includeAddCategory = selectId === "scPartGroup";
     const addValue = typeof PAINTING_ADD_MODEL_VALUE !== "undefined" ? PAINTING_ADD_MODEL_VALUE : "__ADD_MODEL__";
     const visibleOptions = (Array.isArray(options) ? options : []).filter(option => {
         const label = String(typeof option === "string" ? option : (option?.label ?? option?.value ?? option?.code ?? ""))
@@ -57,6 +58,7 @@ function screenOptions(selectId, options, placeholder) {
         const label = typeof option === "string" ? option : (option.label ?? option.value ?? option.code ?? "");
         return `<option value="${screenEsc(value)}">${screenEsc(label)}</option>`;
     }).join("") + (includeAddOption ? `<option value="${screenEsc(addValue)}">➕ เพิ่มรายการ</option>` : "");
+    if (includeAddCategory) select.insertAdjacentHTML("beforeend", '<option value="__ADD_CATEGORY__">➕ เพิ่มรายการใหม่</option>');
     if (visibleOptions.some(option => String(typeof option === "string" ? option : (option.value ?? option.code ?? "")) === String(current))) {
         select.value = current;
     }
@@ -103,6 +105,20 @@ function handleScreenModelSelect(select) {
     showToast?.("เพิ่มรายการรุ่นงานแล้ว", "success");
 }
 
+function handleScreenPartCategorySelect(select) {
+    if (!select || select.value !== "__ADD_CATEGORY__") return;
+    const { groups } = screenCatalog();
+    const group = document.getElementById("scProductGroup")?.value || "";
+    const categories = groups[group]?.categories;
+    const name = String(window.prompt("ชื่อประเภทชิ้นงานใหม่") || "").trim();
+    if (!categories || !name) { select.value = ""; return; }
+    if (Object.keys(categories).some(item => item.toLowerCase() === name.toLowerCase())) { showToast?.("มีประเภทชิ้นงานนี้อยู่แล้ว", "error"); select.value = name; return; }
+    categories[name] = [];
+    localStorage.setItem(PAINTING_PRODUCT_CATALOG_CACHE, JSON.stringify(groups));
+    renderScreenPartGroups(); select.value = name; renderScreenModels();
+    showToast?.("เพิ่มประเภทชิ้นงานใหม่แล้ว", "success");
+}
+
 function renderScreenProductGroups() {
     const { groups, order } = screenCatalog();
     screenOptions("scProductGroup", order.filter(key => groups[key]), "-- เลือกกลุ่มผลิตภัณฑ์ --");
@@ -115,6 +131,7 @@ function renderScreenPartGroups() {
     const group = document.getElementById("scProductGroup")?.value || "";
     const categories = groups[group]?.categories || {};
     screenOptions("scPartGroup", Object.keys(categories), "-- เลือกประเภทชิ้นงาน --");
+    document.getElementById("scPartGroup")?.setAttribute("onchange", "handleScreenPartCategorySelect(this)");
     renderScreenModels();
 }
 
