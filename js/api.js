@@ -4,6 +4,13 @@ let API_URL = localStorage.getItem("PAINTING_API_URL") || DEFAULT_API_URL;
 
 let activeSyncRequests = 0;
 let lastDailyReportFetchSucceeded = false;
+let cloudReadQueue = Promise.resolve();
+
+function enqueueCloudRead(task) {
+    const run = cloudReadQueue.then(() => task(), () => task());
+    cloudReadQueue = run.catch(() => {});
+    return run;
+}
 
 function updateSyncUI() {
     const statusText = document.getElementById("statusText");
@@ -73,6 +80,7 @@ function waitBeforeApiRetry(delayMs) {
 }
 
 async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
+    return enqueueCloudRead(async () => {
     const attempts = Math.max(1, Number(retryOptions.attempts ?? retryOptions.maxRetries) || 1);
     const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 12000);
     let lastError = null;
@@ -102,6 +110,7 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
     }
 
     throw lastError || new Error(`${operation}: ไม่สามารถโหลดข้อมูลได้`);
+    });
 }
 
 // Fetch historical inspection records from Google Sheet API
@@ -113,17 +122,7 @@ async function fetchInspectionDataFromAPI(dateFilter = "") {
 
     try {
         const requestUrl = url + (url.includes('?') ? '&' : '?') + (requestedDate ? `date=${encodeURIComponent(requestedDate)}` : '');
-        const response = await fetch(withApiRequestNonce(requestUrl), {
-            method: "GET",
-            cache: "no-store",
-            headers: { "Accept": "application/json" }
-        });
-
-        if (!response.ok) {
-            throw new Error("HTTP error " + response.status);
-        }
-
-        const data = await response.json();
+        const data = await fetchAppsScriptJsonWithRetry(requestUrl, "Get inspection data", { attempts: 2, timeoutMs: 15000 });
         let records = [];
         if (Array.isArray(data)) {
             records = data;
@@ -454,8 +453,7 @@ async function fetchRecordersFromAPI() {
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getRecorders';
 
     try {
-        const res = await fetch(withApiRequestNonce(url), { cache: "no-store", headers: { "Accept": "application/json" } });
-        const data = await res.json();
+        const data = await fetchAppsScriptJsonWithRetry(url, "Get recorders", { attempts: 2, timeoutMs: 15000 });
         if (data && data.recorders && Array.isArray(data.recorders)) {
             return data.recorders;
         }
@@ -771,8 +769,7 @@ async function fetchPartModelsFromAPI() {
     if (baseUrl) {
         const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getPartModels';
         try {
-            const res = await fetch(url);
-            const json = await res.json();
+            const json = await fetchAppsScriptJsonWithRetry(url, "Get part models", { attempts: 2, timeoutMs: 15000 });
             if (json && json.groups && typeof json.groups === 'object' && Object.keys(json.groups).length > 0) {
                 localStorage.setItem("PAINTING_PART_MODELS_CACHE", JSON.stringify(json.groups));
                 return json.groups;
@@ -804,15 +801,12 @@ async function fetchEventsFromAPI() {
     if (baseUrl) {
         try {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getEvents';
-            const response = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
-            if (response.ok) {
-                const res = await response.json();
-                if (res.status === "success" && Array.isArray(res.data)) {
+            const res = await fetchAppsScriptJsonWithRetry(url, "Get events", { attempts: 2, timeoutMs: 15000 });
+            if (res && res.status === "success" && Array.isArray(res.data)) {
                     // Filter out legacy mock sample items
                     const realData = res.data.filter(evt => !String(evt.id || '').startsWith("evt_10") && String(evt.title || '') !== "ปรับเพิ่มอุณหภูมิตู้อบสี");
                     localStorage.setItem("PAINTING_EVENTS_CACHE", JSON.stringify(realData));
                     return realData;
-                }
             }
         } catch (e) {
             console.warn("Failed to fetch 5M1E events from cloud API, checking cache:", e);
@@ -1093,26 +1087,19 @@ function saveUserLocallyFallback(userData) {
 async function getUsersAPI() {
     const baseUrl = getApiUrl();
     if (baseUrl) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
         try {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
-            const res = await fetch(withApiRequestNonce(url), { cache: 'no-store', signal: controller.signal, headers: { "Accept": "application/json" } });
-            if (res.ok) {
-                const json = await res.json();
-                if (json && json.status === "success" && Array.isArray(json.users)) {
-                    const users = json.users.map(user => ({
-                        ...user,
-                        permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
-                    }));
-                    localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
-                    return users;
-                }
+            const json = await fetchAppsScriptJsonWithRetry(url, "Get users", { attempts: 1, timeoutMs: 15000 });
+            if (json && json.status === "success" && Array.isArray(json.users)) {
+                const users = json.users.map(user => ({
+                    ...user,
+                    permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
+                }));
+                localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
+                return users;
             }
         } catch (e) {
             console.warn("getUsersAPI cloud fetch failed:", e);
-        } finally {
-            clearTimeout(timeoutId);
         }
     }
 
