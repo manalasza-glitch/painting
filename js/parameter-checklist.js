@@ -286,6 +286,19 @@ function renderParameterChecklistHistory(bodyId = "parameterChecklistHistoryBody
             ${includeDetails ? `<td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCChecklistDetail('${detailId}', this)">ดูรายละเอียด</button></td>` : ""}
         </tr>${includeDetails ? `<tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="8"><div class="qc-history-detail-wrap"><table class="qc-history-detail-table"><thead><tr><th>ข้อ</th><th>รายการตรวจ</th><th>มาตรฐาน</th><th>ค่าที่บันทึก</th><th>ผลตรวจ</th><th>หมายเหตุ</th></tr></thead><tbody>${renderQCChecklistDetailRows(group.rows)}</tbody></table></div></td></tr>` : ""}`;
     }).join("");
+    let renderedRowIndex = 0;
+    groups.forEach(group => {
+        const row = body.rows && body.rows[renderedRowIndex];
+        if (row) row.setAttribute("data-qc-record-ref", encodeURIComponent(JSON.stringify({
+            timestamp: group.timestamp || "",
+            date: group.date || "",
+            operator: group.operator || "",
+            teamLeader: group.teamLeader || "",
+            submissionId: group.submissionId || "",
+            checklistType: bodyId === "qcWaterChecklistHistoryBody" ? "water" : "parameter"
+        })));
+        renderedRowIndex += includeDetails ? 2 : 1;
+    });
 }
 
 function renderQCChecklistHistories() {
@@ -325,6 +338,34 @@ function screenHistorySortKey(row) {
     const time = screenHistoryValue(row, ["time", "Time", "timeSlot", "TimeSlot"], "");
     const parsed = Date.parse(`${date} ${time}`);
     return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildQCHistoryRecordRef(row, kind) {
+    return encodeURIComponent(JSON.stringify({
+        timestamp: row && (row.timestamp || row.Timestamp) || "",
+        date: row && (row.date || row.Date || row.inspectionDate || row.reworkDate || row.recordDate) || "",
+        model: screenHistoryValue(row, ["model", "Model", "partNo", "PartNo"], ""),
+        timeSlot: screenHistoryValue(row, ["timeSlot", "TimeSlot", "time", "Time"], ""),
+        color: screenHistoryValue(row, ["color", "Color", "colour"], ""),
+        prodQty: screenHistoryNumber(row, ["prodQty", "ProdQty", "prod_qty", "qty", "quantity"]),
+        totalDefect: screenHistoryDefectTotal(row),
+        submissionId: row && (row.submissionId || row.SubmissionId) || "",
+        productGroup: screenHistoryValue(row, ["productGroup", "ProductGroup", "group"], ""),
+        sourceType: kind || ""
+    }));
+}
+
+function attachQCRecordRefsToHistoryTables(root, tableClass, groups, order) {
+    if (!root) return;
+    order.forEach(group => {
+        const table = Array.from(root.querySelectorAll(`table.${tableClass}`)).find(item => item.dataset.qcGroup === group);
+        if (!table) return;
+        const detailRows = groups.get(group).slice().sort((a, b) => screenHistorySortKey(b) - screenHistorySortKey(a));
+        detailRows.forEach((row, index) => {
+            const tableRow = table.tBodies && table.tBodies[0] && table.tBodies[0].rows[index];
+            if (tableRow) tableRow.setAttribute("data-qc-record-ref", buildQCHistoryRecordRef(row, tableClass));
+        });
+    });
 }
 
 function renderQCScreenHistoryMessage(message, isError = false) {
@@ -371,6 +412,7 @@ function renderQCScreenHistory(records = []) {
         }).join("");
         return `<div class="dr-card qc-daily-group-card" style="padding:1rem; margin:0 0 1rem; overflow:hidden;"><h4 class="qc-daily-group-heading" style="margin:0 0 .75rem;">${parameterChecklistEscape(group)}</h4><div class="table-responsive"><table class="data-table qc-screen-group-table" data-qc-group="${parameterChecklistEscape(group)}" style="width:100%; border-collapse:separate; border-spacing:0;"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th>ผู้บันทึก</th><th style="text-align:center;">สถานะ</th></tr></thead><tbody>${body}</tbody></table></div></div>`;
     }).join("");
+    attachQCRecordRefsToHistoryTables(root, "qc-screen-group-table", groups, order);
 }
 
 function renderQCReworkHistoryMessage(message, isError = false) {
@@ -417,6 +459,7 @@ function renderQCReworkHistory(records = []) {
         }).join("");
         return `<div class="dr-card qc-daily-group-card" style="padding:1rem; margin:0 0 1rem; overflow:hidden;"><h4 class="qc-daily-group-heading" style="margin:0 0 .75rem;">${parameterChecklistEscape(group)}</h4><div class="table-responsive"><table class="data-table qc-rework-group-table" data-qc-group="${parameterChecklistEscape(group)}" style="width:100%; border-collapse:separate; border-spacing:0;"><thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th>ผู้บันทึก</th><th style="text-align:center;">สถานะ</th></tr></thead><tbody>${body}</tbody></table></div></div>`;
     }).join("");
+    attachQCRecordRefsToHistoryTables(root, "qc-rework-group-table", groups, order);
 }
 
 function setQCChecklistRefreshButtonLoading(isLoading) {

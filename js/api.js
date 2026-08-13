@@ -689,27 +689,20 @@ async function fetchQCReviewDataFromAPI(options = {}) {
 async function sendQCChecklistReviewToAPI(payload) {
     const baseUrl = getApiUrl();
     if (!baseUrl) throw new Error("ไม่พบ URL ของระบบหลังบ้าน");
-    const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + "action=submitQCReview";
-    let result;
-    try {
-        const response = await fetch(url, {
-            method: "POST", cache: "no-cache",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload || {}),
-            signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
-        });
-        result = await requireJsonResponse(response, "Submit QC review");
-    } catch (postError) {
-        const fallbackUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?')
-            + "action=submitQCReview&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
-        const fallbackResponse = await fetch(fallbackUrl, {
-            method: "GET", cache: "no-cache", headers: { "Accept": "application/json" },
-            signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
-        });
-        result = await requireJsonResponse(fallbackResponse, "Submit QC review");
-    }
+    // Use the GET-compatible Apps Script handler with a fresh nonce. The old
+    // POST-first path could follow a stale googleusercontent redirect and
+    // leave the button in a saving state even though it received the click.
+    const reviewUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?')
+        + "action=submitQCReview&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
+    const result = await fetchAppsScriptJsonWithRetry(reviewUrl, "Submit QC review", {
+        attempts: 2,
+        timeoutMs: 20000
+    });
     if (!result || result.status !== "success" || result.action !== "submitQCReview") {
         throw new Error("ระบบหลังบ้านไม่ยืนยันการตรวจ QC");
+    }
+    if (!result.duplicate && Number(result.moved || 0) < 1) {
+        throw new Error("ไม่พบแถวต้นทาง จึงยังย้ายข้อมูลไปชีต Reviewed ไม่ได้");
     }
     return result;
 }

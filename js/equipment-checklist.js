@@ -148,6 +148,19 @@ function renderEquipmentChecklistHistory() {
             ${includeDetails ? `<td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCChecklistDetail('${detailId}', this)">ดูรายละเอียด</button></td>` : ""}
         </tr>${includeDetails ? `<tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="8"><div class="qc-history-detail-wrap"><table class="qc-history-detail-table"><thead><tr><th>ข้อ</th><th>รายการตรวจ</th><th>มาตรฐาน</th><th>ค่าที่บันทึก</th><th>ผลตรวจ</th><th>หมายเหตุ</th></tr></thead><tbody>${typeof renderQCChecklistDetailRows === "function" ? renderQCChecklistDetailRows(group.rows) : ""}</tbody></table></div></td></tr>` : ""}`;
     }).join("");
+    let renderedRowIndex = 0;
+    groups.forEach(group => {
+        const row = body.rows && body.rows[renderedRowIndex];
+        if (row) row.setAttribute("data-qc-record-ref", encodeURIComponent(JSON.stringify({
+            timestamp: group.timestamp || "",
+            date: group.date || "",
+            operator: group.operator || "",
+            teamLeader: group.teamLeader || "",
+            submissionId: group.submissionId || "",
+            checklistType: "equipment"
+        })));
+        renderedRowIndex += includeDetails ? 2 : 1;
+    });
 }
 
 async function refreshEquipmentChecklist() {

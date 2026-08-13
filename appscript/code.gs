@@ -466,21 +466,153 @@ function migrateExistingQCData_(ss) {
   return moved;
 }
 
+function qcText_(value) {
+  return String(value == null ? "" : value).replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function qcDateToken_(value) {
+  const formatted = formatDateStr(value, false);
+  const text = String(formatted == null ? "" : formatted).trim();
+  let match = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if (match) return match[1] + "-" + ("0" + match[2]).slice(-2) + "-" + ("0" + match[3]).slice(-2);
+  match = text.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if (match) return match[3] + "-" + ("0" + match[2]).slice(-2) + "-" + ("0" + match[1]).slice(-2);
+  return text.substring(0, 10);
+}
+
+function qcHeaderIndex_(headers, names) {
+  for (let i = 0; i < names.length; i++) {
+    const index = headers.indexOf(names[i]);
+    if (index >= 0) return index;
+  }
+  return -1;
+}
+
+function qcNumericEqual_(actual, expected) {
+  const left = Number(String(actual == null ? "" : actual).replace(/,/g, "").trim());
+  const right = Number(String(expected == null ? "" : expected).replace(/,/g, "").trim());
+  return Number.isFinite(left) && Number.isFinite(right) && left === right;
+}
+
+function qcSourceRows_(sheet, sourceName, recordRef) {
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const ref = recordRef && typeof recordRef === "object" ? recordRef : {};
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastColumn).getValues();
+  const display = sheet.getRange(2, 1, sheet.getLastRow() - 1, lastColumn).getDisplayValues();
+  const indexes = {
+    id: qcHeaderIndex_(headers, ["SubmissionId"]),
+    timestamp: qcHeaderIndex_(headers, ["Timestamp"]),
+    date: qcHeaderIndex_(headers, ["Date"]),
+    model: qcHeaderIndex_(headers, ["Model"]),
+    timeSlot: qcHeaderIndex_(headers, ["TimeSlot"]),
+    color: qcHeaderIndex_(headers, ["Color"]),
+    prodQty: qcHeaderIndex_(headers, ["ProdQty"]),
+    totalDefect: qcHeaderIndex_(headers, ["TotalDefect"]),
+    productGroup: qcHeaderIndex_(headers, ["ProductGroup"]),
+    operator: qcHeaderIndex_(headers, ["Operator", "Recorder"]),
+    teamLeader: qcHeaderIndex_(headers, ["TeamLeader", "Checker"])
+  };
+  const checklist = /ParameterChecklist|WaterParameterChecklist|EquipmentChecklist/i.test(String(sourceName || ""));
+  const refId = qcText_(ref.submissionId || ref.SubmissionId);
+  const result = [];
+
+  for (let i = 0; i < values.length; i++) {
+    const shown = display[i] || [];
+    const rowId = indexes.id >= 0 ? qcText_(shown[indexes.id]) : "";
+    if (refId && indexes.id >= 0 && rowId !== refId) continue;
+
+    // A checklist row is one item in a submission. The QC page groups all
+    // items by SubmissionId, so approving the group must move every item.
+    if (checklist && refId && indexes.id >= 0) {
+      result.push({ rowIndex: i + 2, values: values[i] });
+      continue;
+    }
+
+    let specified = 0;
+    let matched = 0;
+    const compareText = (index, expected) => {
+      if (index < 0 || expected === undefined || expected === null || String(expected).trim() === "") return;
+      specified++;
+      if (qcText_(shown[index]) === qcText_(expected)) matched++;
+    };
+    const compareDate = (index, expected) => {
+      if (index < 0 || expected === undefined || expected === null || String(expected).trim() === "") return;
+      specified++;
+      if (qcDateToken_(values[i][index]) === qcDateToken_(expected)) matched++;
+    };
+    const compareNumber = (index, expected) => {
+      if (index < 0 || expected === undefined || expected === null || String(expected).trim() === "") return;
+      specified++;
+      if (qcNumericEqual_(shown[index], expected)) matched++;
+    };
+
+    compareDate(indexes.date, ref.date || ref.Date);
+    compareText(indexes.model, ref.model || ref.Model);
+    compareText(indexes.timeSlot, ref.timeSlot || ref.TimeSlot);
+    compareText(indexes.color, ref.color || ref.Color);
+    compareNumber(indexes.prodQty, ref.prodQty !== undefined ? ref.prodQty : ref.ProdQty);
+    compareNumber(indexes.totalDefect, ref.totalDefect !== undefined ? ref.totalDefect : ref.TotalDefect);
+    compareText(indexes.productGroup, ref.productGroup || ref.ProductGroup);
+
+    if (refId && indexes.id >= 0) {
+      if (specified === 0 || matched === specified) result.push({ rowIndex: i + 2, values: values[i] });
+    } else if (specified >= 2 && matched === specified) {
+      result.push({ rowIndex: i + 2, values: values[i] });
+    }
+  }
+  return result;
+}
+
+function deleteQCSourceRows_(sheet, rows) {
+  if (!sheet || !rows || !rows.length) return 0;
+  rows.slice().sort((a, b) => b.rowIndex - a.rowIndex).forEach(item => sheet.deleteRow(item.rowIndex));
+  return rows.length;
+}
+
+function ensureQCReviewMetadataHeaders_(sheet) {
+  if (!sheet) return;
+  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(value => String(value || "").trim());
+  ["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"].forEach(name => {
+    if (headers.indexOf(name) < 0) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(name);
+      headers.push(name);
+    }
+  });
+}
+
+function qcReviewDataRow_(row, dataColumnCount) {
+  const result = Array.isArray(row) ? row.slice(0, dataColumnCount) : [];
+  while (result.length < dataColumnCount) result.push("");
+  return result;
+}
+
 function appendQCReviewRecord_(ss, payload) {
   let sourceName = String(payload && payload.sourceSheet || "QC").trim() || "QC";
   if (sourceName === "ScreenReports") sourceName = "SCREEN";
   const record = payload && payload.record && Array.isArray(payload.record.cells) ? payload.record.cells : [];
+  const recordRef = payload && payload.recordRef && typeof payload.recordRef === "object" ? payload.recordRef : {};
   const mirrors = ensureQCMirrorSheets_(ss, sourceName, record);
-  const sourceSheet = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX) || ss.getSheetByName(sourceName);
+  const pending = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX);
+  const legacy = ss.getSheetByName(sourceName);
+  const sourceSheet = pending && pending.getLastRow() > 1 ? pending : legacy;
   const reviewedSheet = mirrors.reviewed;
+  ensureQCReviewMetadataHeaders_(reviewedSheet);
   const reviewKey = String(payload && payload.reviewKey || "").trim();
+  const sourceRows = qcSourceRows_(sourceSheet, sourceName, recordRef);
   const columnMap = getQCReviewColumnMap_(reviewedSheet, sourceName);
+  let duplicate = false;
   if (reviewKey && reviewedSheet.getLastRow() > 1 && columnMap.keyIndex >= 0) {
     const keys = reviewedSheet.getRange(2, columnMap.keyIndex + 1, reviewedSheet.getLastRow() - 1, 1).getDisplayValues();
-    if (keys.some(row => String(row[0] || "").trim() === reviewKey)) {
-      return { duplicate: true };
-    }
+    duplicate = keys.some(row => String(row[0] || "").trim() === reviewKey);
   }
+  if (duplicate) {
+    const moved = deleteQCSourceRows_(sourceSheet, sourceRows);
+    SpreadsheetApp.flush();
+    return { duplicate: true, moved: moved };
+  }
+  if (!sourceRows.length) return { duplicate: false, moved: 0, notFound: true };
 
   const reviewer = payload && payload.reviewedBy;
   const reviewerName = typeof reviewer === "string"
@@ -488,21 +620,14 @@ function appendQCReviewRecord_(ss, payload) {
     : String((reviewer && (reviewer.displayName || reviewer.name || reviewer.employeeId)) || "");
   const status = String(payload && payload.status || "").trim();
   const reviewedAt = new Date();
-  reviewedSheet.appendRow(record.concat([status, reviewedAt, reviewerName, reviewKey]));
-  // Copy-first, delete-second: the source row is removed only after the reviewed copy exists.
-  if (sourceSheet && sourceSheet.getLastRow() > 1 && record.length) {
-    const values = sourceSheet.getDataRange().getDisplayValues();
-    for (let i = values.length - 1; i >= 1; i--) {
-      const row = values[i].map(v => String(v == null ? "" : v).trim());
-      const wanted = record.map(v => String(v == null ? "" : v).trim());
-      if (row.length >= wanted.length && wanted.every((v, idx) => row[idx] === v)) {
-        sourceSheet.deleteRow(i + 1);
-        break;
-      }
-    }
-  }
+  const dataColumnCount = Math.max(1, reviewedSheet.getLastColumn() - 4);
+  sourceRows.forEach(item => {
+    reviewedSheet.appendRow(qcReviewDataRow_(item.values, dataColumnCount).concat([status, reviewedAt, reviewerName, reviewKey]));
+  });
+  // Copy-first, delete-second: only delete after every reviewed copy exists.
+  const moved = deleteQCSourceRows_(sourceSheet, sourceRows);
   SpreadsheetApp.flush();
-  return { duplicate: false };
+  return { duplicate: false, moved: moved };
 }
 
 function getQCReviewColumnMap_(sheet, base) {
@@ -586,7 +711,9 @@ function doPost(e) {
       } catch (parseErr) { earlyPayload = e.parameter || {}; }
       const earlyResult = appendQCReviewRecord_(ss, earlyPayload || {});
       return ContentService.createTextOutput(JSON.stringify({
-        status: "success", action: "submitQCReview", duplicate: !!earlyResult.duplicate
+        status: earlyResult.notFound ? "error" : "success", action: "submitQCReview",
+        duplicate: !!earlyResult.duplicate, moved: Number(earlyResult.moved || 0),
+        message: earlyResult.notFound ? "Source row not found" : ""
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -694,7 +821,9 @@ function doPost(e) {
     if (action === "submitQCReview") {
       const result = appendQCReviewRecord_(ss, data || {});
       return ContentService.createTextOutput(JSON.stringify({
-        status: "success", action: "submitQCReview", duplicate: !!result.duplicate
+        status: result.notFound ? "error" : "success", action: "submitQCReview",
+        duplicate: !!result.duplicate, moved: Number(result.moved || 0),
+        message: result.notFound ? "Source row not found" : ""
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -1173,7 +1302,9 @@ function doGet(e) {
       try { payload = JSON.parse(String((e && e.parameter && e.parameter.payload) || "{}")); } catch (parseErr) {}
       const result = appendQCReviewRecord_(ss, payload);
       return ContentService.createTextOutput(JSON.stringify({
-        status: "success", action: "submitQCReview", duplicate: !!result.duplicate
+        status: result.notFound ? "error" : "success", action: "submitQCReview",
+        duplicate: !!result.duplicate, moved: Number(result.moved || 0),
+        message: result.notFound ? "Source row not found" : ""
       })).setMimeType(ContentService.MimeType.JSON);
     }
 

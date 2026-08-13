@@ -1115,8 +1115,20 @@ function renderQCDailyReportHistory() {
         ...Array.from(grouped.keys()).filter(group => !PAINTING_PRODUCT_GROUP_ORDER.includes(group))
     ];
 
-    const renderRows = rows => rows.map(record => `
-        <tr>
+    const renderRows = rows => rows.map(record => {
+        const qcRecordRef = encodeURIComponent(JSON.stringify({
+            timestamp: record.timestamp || record.Timestamp || '',
+            date: record.date || record.Date || '',
+            model: record.model || record.Model || '',
+            timeSlot: record.timeSlot || record.TimeSlot || '',
+            color: record.color || record.Color || '',
+            prodQty: Number(record.prodQty || record.ProdQty || record.prod_qty || record.qty) || 0,
+            totalDefect: getDailyReportDefectTotal(record),
+            submissionId: record.submissionId || record.SubmissionId || '',
+            productGroup: getDailyReportProductGroup(record)
+        }));
+        return `
+        <tr data-qc-record-ref="${qcRecordRef}">
             <td style="font-weight:700; white-space:nowrap;">${formatDailyReportDate(record.date || record.Date, record.timestamp || record.Timestamp)}</td>
             <td style="font-weight:700;">${escapeDailyReportHtml(record.model || record.Model || '-')}</td>
             <td><span class="badge" style="background:rgba(56,189,248,.15); color:#38bdf8; border:1px solid rgba(56,189,248,.3);">${escapeDailyReportHtml(record.timeSlot || record.TimeSlot || '-')}</span></td>
@@ -1125,7 +1137,8 @@ function renderQCDailyReportHistory() {
             <td style="text-align:center;"><span class="badge-defect ${getDailyReportDefectTotal(record) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(record)}</span></td>
             <td style="text-align:center; font-size:.78rem; color:#38bdf8; font-weight:700;">บันทึกแล้ว</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 
     const groupTables = groupNames.map(group => {
         const rows = grouped.get(group) || [];

@@ -106,6 +106,13 @@
         return `${group ? `${source}|${group}` : source}|${values.join('|')}`;
     }
 
+    function readRecordRef(row) {
+        const encoded = row && row.getAttribute('data-qc-record-ref');
+        if (!encoded) return {};
+        try { return JSON.parse(decodeURIComponent(encoded)) || {}; }
+        catch (error) { return {}; }
+    }
+
     function headerAndRows(table) {
         const body = table && table.tBodies && table.tBodies[0];
         const rows = tableRows(table);
@@ -150,13 +157,13 @@
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
                 cell.innerHTML = '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
-                cell.querySelector('button').addEventListener('click', event => decide(event, cell.querySelector('button'), source, row, key));
+                cell.querySelector('button').addEventListener('click', event => decide(event, cell.querySelector('button'), source, row, key, readRecordRef(row)));
             }
             row.appendChild(cell);
         });
     }
 
-    async function decide(event, button, source, row, key) {
+    async function decide(event, button, source, row, key, recordRef = {}) {
         event.preventDefault();
         event.stopPropagation();
         const status = button.dataset.qcStatus;
@@ -166,6 +173,7 @@
             reviewKey: key,
             status,
             sourceSheet: source,
+            recordRef,
             reviewedBy: reviewer,
             record: { cells: Array.from(row.cells)
                 .filter(cell => !cell.classList.contains('qc-review-cell'))
