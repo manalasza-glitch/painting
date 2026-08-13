@@ -161,7 +161,7 @@
         event.preventDefault();
         event.stopPropagation();
         const status = button.dataset.qcStatus;
-        const reviewer = currentReviewer();
+        const reviewer = currentReviewer() || { employeeId: '', displayName: 'ไม่ระบุผู้ตรวจ' };
         const payload = {
             action: 'submitQCReview',
             reviewKey: key,
@@ -173,7 +173,7 @@
         row.querySelectorAll('button').forEach(item => { item.disabled = true; });
         try {
             if (typeof sendQCChecklistReviewToAPI === 'function') await sendQCChecklistReviewToAPI(payload);
-            state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || '' };
+            state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || 'ไม่ระบุผู้ตรวจ' };
             writeLocal();
             if (typeof showToast === 'function') showToast(status === 'approved' ? 'บันทึกผลตรวจผ่านแล้ว' : 'บันทึกผลตรวจไม่ผ่านแล้ว', 'success');
             enhanceAll();

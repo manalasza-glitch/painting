@@ -457,7 +457,7 @@ function appendQCReviewRecord_(ss, payload) {
   const sourceName = String(payload && payload.sourceSheet || "QC").trim() || "QC";
   const record = payload && payload.record && Array.isArray(payload.record.cells) ? payload.record.cells : [];
   const mirrors = ensureQCMirrorSheets_(ss, sourceName, record);
-  const sourceSheet = ss.getSheetByName(sourceName);
+  const sourceSheet = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX) || ss.getSheetByName(sourceName);
   const reviewedSheet = mirrors.reviewed;
   const reviewKey = String(payload && payload.reviewKey || "").trim();
   if (reviewKey && reviewedSheet.getLastRow() > 1) {
