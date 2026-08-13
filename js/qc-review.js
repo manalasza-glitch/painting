@@ -56,7 +56,7 @@
         state.loading = true;
         try {
             if (typeof fetchQCReviewDataFromAPI === 'function') {
-                const rows = await fetchQCReviewDataFromAPI({ retryOptions: { attempts: 1, timeoutMs: 12000, skipQueue: true } });
+                const rows = await fetchQCReviewDataFromAPI({ retryOptions: { attempts: 2, timeoutMs: 12000, skipQueue: true } });
                 (rows || []).forEach(row => {
                     const key = String(row.reviewKey || '').trim();
                     if (key) state.statuses[key] = { status: normalizeStatus(row.status), reviewedAt: row.reviewedAt, reviewedBy: row.reviewedBy };
@@ -270,7 +270,11 @@
         state.view = view === 'reviewed' ? 'reviewed' : 'pending';
         setReviewSubmenuOpen(true);
         if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
-        loadReviewStatuses().then(enhanceAll);
+        // Pending rows already come from *_Pending sheets, so do not make the
+        // slow six-sheet Reviewed read block the actionable queue. Load review
+        // metadata only when the user opens the Reviewed view.
+        if (state.view === 'reviewed') loadReviewStatuses().then(enhanceAll);
+        else enhanceAll();
         return false;
     }
 
