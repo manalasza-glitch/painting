@@ -51,7 +51,7 @@ jobs:
           # unavailable. The public web-app URL in js/api.js uses this deployment.
           DEPLOYMENT_ID="$APPS_SCRIPT_DEPLOYMENT_ID"
           if [ -z "$DEPLOYMENT_ID" ]; then
-            DEPLOYMENT_ID="AKfycbw-AUsJbDa3oJCKtGmL-tZ5voEPxS3cx9ajPG2ToLEgZgCKTNWzBpgZRTx7ZHDF6g8U"
+            DEPLOYMENT_ID="AKfycbyDIctyjCmQrgpUYHKJTz-SEIopYZdafKXkMLlWwV2I72mINd8yKa_JA8MF-dR1-ETU"
           fi
           clasp push --force
           clasp deploy --deploymentId "$DEPLOYMENT_ID" --description "Auto-deployed via GitHub Actions"
