@@ -516,7 +516,6 @@ function readQCReviewRecords_(ss) {
 function doPost(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    ensureAllQCMirrorSheets_(ss);
     let sheet = ss.getSheetByName(SHEET_NAME);
 
     /* Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.
@@ -1088,7 +1087,6 @@ function getOrCreateUsersSheet(ss) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    ensureAllQCMirrorSheets_(ss);
     const action = (e && e.parameter && e.parameter.action) || "";
 
     if (action === "migrateQCData") {
