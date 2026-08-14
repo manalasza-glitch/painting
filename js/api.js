@@ -695,11 +695,18 @@ async function sendQCChecklistReviewToAPI(payload) {
     // leave the button in a saving state even though it received the click.
     const reviewUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?')
         + "action=submitQCReview&payload=" + encodeURIComponent(JSON.stringify(payload || {}));
-    const result = await fetchAppsScriptJsonWithRetry(reviewUrl, "Submit QC review", {
+    const request = fetchAppsScriptJsonWithRetry(reviewUrl, "Submit QC review", {
         attempts: 2,
-        timeoutMs: 20000,
+        timeoutMs: 8000,
         skipQueue: true
     });
+    const result = await Promise.race([
+        request,
+        new Promise((_, reject) => setTimeout(
+            () => reject(new Error("บันทึกผลตรวจใช้เวลานานเกินไป กรุณากดตรวจอีกครั้ง")),
+            18000
+        ))
+    ]);
     if (!result || result.status !== "success" || result.action !== "submitQCReview") {
         throw new Error("ระบบหลังบ้านไม่ยืนยันการตรวจ QC");
     }

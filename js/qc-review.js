@@ -217,7 +217,10 @@
             if (item.classList.contains('qc-review-complete')) item.textContent = 'กำลังบันทึก...';
         });
         try {
-            if (typeof sendQCChecklistReviewToAPI === 'function') await sendQCChecklistReviewToAPI(payload);
+            if (typeof sendQCChecklistReviewToAPI !== 'function') {
+                throw new Error('ไม่พบการเชื่อมต่อ Apps Script สำหรับบันทึกผลตรวจ');
+            }
+            await sendQCChecklistReviewToAPI(payload);
             state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || 'ไม่ระบุผู้ตรวจ' };
             writeLocal();
             if (typeof showToast === 'function') showToast(status === 'approved' ? 'บันทึกผลตรวจผ่านแล้ว' : 'บันทึกผลตรวจไม่ผ่านแล้ว', 'success');
