@@ -146,6 +146,8 @@
                 detail.style.display = rowVisible && expanded ? 'table-row' : 'none';
             }
             row.style.display = rowVisible ? '' : 'none';
+            // Keep a live save button stable while the observer watches table updates.
+            if (state.view !== 'reviewed' && row.dataset.qcReviewSaving === 'true') return;
             const old = row.querySelector('.qc-review-cell');
             if (old) old.remove();
             const cell = document.createElement('td');
@@ -216,6 +218,7 @@
             item.disabled = true;
             if (item.classList.contains('qc-review-complete')) item.textContent = 'กำลังบันทึก...';
         });
+        row.dataset.qcReviewSaving = 'true';
         try {
             if (typeof sendQCChecklistReviewToAPI !== 'function') {
                 throw new Error('ไม่พบการเชื่อมต่อ Apps Script สำหรับบันทึกผลตรวจ');
@@ -223,9 +226,11 @@
             await sendQCChecklistReviewToAPI(payload);
             state.statuses[key] = { status, reviewedBy: reviewer.displayName || reviewer.employeeId || 'ไม่ระบุผู้ตรวจ' };
             writeLocal();
+            delete row.dataset.qcReviewSaving;
             if (typeof showToast === 'function') showToast(status === 'approved' ? 'บันทึกผลตรวจผ่านแล้ว' : 'บันทึกผลตรวจไม่ผ่านแล้ว', 'success');
             enhanceAll();
         } catch (error) {
+            delete row.dataset.qcReviewSaving;
             row.querySelectorAll('button').forEach(item => {
                 item.disabled = false;
                 if (item.classList.contains('qc-review-complete')) item.textContent = 'ตรวจแล้ว';
