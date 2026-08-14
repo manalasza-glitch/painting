@@ -422,15 +422,14 @@ function ensureQCMirrorSheets_(ss, sourceSheetName, rowValues) {
   const base = String(sourceSheetName || "QC").trim() || "QC";
   const pendingName = base + QC_PENDING_SUFFIX;
   const reviewedName = base + QC_REVIEWED_SUFFIX;
+  const dataHeaders = qcCanonicalDataHeaders_(ss, base, rowValues);
+  const metadata = qcMetadataNames_();
   [pendingName, reviewedName].forEach(name => {
     let sheet = ss.getSheetByName(name);
     if (!sheet) sheet = ss.insertSheet(name);
     if (sheet.getLastRow() === 0) {
-      const source = ss.getSheetByName(base);
-      const headers = source && source.getLastColumn() > 0
-        ? source.getRange(1, 1, 1, source.getLastColumn()).getValues()[0]
-        : (Array.isArray(rowValues) ? rowValues.map((_, i) => "Column" + (i + 1)) : []);
-      sheet.appendRow(headers.concat(["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"]));
+      const headers = name === pendingName ? dataHeaders : dataHeaders.concat(metadata);
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       sheet.setFrozenRows(1);
     }
   });
@@ -464,6 +463,202 @@ function migrateExistingQCData_(ss) {
   });
   SpreadsheetApp.flush();
   return moved;
+}
+
+function qcMetadataNames_() {
+  return ["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"];
+}
+
+function qcProductionDataHeaders_() {
+  return [
+    "Timestamp", "Date", "Shift", "Recorder", "Checker",
+    "Downtime_Burner", "Downtime_Wash", "Downtime_Oven_Etc", "Downtime_Note",
+    "Model", "TimeSlot", "ProdQty", "Dent", "ColorDrop", "ThinPaint",
+    "ThickPaint", "WaterStain", "OtherDefect", "TotalDefect", "SubmissionId",
+    "Color", "ProductGroup", "PartCategory", "ColorCode", "Dust", "Oil", "Rust"
+  ];
+}
+
+function qcHeaderValues_(sheet) {
+  if (!sheet || sheet.getLastColumn() <= 0) return [];
+  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0]
+    .map(value => String(value || "").trim());
+}
+
+function qcHasTrailingMetadata_(headers) {
+  const metadata = qcMetadataNames_();
+  if (!headers || headers.length < metadata.length) return false;
+  const start = headers.length - metadata.length;
+  return metadata.every((name, index) => headers[start + index] === name);
+}
+
+function qcStripTrailingMetadata_(headers) {
+  return qcHasTrailingMetadata_(headers)
+    ? headers.slice(0, headers.length - qcMetadataNames_().length)
+    : headers.slice();
+}
+
+function qcCanonicalDataHeaders_(ss, sourceName, rowValues) {
+  const base = String(sourceName || "").trim();
+  const candidates = [ss.getSheetByName(base + QC_PENDING_SUFFIX), ss.getSheetByName(base)];
+  for (let i = 0; i < candidates.length; i++) {
+    const headers = qcStripTrailingMetadata_(qcHeaderValues_(candidates[i]));
+    if (headers.length && headers.some(value => value !== "")) {
+      // The production forms share one stable 27-column schema. Ignore the
+      // old outputdiary header because it belongs to a legacy report layout.
+      if (/^(outputdiary|REWORK|SCREEN)$/i.test(base)) {
+        const hasProductionShape = headers.indexOf("Timestamp") >= 0 && headers.indexOf("Model") >= 0;
+        if (hasProductionShape && headers.length >= 20) return headers.slice(0, 27);
+      } else {
+        return headers;
+      }
+    }
+  }
+  if (/^(outputdiary|REWORK|SCREEN)$/i.test(base)) return qcProductionDataHeaders_();
+  if (Array.isArray(rowValues) && rowValues.length) {
+    return rowValues.map((_, index) => "Column" + (index + 1));
+  }
+  return [];
+}
+
+function qcCanonicalReviewedLayout_(sheet, dataHeaders) {
+  if (!sheet || !dataHeaders || !dataHeaders.length) return false;
+  const headers = qcHeaderValues_(sheet);
+  const metadata = qcMetadataNames_();
+  if (headers.length < dataHeaders.length + metadata.length) return false;
+  for (let i = 0; i < dataHeaders.length; i++) {
+    if (String(headers[i] || "") !== String(dataHeaders[i] || "")) return false;
+  }
+  return metadata.every((name, index) => headers[dataHeaders.length + index] === name);
+}
+
+function qcKeyRecordRef_(sourceName, reviewKey) {
+  const parts = String(reviewKey || "").split("|");
+  if (parts.length < 7 || String(parts[0] || "") !== String(sourceName || "")) return {};
+  return {
+    date: parts[1], model: parts[2], timeSlot: parts[3], color: parts[4],
+    prodQty: parts[5], totalDefect: parts[6]
+  };
+}
+
+function qcFindMatchingSourceValues_(ss, sourceName, reviewKey) {
+  const ref = qcKeyRecordRef_(sourceName, reviewKey);
+  if (!ref.date || !ref.model || !ref.timeSlot) return [];
+  const candidates = [ss.getSheetByName(sourceName + QC_PENDING_SUFFIX), ss.getSheetByName(sourceName)];
+  for (let i = 0; i < candidates.length; i++) {
+    const rows = qcSourceRows_(candidates[i], sourceName, ref);
+    if (rows.length) return rows[0].values;
+  }
+  return [];
+}
+
+function qcMetadataFromLegacyRow_(row, headers, sourceName) {
+  const values = Array.isArray(row) ? row : [];
+  const metadata = qcMetadataNames_();
+  let keyIndex = values.findIndex(value => String(value || "").trim().indexOf(String(sourceName || "") + "|") === 0);
+  let statusIndex = -1;
+  let reviewedAtIndex = -1;
+  let reviewerIndex = -1;
+
+  for (let i = 0; i <= headers.length - metadata.length; i++) {
+    if (metadata.every((name, offset) => headers[i + offset] === name)) {
+      const candidateKey = String(values[i + 3] || "").trim();
+      const candidateStatus = String(values[i] || "").trim().toLowerCase();
+      if (candidateKey.indexOf(String(sourceName || "") + "|") === 0 ||
+          ["approved", "rejected"].indexOf(candidateStatus) >= 0) {
+        statusIndex = i;
+        reviewedAtIndex = i + 1;
+        reviewerIndex = i + 2;
+        if (candidateKey) keyIndex = i + 3;
+      }
+    }
+  }
+
+  if (keyIndex >= 0 && statusIndex < 0) {
+    // Legacy rows written before the metadata columns were normalized can
+    // have the key one cell after the four metadata values.
+    const keyValue = String(values[keyIndex] || "").trim();
+    const candidateStatus = values.findIndex(value => ["approved", "rejected"].indexOf(String(value || "").trim().toLowerCase()) >= 0);
+    statusIndex = candidateStatus >= 0 ? candidateStatus : -1;
+    if (statusIndex >= 0) {
+      reviewedAtIndex = statusIndex + 1;
+      reviewerIndex = statusIndex + 2;
+    } else if (keyIndex >= 2) {
+      reviewedAtIndex = keyIndex - 2;
+      reviewerIndex = keyIndex - 1;
+    }
+  }
+
+  const status = statusIndex >= 0 && values[statusIndex]
+    ? String(values[statusIndex]).trim()
+    : "approved";
+  return {
+    status: status || "approved",
+    reviewedAt: reviewedAtIndex >= 0 ? values[reviewedAtIndex] : new Date(),
+    reviewer: reviewerIndex >= 0 ? String(values[reviewerIndex] || "").trim() : "",
+    reviewKey: keyIndex >= 0 ? String(values[keyIndex] || "").trim() : ""
+  };
+}
+
+function qcLegacyDataRow_(row, sourceName, dataHeaders, metadata) {
+  const values = Array.isArray(row) ? row : [];
+  const result = new Array(dataHeaders.length).fill("");
+  const sourceStart = metadata.statusIndex >= 0 ? metadata.statusIndex : -1;
+  if (sourceStart > 0) {
+    for (let i = 0; i < Math.min(sourceStart, dataHeaders.length); i++) result[i] = values[i] == null ? "" : values[i];
+  }
+
+  const ref = qcKeyRecordRef_(sourceName, metadata.reviewKey);
+  const setIfEmpty = (name, value) => {
+    const index = dataHeaders.indexOf(name);
+    if (index >= 0 && (result[index] === "" || result[index] == null) && value !== undefined) result[index] = value;
+  };
+  setIfEmpty("Date", ref.date);
+  setIfEmpty("Model", ref.model);
+  setIfEmpty("TimeSlot", ref.timeSlot);
+  setIfEmpty("Color", ref.color);
+  setIfEmpty("ProdQty", ref.prodQty);
+  setIfEmpty("TotalDefect", ref.totalDefect);
+  return result;
+}
+
+function normalizeQCReviewedSheet_(ss, sourceName, sheet, rowValues) {
+  if (!sheet) return { changed: false, rows: 0 };
+  const dataHeaders = qcCanonicalDataHeaders_(ss, sourceName, rowValues);
+  const metadataNames = qcMetadataNames_();
+  if (!dataHeaders.length) return { changed: false, rows: 0 };
+  if (qcCanonicalReviewedLayout_(sheet, dataHeaders)) return { changed: false, rows: Math.max(0, sheet.getLastRow() - 1) };
+
+  const oldHeaders = qcHeaderValues_(sheet);
+  const oldRows = sheet.getLastRow() > 1
+    ? sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(1, sheet.getLastColumn())).getValues()
+    : [];
+  const output = [[].concat(dataHeaders, metadataNames)];
+  oldRows.forEach(row => {
+    const metadata = qcMetadataFromLegacyRow_(row, oldHeaders, sourceName);
+    if (!metadata.reviewKey) return;
+    let data = qcFindMatchingSourceValues_(ss, sourceName, metadata.reviewKey);
+    if (!data.length) data = qcLegacyDataRow_(row, sourceName, dataHeaders, metadata);
+    data = qcReviewDataRow_(data, dataHeaders.length);
+    output.push(data.concat([metadata.status, metadata.reviewedAt, metadata.reviewer, metadata.reviewKey]));
+  });
+
+  const targetColumns = output[0].length;
+  if (sheet.getMaxColumns() < targetColumns) sheet.insertColumnsAfter(sheet.getMaxColumns(), targetColumns - sheet.getMaxColumns());
+  if (sheet.getLastRow() > 0 && sheet.getLastColumn() > 0) sheet.getDataRange().clearContent();
+  sheet.getRange(1, 1, output.length, targetColumns).setValues(output);
+  sheet.setFrozenRows(1);
+  return { changed: true, rows: output.length - 1 };
+}
+
+function repairQCReviewedSheets_(ss) {
+  const result = [];
+  QC_MIGRATION_SOURCES.forEach(sourceName => {
+    const mirrors = ensureQCMirrorSheets_(ss, sourceName, []);
+    result.push({ source: sourceName, result: normalizeQCReviewedSheet_(ss, sourceName, mirrors.reviewed, []) });
+  });
+  SpreadsheetApp.flush();
+  return result;
 }
 
 function qcText_(value) {
@@ -571,17 +766,6 @@ function deleteQCSourceRows_(sheet, rows) {
   return rows.length;
 }
 
-function ensureQCReviewMetadataHeaders_(sheet) {
-  if (!sheet) return;
-  const metadata = ["QCStatus", "QCReviewedAt", "QCReviewedBy", "QCReviewKey"];
-  const currentLastColumn = Math.max(1, sheet.getLastColumn());
-  const currentHeaders = sheet.getRange(1, 1, 1, currentLastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
-  const hasTrailingMetadata = currentLastColumn >= 4 && metadata.every((name, index) => currentHeaders[currentLastColumn - 4 + index] === name);
-  const dataColumnCount = hasTrailingMetadata ? currentLastColumn - 4 : currentLastColumn;
-  if (!hasTrailingMetadata) sheet.insertColumnsAfter(currentLastColumn, metadata.length);
-  sheet.getRange(1, dataColumnCount + 1, 1, metadata.length).setValues([metadata]);
-}
-
 function qcReviewDataRow_(row, dataColumnCount) {
   const result = Array.isArray(row) ? row.slice(0, dataColumnCount) : [];
   while (result.length < dataColumnCount) result.push("");
@@ -598,7 +782,7 @@ function appendQCReviewRecord_(ss, payload) {
   const legacy = ss.getSheetByName(sourceName);
   const sourceSheet = pending && pending.getLastRow() > 1 ? pending : legacy;
   const reviewedSheet = mirrors.reviewed;
-  ensureQCReviewMetadataHeaders_(reviewedSheet);
+  normalizeQCReviewedSheet_(ss, sourceName, reviewedSheet, record);
   const reviewKey = String(payload && payload.reviewKey || "").trim();
   const sourceRows = qcSourceRows_(sourceSheet, sourceName, recordRef);
   const columnMap = getQCReviewColumnMap_(reviewedSheet, sourceName);
@@ -620,7 +804,7 @@ function appendQCReviewRecord_(ss, payload) {
     : String((reviewer && (reviewer.displayName || reviewer.name || reviewer.employeeId)) || "");
   const status = String(payload && payload.status || "").trim();
   const reviewedAt = new Date();
-  const dataColumnCount = Math.max(1, reviewedSheet.getLastColumn() - 4);
+  const dataColumnCount = Math.max(1, qcCanonicalDataHeaders_(ss, sourceName, record).length);
   sourceRows.forEach(item => {
     reviewedSheet.appendRow(qcReviewDataRow_(item.values, dataColumnCount).concat([status, reviewedAt, reviewerName, reviewKey]));
   });
@@ -1304,6 +1488,12 @@ function doGet(e) {
     if (action === "migrateQCData") {
       ensureAllQCMirrorSheets_(ss);
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: action, moved: migrateExistingQCData_(ss), sheets: QC_MIGRATION_SOURCES.map(name => ({ pending: name + QC_PENDING_SUFFIX, reviewed: name + QC_REVIEWED_SUFFIX })) })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "repairQCReviewedSheets") {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success", action: action, repaired: repairQCReviewedSheets_(ss)
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "submitQCReview") {
