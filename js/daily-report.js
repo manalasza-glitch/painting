@@ -1137,7 +1137,7 @@ function renderQCDailyReportHistory() {
             <td style="text-align:center;">${escapeDailyReportHtml(record.color || record.Color || 'ไม่ระบุ')}</td>
             <td style="font-weight:800; color:#34d399; text-align:center;">${Number(record.prodQty || record.ProdQty || record.prod_qty || record.qty) || 0}</td>
             <td style="text-align:center;"><span class="badge-defect ${getDailyReportDefectTotal(record) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(record)}</span></td>
-            <td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCDailyDetail('${detailId}', this)">ดูรายละเอียด</button></td>
+            <td style="text-align:center;"><button type="button" class="qc-history-detail-button" data-qc-daily-detail-id="${detailId}">ดูรายละเอียด</button></td>
             <td style="text-align:center; font-size:.78rem; color:#38bdf8; font-weight:700;">บันทึกแล้ว</td>
         </tr>
         <tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="9">${renderQCDailyReportDetail(record)}</td></tr>
@@ -1169,6 +1169,12 @@ function renderQCDailyReportHistory() {
         </div>
         <div class="qc-daily-report-groups">${groupTables}</div>
     `;
+    container.querySelectorAll('[data-qc-daily-detail-id]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            toggleQCDailyDetail(button.dataset.qcDailyDetailId, button);
+        });
+    });
 }
 
 function dailyReportDetailValue(record, keys, fallback = '-') {
