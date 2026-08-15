@@ -796,6 +796,18 @@ button, input, textarea, select {
 .qc-history-detail-table td:nth-child(6) { width: 18%; }
 .qc-history-detail-table td { overflow-wrap: anywhere; }
 
+.qc-daily-detail-table th {
+  width: 11%;
+  min-width: 110px;
+  white-space: nowrap;
+  color: #38bdf8;
+}
+
+.qc-daily-detail-table td {
+  width: 22%;
+  color: #f8fafc;
+}
+
 .parameter-history-table th:nth-child(8),
 .parameter-history-table td:nth-child(8),
 .equipment-history-table th:nth-child(8),

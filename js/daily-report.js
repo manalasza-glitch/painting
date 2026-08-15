@@ -1115,7 +1115,9 @@ function renderQCDailyReportHistory() {
         ...Array.from(grouped.keys()).filter(group => !PAINTING_PRODUCT_GROUP_ORDER.includes(group))
     ];
 
+    let detailIndex = 0;
     const renderRows = rows => rows.map(record => {
+        const detailId = `qc-daily-detail-${detailIndex++}`;
         const qcRecordRef = encodeURIComponent(JSON.stringify({
             timestamp: record.timestamp || record.Timestamp || '',
             date: record.date || record.Date || '',
@@ -1135,8 +1137,10 @@ function renderQCDailyReportHistory() {
             <td style="text-align:center;">${escapeDailyReportHtml(record.color || record.Color || 'ไม่ระบุ')}</td>
             <td style="font-weight:800; color:#34d399; text-align:center;">${Number(record.prodQty || record.ProdQty || record.prod_qty || record.qty) || 0}</td>
             <td style="text-align:center;"><span class="badge-defect ${getDailyReportDefectTotal(record) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(record)}</span></td>
+            <td style="text-align:center;"><button type="button" class="qc-history-detail-button" onclick="toggleQCDailyDetail('${detailId}', this)">ดูรายละเอียด</button></td>
             <td style="text-align:center; font-size:.78rem; color:#38bdf8; font-weight:700;">บันทึกแล้ว</td>
         </tr>
+        <tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="9">${renderQCDailyReportDetail(record)}</td></tr>
     `;
     }).join('');
 
@@ -1150,8 +1154,8 @@ function renderQCDailyReportHistory() {
                 </div>
                 <div class="table-responsive">
                     <table class="data-table qc-daily-group-table" style="width:100%; border-collapse:separate; border-spacing:0;">
-                        <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">สถานะ</th></tr></thead>
-                        <tbody>${rows.length ? renderRows(rows) : '<tr><td colspan="7" class="qc-daily-group-empty">ยังไม่มีรายการ</td></tr>'}</tbody>
+                        <thead><tr><th>วันที่</th><th>รุ่นงาน</th><th>เวลา</th><th style="text-align:center;">สี</th><th style="text-align:center;">ยอดผลิต</th><th style="text-align:center;">ยอดเสีย</th><th style="text-align:center;">รายละเอียด</th><th style="text-align:center;">สถานะ</th></tr></thead>
+                        <tbody>${rows.length ? renderRows(rows) : '<tr><td colspan="8" class="qc-daily-group-empty">ยังไม่มีรายการ</td></tr>'}</tbody>
                     </table>
                 </div>
             </section>
@@ -1165,6 +1169,68 @@ function renderQCDailyReportHistory() {
         </div>
         <div class="qc-daily-report-groups">${groupTables}</div>
     `;
+}
+
+function dailyReportDetailValue(record, keys, fallback = '-') {
+    for (const key of keys) {
+        const value = record && record[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+    }
+    return fallback;
+}
+
+function renderQCDailyReportDetail(record) {
+    const date = formatDailyReportDate(
+        dailyReportDetailValue(record, ['date', 'Date'], ''),
+        dailyReportDetailValue(record, ['timestamp', 'Timestamp'], '')
+    );
+    const fields = [
+        ['วันที่', date],
+        ['Timestamp', dailyReportDetailValue(record, ['timestamp', 'Timestamp'])],
+        ['กะ', dailyReportDetailValue(record, ['shift', 'Shift'])],
+        ['ผู้บันทึก', dailyReportDetailValue(record, ['recorder', 'Recorder', 'recordedBy', 'RecordedBy'])],
+        ['ผู้ตรวจ/หัวหน้า', dailyReportDetailValue(record, ['checker', 'Checker', 'teamLeader', 'TeamLeader'])],
+        ['กลุ่มผลิตภัณฑ์', dailyReportDetailValue(record, ['productGroup', 'ProductGroup'])],
+        ['ประเภทชิ้นงาน', dailyReportDetailValue(record, ['partCategory', 'PartCategory'])],
+        ['รุ่นงาน', dailyReportDetailValue(record, ['model', 'Model'])],
+        ['ช่วงเวลา', dailyReportDetailValue(record, ['timeSlot', 'TimeSlot'])],
+        ['สี', dailyReportDetailValue(record, ['color', 'Color'])],
+        ['รหัสสี', dailyReportDetailValue(record, ['colorCode', 'ColorCode'])],
+        ['ยอดผลิต', dailyReportDetailValue(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty'], 0)],
+        ['สนิม', dailyReportDetailValue(record, ['rust', 'Rust'], 0)],
+        ['รอยบุบ', dailyReportDetailValue(record, ['dent', 'Dent'], 0)],
+        ['สะเก็ดรอยเชื่อม', dailyReportDetailValue(record, ['colorDrop', 'ColorDrop'], 0)],
+        ['สีหนา/สีปูด', dailyReportDetailValue(record, ['thinPaint', 'ThinPaint'], 0)],
+        ['คราบน้ำ/จาระบี', dailyReportDetailValue(record, ['thickPaint', 'ThickPaint'], 0)],
+        ['คราบน้ำยา/คราบน้ำ', dailyReportDetailValue(record, ['waterStain', 'WaterStain'], 0)],
+        ['คราบน้ำมัน', dailyReportDetailValue(record, ['oil', 'Oil'], 0)],
+        ['เศษฝุ่น', dailyReportDetailValue(record, ['dust', 'Dust'], 0)],
+        ['อื่น ๆ', dailyReportDetailValue(record, ['otherDefect', 'OtherDefect'], 0)],
+        ['ของเสียรวม', getDailyReportDefectTotal(record)],
+        ['Downtime Burner', dailyReportDetailValue(record, ['downtimeBurner', 'Downtime_Burner'], 0)],
+        ['Downtime Wash', dailyReportDetailValue(record, ['downtimeWash', 'Downtime_Wash'], 0)],
+        ['Downtime Oven', dailyReportDetailValue(record, ['downtimeOven', 'Downtime_Oven_Etc', 'Downtime_Oven'], 0)],
+        ['หมายเหตุ Downtime', dailyReportDetailValue(record, ['downtimeNote', 'Downtime_Note'])],
+        ['Submission ID', dailyReportDetailValue(record, ['submissionId', 'SubmissionId'])]
+    ];
+    const rows = [];
+    for (let index = 0; index < fields.length; index += 3) {
+        const cells = fields.slice(index, index + 3).map(([label, value]) => `
+            <th>${escapeDailyReportHtml(label)}</th><td>${escapeDailyReportHtml(value)}</td>
+        `);
+        while (cells.length < 6) cells.push('<th></th><td></td>');
+        rows.push(`<tr>${cells.join('')}</tr>`);
+    }
+    return `<div class="qc-history-detail-wrap"><table class="qc-history-detail-table qc-daily-detail-table"><tbody>${rows.join('')}</tbody></table></div>`;
+}
+
+function toggleQCDailyDetail(detailId, button) {
+    const row = document.getElementById(detailId);
+    if (!row) return;
+    const isOpen = row.style.display === 'table-row';
+    row.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
+    row.style.display = isOpen ? 'none' : 'table-row';
+    if (button) button.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
 }
 
 function getDailyReportProductGroup(record) {
