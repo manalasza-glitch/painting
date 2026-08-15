@@ -1169,12 +1169,6 @@ function renderQCDailyReportHistory() {
         </div>
         <div class="qc-daily-report-groups">${groupTables}</div>
     `;
-    container.querySelectorAll('[data-qc-daily-detail-id]').forEach(button => {
-        button.addEventListener('click', event => {
-            event.preventDefault();
-            toggleQCDailyDetail(button.dataset.qcDailyDetailId, button);
-        });
-    });
 }
 
 function dailyReportDetailValue(record, keys, fallback = '-') {
@@ -1228,15 +1222,6 @@ function renderQCDailyReportDetail(record) {
         rows.push(`<tr>${cells.join('')}</tr>`);
     }
     return `<div class="qc-history-detail-wrap"><table class="qc-history-detail-table qc-daily-detail-table"><tbody>${rows.join('')}</tbody></table></div>`;
-}
-
-function toggleQCDailyDetail(detailId, button) {
-    const row = document.getElementById(detailId);
-    if (!row) return;
-    const isOpen = row.style.display === 'table-row';
-    row.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
-    row.style.display = isOpen ? 'none' : 'table-row';
-    if (button) button.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
 }
 
 function getDailyReportProductGroup(record) {
