@@ -178,7 +178,7 @@
             const detailButton = row.querySelector('button.qc-history-detail-button[data-qc-daily-detail-id]');
             if (detailButton && detailButton.dataset.qcDailyDetailBound !== 'true') {
                 detailButton.dataset.qcDailyDetailBound = 'true';
-                detailButton.addEventListener('click', event => {
+                const toggleDetail = event => {
                     event.preventDefault();
                     event.stopPropagation();
                     const detailRow = document.getElementById(detailButton.dataset.qcDailyDetailId || '');
@@ -187,7 +187,28 @@
                     detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
                     detailRow.style.display = isOpen ? 'none' : 'table-row';
                     detailButton.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
-                });
+                };
+                // Use a capturing pointer handler so the detail action is
+                // immediate and reliable on desktop mouse clicks as well as
+                // touch input. The click fallback keeps keyboard/automation
+                // activation working when no pointer event is synthesized.
+                detailButton.addEventListener('pointerdown', event => {
+                    detailButton.dataset.qcDetailPointerHandledAt = String(Date.now());
+                    toggleDetail(event);
+                }, true);
+                detailButton.addEventListener('click', event => {
+                    const handledAt = Number(detailButton.dataset.qcDetailPointerHandledAt || 0);
+                    if (handledAt && Date.now() - handledAt < 500) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    }
+                    toggleDetail(event);
+                }, true);
+                detailButton.addEventListener('keydown', event => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    toggleDetail(event);
+                }, true);
             }
         });
     }
