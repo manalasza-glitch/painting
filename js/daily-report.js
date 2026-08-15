@@ -1184,7 +1184,7 @@ function renderQCDailyReportDetail(record) {
         dailyReportDetailValue(record, ['date', 'Date'], ''),
         dailyReportDetailValue(record, ['timestamp', 'Timestamp'], '')
     );
-    const fields = [
+    const productionFields = [
         ['วันที่', date],
         ['Timestamp', dailyReportDetailValue(record, ['timestamp', 'Timestamp'])],
         ['กะ', dailyReportDetailValue(record, ['shift', 'Shift'])],
@@ -1196,7 +1196,9 @@ function renderQCDailyReportDetail(record) {
         ['ช่วงเวลา', dailyReportDetailValue(record, ['timeSlot', 'TimeSlot'])],
         ['สี', dailyReportDetailValue(record, ['color', 'Color'])],
         ['รหัสสี', dailyReportDetailValue(record, ['colorCode', 'ColorCode'])],
-        ['ยอดผลิต', dailyReportDetailValue(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty'], 0)],
+        ['ยอดผลิต (ชิ้น)', dailyReportDetailValue(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty'], 0)]
+    ];
+    const defectFields = [
         ['สนิม', dailyReportDetailValue(record, ['rust', 'Rust'], 0)],
         ['รอยบุบ', dailyReportDetailValue(record, ['dent', 'Dent'], 0)],
         ['สะเก็ดรอยเชื่อม', dailyReportDetailValue(record, ['colorDrop', 'ColorDrop'], 0)],
@@ -1206,22 +1208,40 @@ function renderQCDailyReportDetail(record) {
         ['คราบน้ำมัน', dailyReportDetailValue(record, ['oil', 'Oil'], 0)],
         ['เศษฝุ่น', dailyReportDetailValue(record, ['dust', 'Dust'], 0)],
         ['อื่น ๆ', dailyReportDetailValue(record, ['otherDefect', 'OtherDefect'], 0)],
-        ['ของเสียรวม', getDailyReportDefectTotal(record)],
+        ['ของเสียรวม', getDailyReportDefectTotal(record)]
+    ];
+    const systemFields = [
         ['Downtime Burner', dailyReportDetailValue(record, ['downtimeBurner', 'Downtime_Burner'], 0)],
         ['Downtime Wash', dailyReportDetailValue(record, ['downtimeWash', 'Downtime_Wash'], 0)],
         ['Downtime Oven', dailyReportDetailValue(record, ['downtimeOven', 'Downtime_Oven_Etc', 'Downtime_Oven'], 0)],
         ['หมายเหตุ Downtime', dailyReportDetailValue(record, ['downtimeNote', 'Downtime_Note'])],
         ['Submission ID', dailyReportDetailValue(record, ['submissionId', 'SubmissionId'])]
     ];
-    const rows = [];
-    for (let index = 0; index < fields.length; index += 3) {
-        const cells = fields.slice(index, index + 3).map(([label, value]) => `
-            <th>${escapeDailyReportHtml(label)}</th><td>${escapeDailyReportHtml(value)}</td>
-        `);
-        while (cells.length < 6) cells.push('<th></th><td></td>');
-        rows.push(`<tr>${cells.join('')}</tr>`);
-    }
-    return `<div class="qc-history-detail-wrap"><table class="qc-history-detail-table qc-daily-detail-table"><tbody>${rows.join('')}</tbody></table></div>`;
+
+    const renderSection = (title, fields, className = '') => `
+        <section class="qc-daily-detail-section ${className}">
+            <h5>${escapeDailyReportHtml(title)}</h5>
+            <div class="qc-daily-detail-grid">
+                ${fields.map(([label, value]) => {
+                    const numericValue = Number(value);
+                    const isNumericDefect = className.includes('defect') && Number.isFinite(numericValue);
+                    const valueClass = isNumericDefect
+                        ? (numericValue > 0 ? 'qc-daily-detail-value has-defect' : 'qc-daily-detail-value zero-defect')
+                        : 'qc-daily-detail-value';
+                    const totalClass = label === 'ของเสียรวม' ? ' qc-daily-detail-field-total' : '';
+                    return `<div class="qc-daily-detail-field${totalClass}">
+                        <span class="qc-daily-detail-label">${escapeDailyReportHtml(label)}</span>
+                        <strong class="${valueClass}">${escapeDailyReportHtml(value)}</strong>
+                    </div>`;
+                }).join('')}
+            </div>
+        </section>`;
+
+    return `<div class="qc-history-detail-wrap qc-daily-detail-wrap">
+        ${renderSection('ข้อมูลการผลิต', productionFields, 'qc-daily-detail-production')}
+        ${renderSection('รายการของเสีย', defectFields, 'qc-daily-detail-defects')}
+        ${renderSection('Downtime และข้อมูลระบบ', systemFields, 'qc-daily-detail-system')}
+    </div>`;
 }
 
 function toggleQCDailyDetail(detailId, button, event) {

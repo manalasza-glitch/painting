@@ -808,6 +808,117 @@ button, input, textarea, select {
   color: #f8fafc;
 }
 
+/* Daily QC detail is displayed as compact field cards instead of a wide
+   table with unused trailing columns. */
+.qc-daily-detail-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: visible;
+}
+
+.qc-daily-detail-section {
+  padding: 0.85rem;
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.qc-daily-detail-section h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.7rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.qc-daily-detail-section h5::before {
+  content: '';
+  width: 0.38rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.qc-daily-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.qc-daily-detail-field {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 9px;
+  background: rgba(7, 19, 34, 0.72);
+}
+
+.qc-daily-detail-label {
+  min-width: 0;
+  color: #7dd3fc;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.qc-daily-detail-value {
+  min-width: 0;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.qc-daily-detail-value.zero-defect {
+  color: #94a3b8;
+}
+
+.qc-daily-detail-value.has-defect {
+  color: #fda4af;
+}
+
+.qc-daily-detail-field-total {
+  border-color: rgba(251, 113, 133, 0.35);
+  background: rgba(127, 29, 29, 0.2);
+}
+
+.qc-daily-detail-field-total .qc-daily-detail-label,
+.qc-daily-detail-field-total .qc-daily-detail-value {
+  color: #fb7185;
+}
+
+@media (max-width: 980px) {
+  .qc-daily-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .qc-daily-detail-section {
+    padding: 0.7rem;
+  }
+
+  .qc-daily-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-daily-detail-field {
+    gap: 0.5rem;
+  }
+}
+
 .parameter-history-table th:nth-child(8),
 .parameter-history-table td:nth-child(8),
 .equipment-history-table th:nth-child(8),
