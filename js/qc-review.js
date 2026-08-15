@@ -175,6 +175,20 @@
                 actionButton.onclick = handleReviewPointer;
             }
             row.appendChild(cell);
+            const detailButton = row.querySelector('button.qc-history-detail-button[data-qc-daily-detail-id]');
+            if (detailButton && detailButton.dataset.qcDailyDetailBound !== 'true') {
+                detailButton.dataset.qcDailyDetailBound = 'true';
+                detailButton.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const detailRow = document.getElementById(detailButton.dataset.qcDailyDetailId || '');
+                    if (!detailRow) return;
+                    const isOpen = detailRow.style.display === 'table-row';
+                    detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
+                    detailRow.style.display = isOpen ? 'none' : 'table-row';
+                    detailButton.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+                });
+            }
         });
     }
 
@@ -185,20 +199,6 @@
         // checklist loads, so per-button listeners can disappear with a
         // freshly rendered row even though the button remains visible.
         root.addEventListener('click', event => {
-            const detailButton = event.target && event.target.closest
-                ? event.target.closest('button.qc-history-detail-button[data-qc-daily-detail-id]')
-                : null;
-            if (detailButton && root.contains(detailButton)) {
-                event.preventDefault();
-                event.stopPropagation();
-                const detailRow = document.getElementById(detailButton.dataset.qcDailyDetailId || '');
-                if (!detailRow) return;
-                const isOpen = detailRow.style.display === 'table-row';
-                detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
-                detailRow.style.display = isOpen ? 'none' : 'table-row';
-                detailButton.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
-                return;
-            }
             const button = event.target && event.target.closest
                 ? event.target.closest('button.qc-review-action')
                 : null;
