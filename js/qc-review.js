@@ -113,6 +113,49 @@
         catch (error) { return {}; }
     }
 
+    function toggleDailyDetail(button, event) {
+        if (!button) return;
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const detailRow = document.getElementById(button.dataset.qcDailyDetailId || '');
+        if (!detailRow) return;
+        const isOpen = detailRow.style.display === 'table-row';
+        detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
+        detailRow.style.display = isOpen ? 'none' : 'table-row';
+        button.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+        button.dataset.qcDetailHandledAt = String(Date.now());
+    }
+
+    function bindDailyDetailClicks() {
+        if (document.documentElement.dataset.qcDailyDetailDelegated === 'true') return;
+        document.documentElement.dataset.qcDailyDetailDelegated = 'true';
+        const handle = event => {
+            const button = event.target && event.target.closest
+                ? event.target.closest('button.qc-history-detail-button[data-qc-daily-detail-id]')
+                : null;
+            if (!button) return;
+            const handledAt = Number(button.dataset.qcDetailHandledAt || 0);
+            // A physical mouse click can emit pointerdown, mousedown, then
+            // click. Toggle only once while still supporting click-only input.
+            if (event.type === 'click' && handledAt && Date.now() - handledAt < 500) {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+            if (event.type !== 'click' && handledAt && Date.now() - handledAt < 80) return;
+            toggleDailyDetail(button, event);
+        };
+        document.addEventListener('pointerdown', handle, true);
+        document.addEventListener('mousedown', handle, true);
+        document.addEventListener('click', handle, true);
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            handle(event);
+        }, true);
+    }
+
     function headerAndRows(table) {
         const body = table && table.tBodies && table.tBodies[0];
         const rows = tableRows(table);
@@ -175,41 +218,6 @@
                 actionButton.onclick = handleReviewPointer;
             }
             row.appendChild(cell);
-            const detailButton = row.querySelector('button.qc-history-detail-button[data-qc-daily-detail-id]');
-            if (detailButton && detailButton.dataset.qcDailyDetailBound !== 'true') {
-                detailButton.dataset.qcDailyDetailBound = 'true';
-                const toggleDetail = event => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const detailRow = document.getElementById(detailButton.dataset.qcDailyDetailId || '');
-                    if (!detailRow) return;
-                    const isOpen = detailRow.style.display === 'table-row';
-                    detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
-                    detailRow.style.display = isOpen ? 'none' : 'table-row';
-                    detailButton.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
-                };
-                // Use a capturing pointer handler so the detail action is
-                // immediate and reliable on desktop mouse clicks as well as
-                // touch input. The click fallback keeps keyboard/automation
-                // activation working when no pointer event is synthesized.
-                detailButton.addEventListener('pointerdown', event => {
-                    detailButton.dataset.qcDetailPointerHandledAt = String(Date.now());
-                    toggleDetail(event);
-                }, true);
-                detailButton.addEventListener('click', event => {
-                    const handledAt = Number(detailButton.dataset.qcDetailPointerHandledAt || 0);
-                    if (handledAt && Date.now() - handledAt < 500) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return;
-                    }
-                    toggleDetail(event);
-                }, true);
-                detailButton.addEventListener('keydown', event => {
-                    if (event.key !== 'Enter' && event.key !== ' ') return;
-                    toggleDetail(event);
-                }, true);
-            }
         });
     }
 
@@ -564,6 +572,7 @@
 
     function init() {
         injectStyles();
+        bindDailyDetailClicks();
         const desktop = document.querySelector('.sidebar-nav a.nav-link[data-permission="qc.read"]');
         const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
         addQCCaret(desktop);
