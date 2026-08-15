@@ -1137,7 +1137,7 @@ function renderQCDailyReportHistory() {
             <td style="text-align:center;">${escapeDailyReportHtml(record.color || record.Color || 'ไม่ระบุ')}</td>
             <td style="font-weight:800; color:#34d399; text-align:center;">${Number(record.prodQty || record.ProdQty || record.prod_qty || record.qty) || 0}</td>
             <td style="text-align:center;"><span class="badge-defect ${getDailyReportDefectTotal(record) > 0 ? 'badge-has-defect' : 'badge-zero'}">${getDailyReportDefectTotal(record)}</span></td>
-            <td style="text-align:center;"><button type="button" class="qc-history-detail-button" data-qc-daily-detail-id="${detailId}">ดูรายละเอียด</button></td>
+            <td style="text-align:center;"><button type="button" class="qc-history-detail-button" data-qc-daily-detail-id="${detailId}" onclick="toggleQCDailyDetail('${detailId}', this, event)">ดูรายละเอียด</button></td>
             <td style="text-align:center; font-size:.78rem; color:#38bdf8; font-weight:700;">บันทึกแล้ว</td>
         </tr>
         <tr id="${detailId}" class="qc-history-detail-row" style="display:none;"><td colspan="9">${renderQCDailyReportDetail(record)}</td></tr>
@@ -1222,6 +1222,28 @@ function renderQCDailyReportDetail(record) {
         rows.push(`<tr>${cells.join('')}</tr>`);
     }
     return `<div class="qc-history-detail-wrap"><table class="qc-history-detail-table qc-daily-detail-table"><tbody>${rows.join('')}</tbody></table></div>`;
+}
+
+function toggleQCDailyDetail(detailId, button, event) {
+    const handledAt = Number(button?.dataset?.qcDetailHandledAt || 0);
+    // The document-level handler handles real pointer input first. This
+    // inline fallback is for click-only activation and must not toggle twice.
+    if (handledAt && Date.now() - handledAt < 500) {
+        event?.preventDefault();
+        event?.stopPropagation();
+        return;
+    }
+    event?.preventDefault();
+    event?.stopPropagation();
+    const detailRow = document.getElementById(detailId || '');
+    if (!detailRow) return;
+    const isOpen = detailRow.style.display === 'table-row';
+    detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
+    detailRow.style.display = isOpen ? 'none' : 'table-row';
+    if (button) {
+        button.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+        button.dataset.qcDetailHandledAt = String(Date.now());
+    }
 }
 
 function getDailyReportProductGroup(record) {
