@@ -442,12 +442,18 @@
                 min-width: 76px;
                 padding: 0 10px;
                 font-size: .8rem;
-                transition: background-color .15s ease, transform .15s ease;
+                transition: background-color .15s ease, box-shadow .15s ease;
             }
             .qc-review-complete:hover,
             .qc-review-complete:focus-visible {
                 background: #047857;
-                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(4, 120, 87, .32);
+                transform: none;
+                animation: none;
+            }
+            .qc-review-complete:active {
+                background: #065f46;
+                transform: none;
             }
             .qc-review-badge {
                 display: inline-flex;
