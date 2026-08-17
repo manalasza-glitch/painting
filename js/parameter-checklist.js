@@ -500,6 +500,8 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         // QC is a dashboard view: fail fast and let the user retry instead of
         // blocking the whole page behind several long Apps Script retries.
         const retryOptions = { attempts: 2, timeoutMs: 12000, skipQueue: true };
+        const historyScope = window.qcReviewDataScope === "reviewed" ? "reviewed" : "pending";
+        const historyOptions = { retryOptions, scope: historyScope };
         setQCChecklistRefreshButtonLoading(true);
         renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจพารามิเตอร์...");
         renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "กำลังโหลดประวัติการตรวจน้ำ...");
@@ -510,7 +512,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         try {
             try {
                 const screenRecords = typeof fetchScreenReportDataFromAPI === "function"
-                    ? await fetchScreenReportDataFromAPI("", { retryOptions })
+                    ? await fetchScreenReportDataFromAPI("", historyOptions)
                     : [];
                 renderQCScreenHistory(screenRecords);
             } catch (error) {
@@ -519,7 +521,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
             }
             try {
                 const reworkRecords = typeof fetchReworkReportDataFromAPI === "function"
-                    ? await fetchReworkReportDataFromAPI("", { retryOptions })
+                    ? await fetchReworkReportDataFromAPI("", historyOptions)
                     : [];
                 renderQCReworkHistory(reworkRecords);
             } catch (error) {
@@ -530,7 +532,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
                 // Load the two populated history sheets first. The parameter
                 // sheet may be empty, and must never block the other tables.
                 try {
-                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { throwOnError: true, retryOptions });
+                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { ...historyOptions, throwOnError: true });
                     waterParameterChecklistHistory = Array.isArray(waterRecords)
                         ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
                         : [];
@@ -542,7 +544,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
 
                 if (typeof fetchEquipmentChecklistDataFromAPI === "function") {
                     try {
-                        equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { throwOnError: true, retryOptions });
+                        equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { ...historyOptions, throwOnError: true });
                         renderEquipmentChecklistHistory();
                     } catch (error) {
                         failures.push("เช็กอุปกรณ์");
@@ -551,7 +553,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
                 }
 
                 try {
-                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { throwOnError: true, retryOptions });
+                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { ...historyOptions, throwOnError: true });
                     parameterChecklistHistory = Array.isArray(parameterRecords)
                         ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
                         : [];
@@ -567,7 +569,7 @@ async function refreshQCChecklistHistory(showFeedback = false) {
             // must never start it alongside SCREEN/REWORK/checklist requests.
             if (typeof refreshDailyReportHistory === "function") {
                 try {
-                    await refreshDailyReportHistory({ retryOptions });
+                    await refreshDailyReportHistory(historyOptions);
                     if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
                 } catch (error) {
                     failures.push("พ่นสีรายวัน");

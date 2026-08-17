@@ -7,6 +7,7 @@
 
     const STORAGE_KEY = 'PAINTING_QC_REVIEW_STATUS_V1';
     const state = { view: 'pending', statuses: {}, loading: false, observerTimer: null };
+    window.qcReviewDataScope = 'pending';
     const bodySources = {
         qcParameterChecklistHistoryBody: 'ParameterChecklist',
         qcWaterChecklistHistoryBody: 'WaterParameterChecklist',
@@ -183,7 +184,10 @@
                 const outerCell = detail.querySelector(':scope > td[colspan]');
                 if (outerCell && headerRow) outerCell.colSpan = headerRow.cells.length;
             }
-            const rowVisible = state.view === 'reviewed' ? !!status : !status;
+            // Reviewed rows already come from *_Reviewed sheets. Keep them
+            // visible even when a legacy review-key format does not match the
+            // current rendered row exactly.
+            const rowVisible = state.view === 'reviewed' ? true : !status;
             if (detail) {
                 const expanded = detail.dataset.qcDetailExpanded === 'true';
                 detail.style.display = rowVisible && expanded ? 'table-row' : 'none';
@@ -197,7 +201,7 @@
             cell.className = 'qc-review-cell';
             cell.style.textAlign = 'center';
             if (state.view === 'reviewed') {
-                cell.innerHTML = status === 'approved'
+                cell.innerHTML = status !== 'rejected'
                     ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
@@ -319,6 +323,7 @@
             return false;
         }
         state.view = view === 'reviewed' ? 'reviewed' : 'pending';
+        window.qcReviewDataScope = state.view;
         setReviewSubmenuOpen(true);
         if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
         // Pending rows already come from *_Pending sheets, so do not make the

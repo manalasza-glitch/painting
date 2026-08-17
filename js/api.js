@@ -568,10 +568,12 @@ async function deleteRecorderFromAPI(name) {
 async function fetchDailyReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
+    const scope = String(options.scope || "").toLowerCase() === "reviewed" ? "reviewed" : "pending";
+    const scopeCacheKey = scope === "reviewed" ? "_REVIEWED" : "_PENDING";
     lastDailyReportFetchSucceeded = false;
-    const cacheKey = requestedDate ? `PAINTING_OUTPUTDIARY_CACHE_${requestedDate}` : "PAINTING_OUTPUTDIARY_CACHE";
+    const cacheKey = requestedDate ? `PAINTING_OUTPUTDIARY_CACHE${scopeCacheKey}_${requestedDate}` : `PAINTING_OUTPUTDIARY_CACHE${scopeCacheKey}`;
     if (baseUrl) {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getDailyReportData&scope=' + scope + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
 
         try {
             const json = await fetchAppsScriptJsonWithRetry(url, "Load outputdiary", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
@@ -600,7 +602,7 @@ async function fetchDailyReportDataFromAPI(dateFilter = "", options = {}) {
 
     if (requestedDate) return [];
 
-    const allCached = localStorage.getItem("PAINTING_OUTPUTDIARY_CACHE");
+    const allCached = localStorage.getItem(`PAINTING_OUTPUTDIARY_CACHE${scopeCacheKey}`);
     if (allCached !== null) {
         try {
             const parsed = JSON.parse(allCached);
@@ -614,9 +616,11 @@ async function fetchDailyReportDataFromAPI(dateFilter = "", options = {}) {
 async function fetchReworkReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
-    const cacheKey = requestedDate ? `PAINTING_REWORK_CACHE_${requestedDate}` : "PAINTING_REWORK_CACHE";
+    const scope = String(options.scope || "").toLowerCase() === "reviewed" ? "reviewed" : "pending";
+    const scopeCacheKey = scope === "reviewed" ? "_REVIEWED" : "_PENDING";
+    const cacheKey = requestedDate ? `PAINTING_REWORK_CACHE${scopeCacheKey}_${requestedDate}` : `PAINTING_REWORK_CACHE${scopeCacheKey}`;
     if (baseUrl) {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getReworkReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getReworkReportData&scope=' + scope + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
             const json = await fetchAppsScriptJsonWithRetry(url, "Load REWORK history", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
@@ -640,9 +644,11 @@ async function fetchReworkReportDataFromAPI(dateFilter = "", options = {}) {
 async function fetchScreenReportDataFromAPI(dateFilter = "", options = {}) {
     const baseUrl = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
-    const cacheKey = requestedDate ? `PAINTING_SCREEN_CACHE_${requestedDate}` : "PAINTING_SCREEN_CACHE";
+    const scope = String(options.scope || "").toLowerCase() === "reviewed" ? "reviewed" : "pending";
+    const scopeCacheKey = scope === "reviewed" ? "_REVIEWED" : "_PENDING";
+    const cacheKey = requestedDate ? `PAINTING_SCREEN_CACHE${scopeCacheKey}_${requestedDate}` : `PAINTING_SCREEN_CACHE${scopeCacheKey}`;
     if (baseUrl) {
-        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getScreenReportData' + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
+        const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getScreenReportData&scope=' + scope + (requestedDate ? `&date=${encodeURIComponent(requestedDate)}` : '');
         try {
             const json = await fetchAppsScriptJsonWithRetry(url, "Load SCREEN history", options.retryOptions || { attempts: 2, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.data)) {
@@ -668,9 +674,11 @@ async function fetchParameterChecklistDataFromAPI(dateFilter = "", typeFilter = 
     if (!baseUrl) return [];
     const requestedDate = String(dateFilter || "").trim();
     const requestedType = String(typeFilter || "").trim();
+    const scope = String(options.scope || "").toLowerCase() === "reviewed" ? "reviewed" : "pending";
     const query = new URLSearchParams({ action: "getParameterChecklistData" });
     if (requestedDate) query.set("date", requestedDate);
     if (requestedType) query.set("type", requestedType);
+    query.set("scope", scope);
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
         const result = await fetchAppsScriptJsonWithRetry(url, "Get parameter checklist data", options.retryOptions || {});
@@ -704,6 +712,7 @@ async function fetchEquipmentChecklistDataFromAPI(dateFilter = "", options = {})
     const baseUrl = getApiUrl();
     if (!baseUrl) return [];
     const query = new URLSearchParams({ action: "getEquipmentChecklistData" });
+    query.set("scope", String(options.scope || "").toLowerCase() === "reviewed" ? "reviewed" : "pending");
     if (String(dateFilter || "").trim()) query.set("date", String(dateFilter).trim());
     const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + query.toString();
     try {
