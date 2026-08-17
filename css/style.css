@@ -1624,6 +1624,16 @@ button, input, textarea, select {
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* The bottom navigation belongs to the phone layout only. Keep it fully
+   removed from the desktop stacking context so it cannot cover tables. */
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
 .mobile-nav-items {
   display: flex;
   align-items: center;
