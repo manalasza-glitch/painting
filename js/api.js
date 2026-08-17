@@ -58,6 +58,60 @@ function withApiRequestNonce(url) {
     return `${url}${separator}_request=${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// Apps Script may redirect the browser fetch to a short-lived
+// googleusercontent.com URL. When that redirect has expired, fetch receives
+// an HTML 404 page even though the /exec endpoint is healthy. JSONP lets the
+// browser follow the redirect as a script request and avoids the stale CORS
+// redirect path. It is used only as a fallback after normal fetch retries.
+function fetchAppsScriptJsonp(url, operation, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+        if (typeof document === "undefined" || !document.head) {
+            reject(new Error(`${operation}: JSONP ใช้ได้เฉพาะในหน้าเว็บ`));
+            return;
+        }
+
+        const callbackName = `__paintingJsonp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        const script = document.createElement("script");
+        let timer = null;
+        let finished = false;
+
+        const cleanup = () => {
+            if (finished) return;
+            finished = true;
+            if (timer) clearTimeout(timer);
+            try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+            script.remove();
+        };
+
+        window[callbackName] = payload => {
+            cleanup();
+            if (payload && payload.status === "error") {
+                reject(new Error(payload.message || `${operation}: backend rejected the request`));
+                return;
+            }
+            resolve(payload);
+        };
+
+        script.async = true;
+        script.onerror = () => {
+            cleanup();
+            reject(new Error(`${operation}: JSONP request failed`));
+        };
+
+        const separator = url.includes("?") ? "&" : "?";
+        // `prefix` is the Apps Script JSONP convention. Keep `callback` too
+        // for deployments that expose the more common parameter name.
+        const jsonpUrl = `${withApiRequestNonce(url)}${separator}prefix=${encodeURIComponent(callbackName)}&callback=${encodeURIComponent(callbackName)}`;
+        script.src = jsonpUrl;
+        document.head.appendChild(script);
+
+        timer = setTimeout(() => {
+            cleanup();
+            reject(new Error(`${operation}: JSONP หมดเวลารอการตอบกลับจาก Apps Script`));
+        }, Math.max(5000, Number(timeoutMs) || 15000));
+    });
+}
+
 async function requireJsonResponse(response, operation) {
     if (!response.ok) {
         throw new Error(`${operation}: HTTP ${response.status}`);
@@ -106,6 +160,14 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
             }
         } finally {
             if (timeoutId) clearTimeout(timeoutId);
+        }
+    }
+
+    if (retryOptions.allowJsonp !== false) {
+        try {
+            return await fetchAppsScriptJsonp(url, operation, retryOptions.jsonpTimeoutMs || timeoutMs);
+        } catch (jsonpError) {
+            lastError = jsonpError || lastError;
         }
     }
 
