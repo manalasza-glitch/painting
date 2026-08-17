@@ -1820,7 +1820,10 @@ function doGetJson_(e) {
     // Handle getUsers
     if (action === "getUsers") {
       let uSheet = getOrCreateUsersSheet(ss);
-      const values = uSheet.getDataRange().getValues();
+      // Users is a nine-column table. Avoid getDataRange(), which can include
+      // a large formatted area and stall the dashboard's initial load.
+      const userLastRow = Math.max(1, Math.min(uSheet.getLastRow(), 5000));
+      const values = uSheet.getRange(1, 1, userLastRow, 9).getValues();
       if (!values || values.length <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", users: [] })).setMimeType(ContentService.MimeType.JSON);
       }
