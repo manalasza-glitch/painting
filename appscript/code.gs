@@ -500,7 +500,9 @@ function qcStripTrailingMetadata_(headers) {
 
 function qcCanonicalDataHeaders_(ss, sourceName, rowValues) {
   const base = String(sourceName || "").trim();
-  const candidates = [ss.getSheetByName(base + QC_PENDING_SUFFIX), ss.getSheetByName(base)];
+  // The live QC workflow uses only the current Pending mirror. Do not use a
+  // legacy base sheet to infer the active schema.
+  const candidates = [ss.getSheetByName(base + QC_PENDING_SUFFIX)];
   for (let i = 0; i < candidates.length; i++) {
     const headers = qcStripTrailingMetadata_(qcHeaderValues_(candidates[i]));
     if (headers.length && headers.some(value => value !== "")) {
@@ -544,7 +546,7 @@ function qcKeyRecordRef_(sourceName, reviewKey) {
 function qcFindMatchingSourceValues_(ss, sourceName, reviewKey) {
   const ref = qcKeyRecordRef_(sourceName, reviewKey);
   if (!ref.date || !ref.model || !ref.timeSlot) return [];
-  const candidates = [ss.getSheetByName(sourceName + QC_PENDING_SUFFIX), ss.getSheetByName(sourceName)];
+  const candidates = [ss.getSheetByName(sourceName + QC_PENDING_SUFFIX)];
   for (let i = 0; i < candidates.length; i++) {
     const rows = qcSourceRows_(candidates[i], sourceName, ref);
     if (rows.length) return rows[0].values;
@@ -779,8 +781,9 @@ function appendQCReviewRecord_(ss, payload) {
   const recordRef = payload && payload.recordRef && typeof payload.recordRef === "object" ? payload.recordRef : {};
   const mirrors = ensureQCMirrorSheets_(ss, sourceName, record);
   const pending = ss.getSheetByName(sourceName + QC_PENDING_SUFFIX);
-  const legacy = ss.getSheetByName(sourceName);
-  const sourceSheet = pending && pending.getLastRow() > 1 ? pending : legacy;
+  // Reviews move rows only from the current Pending mirror. Legacy base
+  // sheets are intentionally excluded from the live workflow.
+  const sourceSheet = pending;
   const reviewedSheet = mirrors.reviewed;
   normalizeQCReviewedSheet_(ss, sourceName, reviewedSheet, record);
   const reviewKey = String(payload && payload.reviewKey || "").trim();
@@ -1836,12 +1839,9 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readScreenReports_(ss, requestedDate) })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle getDailyReportData action (outputdiary sheet tab)
+    // Handle getDailyReportData action (current outputdiary_Pending tab only)
     if (action === "getDailyReportData") {
-      // New submissions are stored in outputdiary_Pending. Keep the legacy
-      // tab as a fallback so records written before the migration remain visible.
       let prodSheet = ss.getSheetByName("outputdiary" + QC_PENDING_SUFFIX);
-      if (!prodSheet || prodSheet.getLastRow() <= 1) prodSheet = ss.getSheetByName("outputdiary");
       if (!prodSheet) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -1893,7 +1893,7 @@ function doGet(e) {
     if (action === "getParameterChecklistData") {
       const requestedType = String((e && e.parameter && e.parameter.type) || "full").toLowerCase() === "water" ? "water" : "full";
       const checklistName = requestedType === "water" ? WATER_PARAMETER_CHECKLIST_SHEET_NAME : PARAMETER_CHECKLIST_SHEET_NAME;
-      const checklistSheet = ss.getSheetByName(checklistName + QC_PENDING_SUFFIX) || ss.getSheetByName(checklistName);
+      const checklistSheet = ss.getSheetByName(checklistName + QC_PENDING_SUFFIX);
       if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
@@ -1928,7 +1928,7 @@ function doGet(e) {
 
     // Handle equipment checklist history and create its sheet on first access
     if (action === "getEquipmentChecklistData") {
-      const checklistSheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX) || ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME);
+      const checklistSheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
       if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
