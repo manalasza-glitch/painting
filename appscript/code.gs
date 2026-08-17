@@ -248,7 +248,7 @@ function readReworkReports_(ss, requestedDate, suffix) {
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const recent = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS);
   const values = recent.values;
-  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(String);
+  const headers = sheet.getRange(1, 1, 1, Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()))).getDisplayValues()[0].map(String);
   const data = values.map(r => ({
     timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true), date: formatDateStr(qcCell_(r, headers, "Date", 1), false), shift: String(qcCell_(r, headers, "Shift", 2) || ""),
     recorder: String(qcCell_(r, headers, "Recorder", 3) || ""), checker: String(qcCell_(r, headers, "Checker", 4) || ""), downtimeBurner: Number(qcCell_(r, headers, "Downtime_Burner", 5)) || 0,
@@ -327,7 +327,7 @@ function readScreenReports_(ss, requestedDate, suffix) {
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const recent = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS);
   const values = recent.values;
-  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(String);
+  const headers = sheet.getRange(1, 1, 1, Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()))).getDisplayValues()[0].map(String);
   const data = values.map(r => ({
     timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true), date: formatDateStr(qcCell_(r, headers, "Date", 1), false), shift: String(qcCell_(r, headers, "Shift", 2) || ""),
     recorder: String(qcCell_(r, headers, "Recorder", 3) || ""), checker: String(qcCell_(r, headers, "Checker", 4) || ""), downtimeBurner: Number(qcCell_(r, headers, "Downtime_Burner", 5)) || 0,
@@ -2072,7 +2072,7 @@ function doGetJson_(e) {
 
       const recent = readRecentDataRows_(prodSheet, REPORT_READ_MAX_ROWS);
       const values = recent.values;
-      const headers = prodSheet.getRange(1, 1, 1, Math.max(1, prodSheet.getLastColumn())).getDisplayValues()[0].map(String);
+      const headers = prodSheet.getRange(1, 1, 1, Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, prodSheet.getLastColumn()))).getDisplayValues()[0].map(String);
       if (!values || values.length === 0) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -2127,7 +2127,7 @@ function doGetJson_(e) {
 
       const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
       const values = recent.values;
-      const headers = checklistSheet.getRange(1, 1, 1, Math.max(1, checklistSheet.getLastColumn())).getDisplayValues()[0].map(String);
+      const headers = checklistSheet.getRange(1, 1, 1, Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, checklistSheet.getLastColumn()))).getDisplayValues()[0].map(String);
       const data = values.map((r, i) => ({
         rowIndex: recent.firstRow + i,
         timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true),
@@ -2163,7 +2163,7 @@ function doGetJson_(e) {
 
       const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
       const values = recent.values;
-      const headers = checklistSheet.getRange(1, 1, 1, Math.max(1, checklistSheet.getLastColumn())).getDisplayValues()[0].map(String);
+      const headers = checklistSheet.getRange(1, 1, 1, Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, checklistSheet.getLastColumn()))).getDisplayValues()[0].map(String);
       const data = values.map((r, i) => ({
         rowIndex: recent.firstRow + i,
         timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true),
