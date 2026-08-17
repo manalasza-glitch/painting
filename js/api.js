@@ -139,6 +139,17 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
     const timeoutMs = Math.max(5000, Number(retryOptions.timeoutMs) || 12000);
     let lastError = null;
 
+    // Use the tested Apps Script JSONP path first in a browser. It follows
+    // the /exec redirect without waiting for the stale redirect that makes a
+    // normal fetch hang or return an HTML 404 page.
+    if (retryOptions.preferJsonp !== false && typeof document !== "undefined" && document.head) {
+        try {
+            return await fetchAppsScriptJsonp(url, operation, retryOptions.jsonpTimeoutMs || timeoutMs);
+        } catch (jsonpError) {
+            lastError = jsonpError || lastError;
+        }
+    }
+
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
         const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
         const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
@@ -163,7 +174,7 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
         }
     }
 
-    if (retryOptions.allowJsonp !== false) {
+    if (retryOptions.allowJsonp !== false && retryOptions.preferJsonp === false) {
         try {
             return await fetchAppsScriptJsonp(url, operation, retryOptions.jsonpTimeoutMs || timeoutMs);
         } catch (jsonpError) {
