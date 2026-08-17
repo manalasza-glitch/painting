@@ -429,23 +429,35 @@
                 background: rgba(26, 126, 232, .18);
             }
             .mobile-qc-review-submenu {
+                position: absolute;
+                left: 50%;
+                bottom: calc(100% + 8px);
+                z-index: 1120;
                 display: flex;
                 gap: 8px;
-                width: 100%;
+                width: max-content;
+                max-width: calc(100vw - 24px);
                 overflow-x: auto;
-                padding: 5px 10px 7px;
-                background: #071322;
+                padding: 8px;
+                border: 1px solid rgba(56, 189, 248, .35);
+                border-radius: 14px;
+                background: rgba(8, 19, 42, .98);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
                 -webkit-overflow-scrolling: touch;
                 max-height: 0;
                 opacity: 0;
                 overflow-y: hidden;
                 pointer-events: none;
-                transition: max-height .22s ease, opacity .18s ease;
+                transform: translate(-50%, 8px);
+                transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
             }
             .mobile-qc-review-submenu.is-open {
                 max-height: 54px;
                 opacity: 1;
                 pointer-events: auto;
+                transform: translate(-50%, 0);
             }
             .mobile-qc-review-submenu button {
                 flex: 0 0 auto;
