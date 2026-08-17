@@ -429,9 +429,9 @@
                 background: rgba(26, 126, 232, .18);
             }
             .mobile-qc-review-submenu {
-                position: absolute;
+                position: fixed;
                 left: 50%;
-                bottom: calc(100% + 8px);
+                bottom: calc(4.2rem + env(safe-area-inset-bottom));
                 z-index: 1120;
                 display: flex;
                 gap: 8px;
