@@ -17,6 +17,9 @@ const QC_PENDING_SUFFIX = "_Pending";
 const QC_REVIEWED_SUFFIX = "_Reviewed";
 const QC_MIGRATION_SOURCES = ["ParameterChecklist", "WaterParameterChecklist", "EquipmentChecklist", "SCREEN", "REWORK", "outputdiary"];
 const REPORT_READ_MAX_ROWS = 5000;
+// Recovered tabs can contain stray formatted columns. Keep history reads
+// bounded so one malformed tab cannot make every QC request time out.
+const REPORT_READ_MAX_COLUMNS = 64;
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
@@ -151,7 +154,7 @@ function hasDailyReportSubmission(sheet, submissionId, idColumn) {
 function readRecentDataRows_(sheet, maxRows) {
   if (!sheet || sheet.getLastRow() <= 1) return { values: [], firstRow: 2 };
   const lastRow = sheet.getLastRow();
-  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const lastColumn = Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()));
   const rowCount = Math.min(lastRow - 1, Number(maxRows) || REPORT_READ_MAX_ROWS);
   const firstRow = lastRow - rowCount + 1;
   return {
@@ -665,7 +668,8 @@ function qcProductionDataHeaders_() {
 
 function qcHeaderValues_(sheet) {
   if (!sheet || sheet.getLastColumn() <= 0) return [];
-  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0]
+  const lastColumn = Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()));
+  return sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
     .map(value => String(value || "").trim());
 }
 
@@ -1002,7 +1006,7 @@ function appendQCReviewRecord_(ss, payload) {
 }
 
 function getQCReviewColumnMap_(sheet, base) {
-  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const lastColumn = Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()));
   const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(value => String(value || "").trim());
   // Mirror tabs always store the four QC metadata fields in the final four
   // columns. Prefer this invariant over legacy header layouts created by
@@ -1059,7 +1063,8 @@ function readQCReviewRecords_(ss) {
     const firstRow = lastRow - rowCount + 1;
     // One range read per reviewed sheet is substantially faster than four
     // separate column reads through the Apps Script Spreadsheet service.
-    const rows = sheet.getRange(firstRow, 1, rowCount, Math.max(1, sheet.getLastColumn())).getDisplayValues();
+    const readColumnCount = Math.min(REPORT_READ_MAX_COLUMNS, Math.max(1, sheet.getLastColumn()));
+    const rows = sheet.getRange(firstRow, 1, rowCount, readColumnCount).getDisplayValues();
     for (let i = 0; i < rowCount; i++) {
       const row = rows[i] || [];
       const reviewKey = String(row[map.keyIndex] || "").trim();
@@ -1292,7 +1297,10 @@ function doPost(e) {
     // Handle getUsers
     if (action === "getUsers") {
       let uSheet = getOrCreateUsersSheet(ss);
-      const values = uSheet.getDataRange().getValues();
+      // Users is a nine-column table. Avoid getDataRange(), which can include
+      // a large formatted area and stall the dashboard's initial load.
+      const userLastRow = Math.max(1, Math.min(uSheet.getLastRow(), 5000));
+      const values = uSheet.getRange(1, 1, userLastRow, 9).getValues();
       if (!values || values.length <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", users: [] })).setMimeType(ContentService.MimeType.JSON);
       }

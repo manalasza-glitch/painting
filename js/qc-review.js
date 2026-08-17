@@ -326,11 +326,12 @@
         window.qcReviewDataScope = state.view;
         setReviewSubmenuOpen(true);
         if (typeof switchTab === 'function') switchTab('qc-history-tab', element);
-        // Pending rows already come from *_Pending sheets, so do not make the
-        // slow six-sheet Reviewed read block the actionable queue. Load review
-        // metadata only when the user opens the Reviewed view.
-        if (state.view === 'reviewed') loadReviewStatuses().then(enhanceAll);
-        else enhanceAll();
+        // The Reviewed tables already come from *_Reviewed sheets. A second
+        // getQCReviewData request reads all six reviewed tabs again and can
+        // make Apps Script serialize/timeout the history requests, leaving a
+        // false empty page. Render the selected view immediately; reviewed
+        // rows use the approved badge unless a local status is already known.
+        enhanceAll();
         return false;
     }
 
