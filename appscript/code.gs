@@ -160,6 +160,25 @@ function readRecentDataRows_(sheet, maxRows) {
   };
 }
 
+function qcReadSuffix_(e) {
+  const scope = String(e && e.parameter && e.parameter.scope || "").trim().toLowerCase();
+  return scope === "reviewed" ? QC_REVIEWED_SUFFIX : QC_PENDING_SUFFIX;
+}
+
+function qcHeaderColumn_(headers, names, fallback) {
+  const list = Array.isArray(names) ? names : [names];
+  for (let i = 0; i < list.length; i++) {
+    const index = headers.indexOf(list[i]);
+    if (index >= 0) return index;
+  }
+  return Number.isFinite(fallback) ? fallback : -1;
+}
+
+function qcCell_(row, headers, names, fallback) {
+  const index = qcHeaderColumn_(headers, names, fallback);
+  return index >= 0 && index < row.length ? row[index] : "";
+}
+
 // REWORK intentionally uses its own sheet, while keeping the same row shape
 // as outputdiary so the production form can be reused without mixing data.
 function reworkReportHeaders_() {
@@ -221,20 +240,22 @@ function appendReworkReport_(ss, payload) {
   return { duplicate: false, rows: records.length };
 }
 
-function readReworkReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(REWORK_SHEET_NAME + QC_PENDING_SUFFIX);
+function readReworkReports_(ss, requestedDate, suffix) {
+  const sheet = ss.getSheetByName(REWORK_SHEET_NAME + (suffix || QC_PENDING_SUFFIX));
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  const values = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS).values;
+  const recent = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS);
+  const values = recent.values;
+  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(String);
   const data = values.map(r => ({
-    timestamp: formatDateStr(r[0], true), date: formatDateStr(r[1], false), shift: String(r[2] || ""),
-    recorder: String(r[3] || ""), checker: String(r[4] || ""), downtimeBurner: Number(r[5]) || 0,
-    downtimeWash: Number(r[6]) || 0, downtimeOvenEtc: Number(r[7]) || 0, downtimeNote: String(r[8] || ""),
-    model: String(r[9] || ""), timeSlot: String(r[10] || ""), prodQty: Number(r[11]) || 0,
-    dent: Number(r[12]) || 0, colorDrop: Number(r[13]) || 0, thinPaint: Number(r[14]) || 0,
-    thickPaint: Number(r[15]) || 0, waterStain: Number(r[16]) || 0, otherDefect: Number(r[17]) || 0,
-    totalDefect: Number(r[18]) || 0, submissionId: String(r[19] || ""), color: String(r[20] || ""),
-    productGroup: String(r[21] || ""), partCategory: String(r[22] || ""), colorCode: String(r[23] || ""),
-    dust: Number(r[24]) || 0, oil: Number(r[25]) || 0, rust: Number(r[26]) || 0
+    timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true), date: formatDateStr(qcCell_(r, headers, "Date", 1), false), shift: String(qcCell_(r, headers, "Shift", 2) || ""),
+    recorder: String(qcCell_(r, headers, "Recorder", 3) || ""), checker: String(qcCell_(r, headers, "Checker", 4) || ""), downtimeBurner: Number(qcCell_(r, headers, "Downtime_Burner", 5)) || 0,
+    downtimeWash: Number(qcCell_(r, headers, "Downtime_Wash", 6)) || 0, downtimeOvenEtc: Number(qcCell_(r, headers, "Downtime_Oven_Etc", 7)) || 0, downtimeNote: String(qcCell_(r, headers, "Downtime_Note", 8) || ""),
+    model: String(qcCell_(r, headers, "Model", 9) || ""), timeSlot: String(qcCell_(r, headers, "TimeSlot", 10) || ""), prodQty: Number(qcCell_(r, headers, "ProdQty", 11)) || 0,
+    dent: Number(qcCell_(r, headers, "Dent", 12)) || 0, colorDrop: Number(qcCell_(r, headers, "ColorDrop", 13)) || 0, thinPaint: Number(qcCell_(r, headers, "ThinPaint", 14)) || 0,
+    thickPaint: Number(qcCell_(r, headers, "ThickPaint", 15)) || 0, waterStain: Number(qcCell_(r, headers, "WaterStain", 16)) || 0, otherDefect: Number(qcCell_(r, headers, "OtherDefect", 17)) || 0,
+    totalDefect: Number(qcCell_(r, headers, "TotalDefect", 18)) || 0, submissionId: String(qcCell_(r, headers, DAILY_REPORT_ID_HEADER, 19) || ""), color: String(qcCell_(r, headers, DAILY_REPORT_COLOR_HEADER, 20) || ""),
+    productGroup: String(qcCell_(r, headers, DAILY_REPORT_PRODUCT_GROUP_HEADER, 21) || ""), partCategory: String(qcCell_(r, headers, DAILY_REPORT_PART_CATEGORY_HEADER, 22) || ""), colorCode: String(qcCell_(r, headers, DAILY_REPORT_COLOR_CODE_HEADER, 23) || ""),
+    dust: Number(qcCell_(r, headers, DAILY_REPORT_DUST_HEADER, 24)) || 0, oil: Number(qcCell_(r, headers, DAILY_REPORT_OIL_HEADER, 25)) || 0, rust: Number(qcCell_(r, headers, DAILY_REPORT_RUST_HEADER, 26)) || 0
   }));
   const filter = String(requestedDate || "").trim();
   return filter ? data.filter(r => String(r.date || "").substring(0, 10) === filter) : data;
@@ -298,20 +319,22 @@ function appendScreenReport_(ss, payload) {
   return { duplicate: false, rows: records.length };
 }
 
-function readScreenReports_(ss, requestedDate) {
-  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME + QC_PENDING_SUFFIX);
+function readScreenReports_(ss, requestedDate, suffix) {
+  const sheet = ss.getSheetByName(SCREEN_SHEET_NAME + (suffix || QC_PENDING_SUFFIX));
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  const values = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS).values;
+  const recent = readRecentDataRows_(sheet, REPORT_READ_MAX_ROWS);
+  const values = recent.values;
+  const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getDisplayValues()[0].map(String);
   const data = values.map(r => ({
-    timestamp: formatDateStr(r[0], true), date: formatDateStr(r[1], false), shift: String(r[2] || ""),
-    recorder: String(r[3] || ""), checker: String(r[4] || ""), downtimeBurner: Number(r[5]) || 0,
-    downtimeWash: Number(r[6]) || 0, downtimeOvenEtc: Number(r[7]) || 0, downtimeNote: String(r[8] || ""),
-    model: String(r[9] || ""), timeSlot: String(r[10] || ""), prodQty: Number(r[11]) || 0,
-    dent: Number(r[12]) || 0, colorDrop: Number(r[13]) || 0, thinPaint: Number(r[14]) || 0,
-    thickPaint: Number(r[15]) || 0, waterStain: Number(r[16]) || 0, otherDefect: Number(r[17]) || 0,
-    totalDefect: Number(r[18]) || 0, submissionId: String(r[19] || ""), color: String(r[20] || ""),
-    productGroup: String(r[21] || ""), partCategory: String(r[22] || ""), colorCode: String(r[23] || ""),
-    dust: Number(r[24]) || 0, oil: Number(r[25]) || 0, rust: Number(r[26]) || 0
+    timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true), date: formatDateStr(qcCell_(r, headers, "Date", 1), false), shift: String(qcCell_(r, headers, "Shift", 2) || ""),
+    recorder: String(qcCell_(r, headers, "Recorder", 3) || ""), checker: String(qcCell_(r, headers, "Checker", 4) || ""), downtimeBurner: Number(qcCell_(r, headers, "Downtime_Burner", 5)) || 0,
+    downtimeWash: Number(qcCell_(r, headers, "Downtime_Wash", 6)) || 0, downtimeOvenEtc: Number(qcCell_(r, headers, "Downtime_Oven_Etc", 7)) || 0, downtimeNote: String(qcCell_(r, headers, "Downtime_Note", 8) || ""),
+    model: String(qcCell_(r, headers, "Model", 9) || ""), timeSlot: String(qcCell_(r, headers, "TimeSlot", 10) || ""), prodQty: Number(qcCell_(r, headers, "ProdQty", 11)) || 0,
+    dent: Number(qcCell_(r, headers, "Dent", 12)) || 0, colorDrop: Number(qcCell_(r, headers, "ColorDrop", 13)) || 0, thinPaint: Number(qcCell_(r, headers, "ThinPaint", 14)) || 0,
+    thickPaint: Number(qcCell_(r, headers, "ThickPaint", 15)) || 0, waterStain: Number(qcCell_(r, headers, "WaterStain", 16)) || 0, otherDefect: Number(qcCell_(r, headers, "OtherDefect", 17)) || 0,
+    totalDefect: Number(qcCell_(r, headers, "TotalDefect", 18)) || 0, submissionId: String(qcCell_(r, headers, DAILY_REPORT_ID_HEADER, 19) || ""), color: String(qcCell_(r, headers, DAILY_REPORT_COLOR_HEADER, 20) || ""),
+    productGroup: String(qcCell_(r, headers, DAILY_REPORT_PRODUCT_GROUP_HEADER, 21) || ""), partCategory: String(qcCell_(r, headers, DAILY_REPORT_PART_CATEGORY_HEADER, 22) || ""), colorCode: String(qcCell_(r, headers, DAILY_REPORT_COLOR_CODE_HEADER, 23) || ""),
+    dust: Number(qcCell_(r, headers, DAILY_REPORT_DUST_HEADER, 24)) || 0, oil: Number(qcCell_(r, headers, DAILY_REPORT_OIL_HEADER, 25)) || 0, rust: Number(qcCell_(r, headers, DAILY_REPORT_RUST_HEADER, 26)) || 0
   }));
   const filter = String(requestedDate || "").trim();
   return filter ? data.filter(r => String(r.date || "").substring(0, 10) === filter) : data;
@@ -463,6 +486,167 @@ function migrateExistingQCData_(ss) {
   });
   SpreadsheetApp.flush();
   return moved;
+}
+
+// Build a stable identity for recovery/deduplication.  QCReviewKey is the
+// strongest identity; the other forms use SubmissionId or their visible
+// business fields as a deterministic fallback.
+function qcRecoveryNormalize_(value) {
+  return String(value == null ? "" : value)
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function qcRecoveryHeaderIndex_(headers, names) {
+  for (let i = 0; i < names.length; i++) {
+    const index = headers.indexOf(names[i]);
+    if (index >= 0) return index;
+  }
+  return -1;
+}
+
+function qcRecoveryKey_(sourceName, row, headers) {
+  const values = Array.isArray(row) ? row : [];
+  const headerValues = Array.isArray(headers) ? headers : [];
+  const sourcePrefix = String(sourceName || "").trim() + "|";
+  const reviewIndex = headerValues.indexOf("QCReviewKey");
+  const reviewValue = reviewIndex >= 0 ? String(values[reviewIndex] || "").trim() : "";
+  if (reviewValue.indexOf(sourcePrefix) === 0) return reviewValue;
+  const embeddedKey = values.find(value => String(value || "").trim().indexOf(sourcePrefix) === 0);
+  if (embeddedKey) return String(embeddedKey).trim();
+
+  const submissionIndex = headerValues.indexOf("SubmissionId");
+  const submissionId = submissionIndex >= 0 ? qcRecoveryNormalize_(values[submissionIndex]) : "";
+  if (submissionId) return sourcePrefix + "submissionid|" + submissionId;
+
+  const identityNames = ["Date", "Model", "TimeSlot", "Color", "ProdQty", "TotalDefect"];
+  const identityIndexes = identityNames.map(name => headerValues.indexOf(name));
+  if (identityIndexes.every(index => index >= 0)) {
+    const identity = identityIndexes.map(index => qcRecoveryNormalize_(values[index])).join("|");
+    if (identity.replace(/\|/g, "")) return sourcePrefix + identity;
+  }
+
+  const compact = values.map(qcRecoveryNormalize_).join("|");
+  return compact.replace(/\|/g, "") ? sourcePrefix + "row|" + compact : "";
+}
+
+function qcRecoveryMetadata_(sourceName, row, headers) {
+  const metadata = qcMetadataFromLegacyRow_(row, headers, sourceName);
+  const key = qcRecoveryKey_(sourceName, row, headers) || metadata.reviewKey;
+  const status = String(metadata.status || "").trim().toLowerCase();
+  let statusIndex = Array.isArray(headers) ? headers.indexOf("QCStatus") : -1;
+  const keyIndex = Array.isArray(headers) ? headers.indexOf("QCReviewKey") : -1;
+  if (keyIndex >= 3) statusIndex = keyIndex - 3;
+  return {
+    reviewKey: key,
+    reviewed: !!key && ["approved", "rejected"].indexOf(status) >= 0,
+    status: status === "rejected" ? "rejected" : "approved",
+    reviewedAt: metadata.reviewedAt || new Date(),
+    reviewer: metadata.reviewer || "Historical recovery",
+    statusIndex: statusIndex
+  };
+}
+
+function qcRecoveryMapRow_(sourceName, row, sourceHeaders, dataHeaders, metadata) {
+  const values = Array.isArray(row) ? row : [];
+  const source = Array.isArray(sourceHeaders) ? sourceHeaders : [];
+  const target = Array.isArray(dataHeaders) ? dataHeaders : [];
+  const result = new Array(target.length).fill("");
+  const metadataStart = metadata && metadata.statusIndex >= 0 ? metadata.statusIndex : source.length;
+  const sourceHasNamedColumns = source.some(name => target.indexOf(name) >= 0);
+  if (sourceHasNamedColumns) {
+    target.forEach((name, targetIndex) => {
+      const sourceIndex = source.indexOf(name);
+      if (sourceIndex >= 0 && sourceIndex < values.length && sourceIndex < metadataStart) result[targetIndex] = values[sourceIndex];
+    });
+  } else {
+    for (let i = 0; i < Math.min(target.length, metadataStart, values.length); i++) result[i] = values[i];
+  }
+
+  const ref = qcKeyRecordRef_(sourceName, metadata && metadata.reviewKey);
+  const setIfEmpty = (name, value) => {
+    const index = target.indexOf(name);
+    if (index >= 0 && (result[index] === "" || result[index] == null) && value !== undefined) result[index] = value;
+  };
+  setIfEmpty("Date", ref.date);
+  setIfEmpty("Model", ref.model);
+  setIfEmpty("TimeSlot", ref.timeSlot);
+  setIfEmpty("Color", ref.color);
+  setIfEmpty("ProdQty", ref.prodQty);
+  setIfEmpty("TotalDefect", ref.totalDefect);
+  while (result.length < target.length) result.push("");
+  return result.slice(0, target.length);
+}
+
+function recoverHistoricalQCData_(ss, sourceSpreadsheetId, dryRun) {
+  const sourceId = String(sourceSpreadsheetId || "").trim();
+  if (!sourceId) throw new Error("ต้องระบุ sourceSpreadsheetId ของสำเนากู้คืน");
+  const sourceSs = SpreadsheetApp.openById(sourceId);
+  const report = [];
+
+  QC_MIGRATION_SOURCES.forEach(sourceName => {
+    const mirrors = ensureQCMirrorSheets_(ss, sourceName, []);
+    const dataHeaders = qcStripTrailingMetadata_(qcHeaderValues_(mirrors.pending));
+    const existingKeys = {};
+    [mirrors.pending, mirrors.reviewed].forEach(sheet => {
+      if (!sheet || sheet.getLastRow() <= 1) return;
+      const headers = qcHeaderValues_(sheet);
+      const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(1, sheet.getLastColumn())).getValues();
+      rows.forEach(row => {
+        const key = qcRecoveryKey_(sourceName, row, headers);
+        if (key) existingKeys[key] = true;
+      });
+    });
+
+    const sourceCandidates = [sourceName, sourceName + QC_PENDING_SUFFIX, sourceName + QC_REVIEWED_SUFFIX];
+    let sourceSheet = null;
+    for (let i = 0; i < sourceCandidates.length; i++) {
+      const candidate = sourceSs.getSheetByName(sourceCandidates[i]);
+      if (candidate && candidate.getLastRow() > 1) { sourceSheet = candidate; break; }
+    }
+    if (!sourceSheet) {
+      report.push({ source: sourceName, addedPending: 0, addedReviewed: 0, skippedExisting: 0, skippedBlank: 0, sourceRows: 0 });
+      return;
+    }
+
+    const sourceHeaders = qcHeaderValues_(sourceSheet);
+    const sourceRows = sourceSheet.getRange(2, 1, sourceSheet.getLastRow() - 1, Math.max(1, sourceSheet.getLastColumn())).getValues();
+    const pendingRows = [];
+    const reviewedRows = [];
+    let skippedExisting = 0;
+    let skippedBlank = 0;
+    sourceRows.forEach(row => {
+      if (!row.some(value => String(value == null ? "" : value).trim() !== "")) { skippedBlank++; return; }
+      const metadata = qcRecoveryMetadata_(sourceName, row, sourceHeaders);
+      if (!metadata.reviewKey) { skippedBlank++; return; }
+      if (existingKeys[metadata.reviewKey]) { skippedExisting++; return; }
+      const mapped = qcRecoveryMapRow_(sourceName, row, sourceHeaders, dataHeaders, metadata);
+      if (!mapped.some(value => String(value == null ? "" : value).trim() !== "")) { skippedBlank++; return; }
+      if (metadata.reviewed) {
+        reviewedRows.push(mapped.concat([metadata.status, metadata.reviewedAt, metadata.reviewer, metadata.reviewKey]));
+      } else {
+        pendingRows.push(mapped);
+      }
+      existingKeys[metadata.reviewKey] = true;
+    });
+
+    if (!dryRun) {
+      if (pendingRows.length) mirrors.pending.getRange(mirrors.pending.getLastRow() + 1, 1, pendingRows.length, dataHeaders.length).setValues(pendingRows);
+      if (reviewedRows.length) mirrors.reviewed.getRange(mirrors.reviewed.getLastRow() + 1, 1, reviewedRows.length, dataHeaders.length + qcMetadataNames_().length).setValues(reviewedRows);
+    }
+    report.push({
+      source: sourceName,
+      sourceSheet: sourceSheet.getName(),
+      sourceRows: sourceRows.length,
+      addedPending: pendingRows.length,
+      addedReviewed: reviewedRows.length,
+      skippedExisting: skippedExisting,
+      skippedBlank: skippedBlank
+    });
+  });
+  if (!dryRun) SpreadsheetApp.flush();
+  return report;
 }
 
 function qcMetadataNames_() {
@@ -1483,7 +1667,22 @@ function getOrCreateUsersSheet(ss) {
   return uSheet;
 }
 
+// Keep the normal JSON response for fetch() callers, but also support a safe
+// JSONP callback. Apps Script /exec uses a short-lived redirect; a browser
+// script request can follow that redirect reliably when fetch() receives a
+// stale googleusercontent.com 404.
 function doGet(e) {
+  const result = doGetJson_(e);
+  const callback = String(e && e.parameter && (e.parameter.prefix || e.parameter.callback) || "").trim();
+  if (callback && /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(callback) && result && typeof result.getContent === "function") {
+    return ContentService
+      .createTextOutput(callback + "(" + result.getContent() + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return result;
+}
+
+function doGetJson_(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const action = (e && e.parameter && e.parameter.action) || "";
@@ -1496,6 +1695,18 @@ function doGet(e) {
     if (action === "repairQCReviewedSheets") {
       return ContentService.createTextOutput(JSON.stringify({
         status: "success", action: action, repaired: repairQCReviewedSheets_(ss)
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "recoverHistoricalQCData") {
+      const sourceId = String((e && e.parameter && e.parameter.sourceSpreadsheetId) || "").trim();
+      const dryRun = String((e && e.parameter && e.parameter.dryRun) || "true").toLowerCase() !== "false";
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        action: action,
+        dryRun: dryRun,
+        sourceSpreadsheetId: sourceId,
+        report: recoverHistoricalQCData_(ss, sourceId, dryRun)
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -1828,57 +2039,61 @@ function doGet(e) {
     // without touching outputdiary.
     if (action === "getReworkReportData") {
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
-      ensureReworkReportSheet_(ss);
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readReworkReports_(ss, requestedDate) })).setMimeType(ContentService.MimeType.JSON);
+      const suffix = qcReadSuffix_(e);
+      if (suffix === QC_PENDING_SUFFIX) ensureReworkReportSheet_(ss);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readReworkReports_(ss, requestedDate, suffix) })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle SCREEN history. Opening the menu creates SCREEN on demand.
     if (action === "getScreenReportData") {
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
-      ensureScreenReportSheet_(ss);
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readScreenReports_(ss, requestedDate) })).setMimeType(ContentService.MimeType.JSON);
+      const suffix = qcReadSuffix_(e);
+      if (suffix === QC_PENDING_SUFFIX) ensureScreenReportSheet_(ss);
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: readScreenReports_(ss, requestedDate, suffix) })).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getDailyReportData action (current outputdiary_Pending tab only)
     if (action === "getDailyReportData") {
-      let prodSheet = ss.getSheetByName("outputdiary" + QC_PENDING_SUFFIX);
+      let prodSheet = ss.getSheetByName("outputdiary" + qcReadSuffix_(e));
       if (!prodSheet) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      const values = readRecentDataRows_(prodSheet, REPORT_READ_MAX_ROWS).values;
+      const recent = readRecentDataRows_(prodSheet, REPORT_READ_MAX_ROWS);
+      const values = recent.values;
+      const headers = prodSheet.getRange(1, 1, 1, Math.max(1, prodSheet.getLastColumn())).getDisplayValues()[0].map(String);
       if (!values || values.length === 0) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       }
 
       const data = values.map(r => ({
-        timestamp: formatDateStr(r[0], true),
-        date: formatDateStr(r[1], false),
-        shift: String(r[2] || ""),
-        recorder: String(r[3] || ""),
-        checker: String(r[4] || ""),
-        downtimeBurner: Number(r[5]) || 0,
-        downtimeWash: Number(r[6]) || 0,
-        downtimeOvenEtc: Number(r[7]) || 0,
-        downtimeNote: String(r[8] || ""),
-        model: String(r[9] || ""),
-        timeSlot: String(r[10] || ""),
-        prodQty: Number(r[11]) || 0,
-        dent: Number(r[12]) || 0,
-        colorDrop: Number(r[13]) || 0,
-        thinPaint: Number(r[14]) || 0,
-        thickPaint: Number(r[15]) || 0,
-        waterStain: Number(r[16]) || 0,
-        otherDefect: Number(r[17]) || 0,
-        totalDefect: Number(r[18]) || 0,
-        submissionId: String(r[19] || ""),
-        color: String(r[20] || ""),
-        productGroup: String(r[21] || ""),
-        partCategory: String(r[22] || ""),
-        colorCode: String(r[23] || ""),
-        dust: Number(r[24]) || 0,
-        oil: Number(r[25]) || 0,
-        rust: Number(r[26]) || 0
+        timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true),
+        date: formatDateStr(qcCell_(r, headers, "Date", 1), false),
+        shift: String(qcCell_(r, headers, "Shift", 2) || ""),
+        recorder: String(qcCell_(r, headers, "Recorder", 3) || ""),
+        checker: String(qcCell_(r, headers, "Checker", 4) || ""),
+        downtimeBurner: Number(qcCell_(r, headers, "Downtime_Burner", 5)) || 0,
+        downtimeWash: Number(qcCell_(r, headers, "Downtime_Wash", 6)) || 0,
+        downtimeOvenEtc: Number(qcCell_(r, headers, "Downtime_Oven_Etc", 7)) || 0,
+        downtimeNote: String(qcCell_(r, headers, "Downtime_Note", 8) || ""),
+        model: String(qcCell_(r, headers, "Model", 9) || ""),
+        timeSlot: String(qcCell_(r, headers, "TimeSlot", 10) || ""),
+        prodQty: Number(qcCell_(r, headers, "ProdQty", 11)) || 0,
+        dent: Number(qcCell_(r, headers, "Dent", 12)) || 0,
+        colorDrop: Number(qcCell_(r, headers, "ColorDrop", 13)) || 0,
+        thinPaint: Number(qcCell_(r, headers, "ThinPaint", 14)) || 0,
+        thickPaint: Number(qcCell_(r, headers, "ThickPaint", 15)) || 0,
+        waterStain: Number(qcCell_(r, headers, "WaterStain", 16)) || 0,
+        otherDefect: Number(qcCell_(r, headers, "OtherDefect", 17)) || 0,
+        totalDefect: Number(qcCell_(r, headers, "TotalDefect", 18)) || 0,
+        submissionId: String(qcCell_(r, headers, DAILY_REPORT_ID_HEADER, 19) || ""),
+        color: String(qcCell_(r, headers, DAILY_REPORT_COLOR_HEADER, 20) || ""),
+        productGroup: String(qcCell_(r, headers, DAILY_REPORT_PRODUCT_GROUP_HEADER, 21) || ""),
+        partCategory: String(qcCell_(r, headers, DAILY_REPORT_PART_CATEGORY_HEADER, 22) || ""),
+        colorCode: String(qcCell_(r, headers, DAILY_REPORT_COLOR_CODE_HEADER, 23) || ""),
+        dust: Number(qcCell_(r, headers, DAILY_REPORT_DUST_HEADER, 24)) || 0,
+        oil: Number(qcCell_(r, headers, DAILY_REPORT_OIL_HEADER, 25)) || 0,
+        rust: Number(qcCell_(r, headers, DAILY_REPORT_RUST_HEADER, 26)) || 0
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
@@ -1893,7 +2108,7 @@ function doGet(e) {
     if (action === "getParameterChecklistData") {
       const requestedType = String((e && e.parameter && e.parameter.type) || "full").toLowerCase() === "water" ? "water" : "full";
       const checklistName = requestedType === "water" ? WATER_PARAMETER_CHECKLIST_SHEET_NAME : PARAMETER_CHECKLIST_SHEET_NAME;
-      const checklistSheet = ss.getSheetByName(checklistName + QC_PENDING_SUFFIX);
+      const checklistSheet = ss.getSheetByName(checklistName + qcReadSuffix_(e));
       if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
@@ -1901,22 +2116,23 @@ function doGet(e) {
 
       const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
       const values = recent.values;
+      const headers = checklistSheet.getRange(1, 1, 1, Math.max(1, checklistSheet.getLastColumn())).getDisplayValues()[0].map(String);
       const data = values.map((r, i) => ({
         rowIndex: recent.firstRow + i,
-        timestamp: formatDateStr(r[0], true),
-        date: formatDateStr(r[1], false),
-        operator: String(r[2] || ""),
-        teamLeader: String(r[3] || ""),
-        itemNo: Number(r[4]) || 0,
-        process: String(r[5] || ""),
-        checkItem: String(r[6] || ""),
-        standard: String(r[7] || ""),
-        actualValue: String(r[8] || ""),
-        status: String(r[9] || ""),
-        note: String(r[10] || ""),
-        submissionId: String(r[11] || ""),
-        checklistType: String(r[12] || requestedType),
-        time: requestedType === "water" ? String(r[13] || "") : ""
+        timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true),
+        date: formatDateStr(qcCell_(r, headers, "Date", 1), false),
+        operator: String(qcCell_(r, headers, "Operator", 2) || ""),
+        teamLeader: String(qcCell_(r, headers, "TeamLeader", 3) || ""),
+        itemNo: Number(qcCell_(r, headers, "ItemNo", 4)) || 0,
+        process: String(qcCell_(r, headers, "Process", 5) || ""),
+        checkItem: String(qcCell_(r, headers, "CheckItem", 6) || ""),
+        standard: String(qcCell_(r, headers, "Standard", 7) || ""),
+        actualValue: String(qcCell_(r, headers, "ActualValue", 8) || ""),
+        status: String(qcCell_(r, headers, "Status", 9) || ""),
+        note: String(qcCell_(r, headers, "Note", 10) || ""),
+        submissionId: String(qcCell_(r, headers, PARAMETER_CHECKLIST_ID_HEADER, 11) || ""),
+        checklistType: String(qcCell_(r, headers, "ChecklistType", 12) || requestedType),
+        time: requestedType === "water" ? String(qcCell_(r, headers, "Time", 13) || "") : ""
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
@@ -1928,7 +2144,7 @@ function doGet(e) {
 
     // Handle equipment checklist history and create its sheet on first access
     if (action === "getEquipmentChecklistData") {
-      const checklistSheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + QC_PENDING_SUFFIX);
+      const checklistSheet = ss.getSheetByName(EQUIPMENT_CHECKLIST_SHEET_NAME + qcReadSuffix_(e));
       if (!checklistSheet) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
       if (checklistSheet.getLastRow() <= 1) {
         return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] })).setMimeType(ContentService.MimeType.JSON);
@@ -1936,20 +2152,21 @@ function doGet(e) {
 
       const recent = readRecentDataRows_(checklistSheet, REPORT_READ_MAX_ROWS);
       const values = recent.values;
+      const headers = checklistSheet.getRange(1, 1, 1, Math.max(1, checklistSheet.getLastColumn())).getDisplayValues()[0].map(String);
       const data = values.map((r, i) => ({
         rowIndex: recent.firstRow + i,
-        timestamp: formatDateStr(r[0], true),
-        date: formatDateStr(r[1], false),
-        operator: String(r[2] || ""),
-        teamLeader: String(r[3] || ""),
-        itemNo: Number(r[4]) || 0,
-        checkItem: String(r[5] || ""),
-        method: String(r[6] || ""),
-        standard: String(r[7] || ""),
-        imageUrl: String(r[8] || ""),
-        status: String(r[9] || ""),
-        note: String(r[10] || ""),
-        submissionId: String(r[11] || "")
+        timestamp: formatDateStr(qcCell_(r, headers, "Timestamp", 0), true),
+        date: formatDateStr(qcCell_(r, headers, "Date", 1), false),
+        operator: String(qcCell_(r, headers, "Operator", 2) || ""),
+        teamLeader: String(qcCell_(r, headers, "TeamLeader", 3) || ""),
+        itemNo: Number(qcCell_(r, headers, "ItemNo", 4)) || 0,
+        checkItem: String(qcCell_(r, headers, "CheckItem", 5) || ""),
+        method: String(qcCell_(r, headers, "Method", 6) || ""),
+        standard: String(qcCell_(r, headers, "Standard", 7) || ""),
+        imageUrl: String(qcCell_(r, headers, "ImageUrl", 8) || ""),
+        status: String(qcCell_(r, headers, "Status", 9) || ""),
+        note: String(qcCell_(r, headers, "Note", 10) || ""),
+        submissionId: String(qcCell_(r, headers, PARAMETER_CHECKLIST_ID_HEADER, 11) || "")
       }));
 
       const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
