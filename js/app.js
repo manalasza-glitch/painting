@@ -1408,13 +1408,21 @@ async function renderDailyReportCharts() {
     const range = getDashboardDateRange();
     const hasDateFilter = Boolean(range.start || range.end);
     const apiDateFilter = range.start && range.end && range.start === range.end ? range.start : "";
-    const data = await fetchDailyReportDataFromAPI(apiDateFilter);
+    // The dashboard must use QC-approved production rows.  Pending rows are
+    // intentionally excluded from production KPIs and the main stacked chart.
+    // Fetch the full reviewed history and apply the dashboard date range here
+    // so Inspection-only dates are not lost when outputdiary has no row for a
+    // selected day.
+    const data = await fetchDailyReportDataFromAPI("", { scope: "reviewed" });
+    const inspectionForRange = Array.isArray(inspectionRecords)
+        ? inspectionRecords.filter(record => dashboardRecordInDateRange(record, range))
+        : [];
 
     // Render this comparison independently of the production KPI/chart data;
     // it must still show Inspection-only days when outputdiary has no rows.
     renderInspectionVsOutputChart(data || [], inspectionRecords, range);
     
-    if (!data || data.length === 0) {
+    if ((!data || data.length === 0) && inspectionForRange.length === 0) {
         // Reset KPI Elements to 0
         const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
         const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
@@ -1438,10 +1446,13 @@ async function renderDailyReportCharts() {
         return;
     }
 
-    let filteredData = data;
+    let filteredData = Array.isArray(data) ? data : [];
     if (hasDateFilter) {
-        filteredData = data.filter(r => dashboardRecordInDateRange(r, range));
+        filteredData = filteredData.filter(r => dashboardRecordInDateRange(r, range));
     }
+
+    const inspectionRejectTotal = inspectionForRange.reduce((sum, record) =>
+        sum + qc7InspectionRejectTotal(record), 0);
 
     // 1. Calculate KPIs
     let totalProdQty = 0;
@@ -1460,6 +1471,12 @@ async function renderDailyReportCharts() {
             modelMap[mName] = (modelMap[mName] || 0) + pQty;
         }
     });
+
+    // Inspection records represent pieces rejected before the painting
+    // output stage. Count them as both production throughput and waste when
+    // presenting the combined dashboard totals.
+    totalProdQty += inspectionRejectTotal;
+    totalDefects += inspectionRejectTotal;
 
     const reportCount = filteredData.length;
     const defectRate = totalProdQty > 0 ? ((totalDefects / totalProdQty) * 100).toFixed(1) : 0;
@@ -1509,9 +1526,13 @@ async function renderDailyReportCharts() {
     const topModelNames = sortedModelNames.slice(0, 8);
     const hasMoreModels = sortedModelNames.length > 8;
 
+    const inspectionStackLabel = 'Inspection — คัดออกจากราว';
     const activeModels = [...topModelNames];
     if (hasMoreModels && !activeModels.includes('รุ่นอื่นๆ (Other)')) {
         activeModels.push('รุ่นอื่นๆ (Other)');
+    }
+    if (inspectionForRange.some(record => qc7InspectionRejectTotal(record) > 0)) {
+        activeModels.push(inspectionStackLabel);
     }
 
     const paletteColors = [
@@ -1534,6 +1555,8 @@ async function renderDailyReportCharts() {
 
     const dateGroupMap = {};
     const dateModelDefectMap = {};
+    const dateOutputDefectsMap = {};
+    const dateInspectionRejectMap = {};
     const dateDefectsMap = {};
     const dateTotalProdMap = {};
 
@@ -1554,6 +1577,8 @@ async function renderDailyReportCharts() {
             dateModelDefectMap[dStr] = {};
             activeModels.forEach(m => dateGroupMap[dStr][m] = 0);
             activeModels.forEach(m => dateModelDefectMap[dStr][m] = 0);
+            dateOutputDefectsMap[dStr] = 0;
+            dateInspectionRejectMap[dStr] = 0;
             dateDefectsMap[dStr] = 0;
             dateTotalProdMap[dStr] = 0;
         }
@@ -1563,12 +1588,38 @@ async function renderDailyReportCharts() {
 
         dateGroupMap[dStr][mName] = (dateGroupMap[dStr][mName] || 0) + pQty;
         dateModelDefectMap[dStr][mName] = (dateModelDefectMap[dStr][mName] || 0) + Math.min(dQty, pQty);
+        dateOutputDefectsMap[dStr] += dQty;
         dateDefectsMap[dStr] += dQty;
         dateTotalProdMap[dStr] += pQty;
     });
 
+    // Inspection rows do not contain a production model. They are added as a
+    // separate stack segment so the chart keeps the outputdiary model split
+    // while still including rack rejects in total production and waste.
+    inspectionForRange.forEach(record => {
+        const dStr = qc7RecordDate(record);
+        const rejectQty = qc7InspectionRejectTotal(record);
+        if (!dStr || rejectQty <= 0) return;
+        if (!dateGroupMap[dStr]) {
+            dateGroupMap[dStr] = {};
+            dateModelDefectMap[dStr] = {};
+            activeModels.forEach(m => dateGroupMap[dStr][m] = 0);
+            activeModels.forEach(m => dateModelDefectMap[dStr][m] = 0);
+            dateOutputDefectsMap[dStr] = 0;
+            dateInspectionRejectMap[dStr] = 0;
+            dateDefectsMap[dStr] = 0;
+            dateTotalProdMap[dStr] = 0;
+        }
+        dateGroupMap[dStr][inspectionStackLabel] = (dateGroupMap[dStr][inspectionStackLabel] || 0) + rejectQty;
+        dateInspectionRejectMap[dStr] += rejectQty;
+        dateDefectsMap[dStr] += rejectQty;
+        dateTotalProdMap[dStr] += rejectQty;
+    });
+
     const datesList = Object.keys(dateGroupMap).sort();
-    const defectsList = datesList.map(d => dateDefectsMap[d]);
+    const outputDefectsList = datesList.map(d => dateOutputDefectsMap[d] || 0);
+    const inspectionRejectList = datesList.map(d => dateInspectionRejectMap[d] || 0);
+    const defectsList = datesList.map(d => dateDefectsMap[d] || 0);
     const defectRateList = datesList.map(d => {
         const production = dateTotalProdMap[d] || 0;
         return production > 0 ? Number(((dateDefectsMap[d] || 0) / production * 100).toFixed(2)) : 0;
@@ -1578,25 +1629,12 @@ async function renderDailyReportCharts() {
     const maxDefectRate = Math.max(...defectRateList, 0);
     const defectRateAxisMax = Math.min(100, Math.max(5, Math.ceil((maxDefectRate * 1.25) / 5) * 5));
 
-    // Build stacked datasets: model-good segments plus the red defect segment.
+    // Build stacked datasets from approved outputdiary rows plus Inspection
+    // rejects. The two waste sources remain visibly distinguishable.
     const stackedDatasets = [
         {
-            type: 'bar',
-            label: 'ของเสียรวม (ชิ้น)',
-            data: defectsList,
-            yAxisID: 'y',
-            stack: 'prodStack',
-            borderColor: '#ef4444',
-            backgroundColor: '#ef4444',
-            borderWidth: 3,
-            pointRadius: 4,
-            fill: false,
-            tension: 0.3,
-            order: 0
-        },
-        {
             type: 'line',
-            label: '% ของเสีย (NG Rate)',
+            label: '% ของเสียรวม (NG Rate)',
             data: defectRateList,
             yAxisID: 'y1',
             borderColor: '#facc15',
@@ -1609,13 +1647,8 @@ async function renderDailyReportCharts() {
             order: 0
         }
     ];
-    // Put the red defect segment after the model segments so it appears as
-    // the final portion of each day's stacked production bar.
-    const defectStackDataset = stackedDatasets.shift();
-
     activeModels.forEach(mName => {
-        // ProdQty already includes defects. Subtract model defects so the
-        // separate red defect segment does not inflate the stacked total.
+        if (mName === inspectionStackLabel) return;
         const qtyData = datesList.map(d => Math.max(0,
             (dateGroupMap[d][mName] || 0) - (dateModelDefectMap[d][mName] || 0)
         ));
@@ -1633,7 +1666,30 @@ async function renderDailyReportCharts() {
         }
     });
 
-    if (defectStackDataset) stackedDatasets.push(defectStackDataset);
+    if (outputDefectsList.some(value => value > 0)) {
+        stackedDatasets.push({
+            type: 'bar',
+            label: 'ของเสียจาก outputdiary_Reviewed',
+            data: outputDefectsList,
+            backgroundColor: '#ef4444',
+            borderColor: '#ef4444',
+            stack: 'prodStack',
+            borderRadius: 2,
+            order: 1
+        });
+    }
+    if (inspectionRejectList.some(value => value > 0)) {
+        stackedDatasets.push({
+            type: 'bar',
+            label: inspectionStackLabel,
+            data: inspectionRejectList,
+            backgroundColor: '#f97316',
+            borderColor: '#f97316',
+            stack: 'prodStack',
+            borderRadius: 2,
+            order: 1
+        });
+    }
 
     renderOutputDailyLegend(stackedDatasets);
 
