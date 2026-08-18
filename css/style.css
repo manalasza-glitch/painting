@@ -2676,6 +2676,30 @@ button, input, textarea, select {
     padding: 0 !important;
   }
 
+  /* Keep dashboard sections visually separated on tablet/mobile layouts.
+     The broad mobile reset above intentionally removes inline margins, but
+     these sections still need a clear gap between KPI, chart, and table cards. */
+  #dashboard-tab > #dashboardOverviewKpis,
+  #dashboardProductionReport > .kpi-grid {
+    margin-bottom: 1rem !important;
+  }
+
+  #dashboardInspectionCharts {
+    margin-bottom: 1.5rem !important;
+  }
+
+  #dashboardProductionReport {
+    margin-top: 1.5rem !important;
+  }
+
+  #dashboardProductionReport > .dashboard-production-chart-grid {
+    margin-bottom: 1.5rem !important;
+  }
+
+  #dashboardProductionReport > .dashboard-grid:not(.dashboard-production-chart-grid) {
+    margin-bottom: 2rem !important;
+  }
+
   .app-header {
     padding: 0.5rem 0.85rem !important;
     gap: 0.4rem !important;
