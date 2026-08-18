@@ -207,6 +207,49 @@
         /* Keep the two primary production charts visually balanced. */
         .dashboard-production-chart-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+        }
+
+        /* Prevent chart cards and their headers from pushing the dashboard past the viewport. */
+        .dashboard-production-chart-grid > .chart-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-production-chart-grid .chart-header {
+            min-width: 0 !important;
+            flex-wrap: wrap !important;
+        }
+
+        .dashboard-production-chart-grid .chart-title {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .dashboard-production-chart-grid .chart-title > span {
+            min-width: 0 !important;
+            overflow-wrap: anywhere;
+        }
+
+        .dashboard-production-chart-grid .chart-header > div {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            flex-wrap: wrap !important;
+        }
+
+        .dashboard-production-chart-grid .chart-container-wrapper,
+        .dashboard-production-chart-grid canvas {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
         }
 
         .chart-card {
