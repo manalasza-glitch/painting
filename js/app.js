@@ -243,6 +243,15 @@ function toggleChecklistMenu(event, element) {
     if (element) element.setAttribute('aria-expanded', String(!isOpen));
 }
 
+function toggleProductionMenu(event, element) {
+    if (event) event.preventDefault();
+    const submenu = document.getElementById('production-submenu');
+    if (!submenu) return;
+    const isOpen = !submenu.hidden;
+    submenu.hidden = isOpen;
+    if (element) element.setAttribute('aria-expanded', String(!isOpen));
+}
+
 function toggleMobileChecklistMenu(event, element) {
     if (event) {
         event.stopPropagation();
@@ -261,12 +270,42 @@ function toggleMobileChecklistMenu(event, element) {
 
 function closeMobileChecklistMenu() {
     const menu = document.getElementById('mobile-checklist-menu');
-    const trigger = document.querySelector('.mobile-checklist-trigger');
+    const trigger = document.querySelector('[data-mobile-checklist="true"]');
     if (menu) {
         menu.hidden = true;
         menu.classList.remove('is-open');
     }
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+function toggleMobileProductionMenu(event, element) {
+    if (event) {
+        event.stopPropagation();
+        if (event.cancelable && event.type !== 'click') event.preventDefault();
+    }
+    const menu = document.getElementById('mobile-production-menu');
+    if (!menu) return;
+    closeMobileChecklistMenu();
+    const willOpen = menu.hidden;
+    menu.hidden = !willOpen;
+    menu.classList.toggle('is-open', willOpen);
+    if (element) element.setAttribute('aria-expanded', String(willOpen));
+}
+
+function closeMobileProductionMenu() {
+    const menu = document.getElementById('mobile-production-menu');
+    const trigger = document.querySelector('.mobile-production-trigger');
+    if (menu) {
+        menu.hidden = true;
+        menu.classList.remove('is-open');
+    }
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+function openProductionTab(tabId, event, element) {
+    if (event) event.preventDefault();
+    closeMobileProductionMenu();
+    switchTab(tabId, element);
 }
 
 function openParameterChecklistMode(mode, event, element) {
@@ -291,6 +330,7 @@ function switchTab(tabId, element) {
     }
 
     if (typeof closeMobileChecklistMenu === 'function') closeMobileChecklistMenu();
+    if (typeof closeMobileProductionMenu === 'function') closeMobileProductionMenu();
 
     const targetTab = document.getElementById(tabId);
 
@@ -337,6 +377,9 @@ function switchTab(tabId, element) {
     }
     if (tabId === "parameter-checklist-tab" || tabId === "equipment-checklist-tab") {
         document.querySelectorAll('[data-mobile-checklist="true"]').forEach(el => el.classList.add("active"));
+    }
+    if (tabId === "daily-report-tab" || tabId === "rework-tab" || tabId === "screen-tab") {
+        document.querySelectorAll('.production-menu-parent, .mobile-production-trigger').forEach(el => el.classList.add("active"));
     }
 
     // Scroll window to top smoothly

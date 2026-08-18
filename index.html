@@ -154,6 +154,10 @@
             transform: rotate(180deg);
         }
 
+        .production-menu-parent[aria-expanded="true"] .checklist-menu-caret {
+            transform: rotate(180deg);
+        }
+
         .sidebar-footer {
             margin-top: auto !important;
             padding-top: 1.5rem !important;
@@ -779,14 +783,24 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
                     บันทึกงานตรวจ
                 </a>
-                <a href="#" class="nav-link" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    บันทึกงานใหม่
-                </a>
-                <a href="#" class="nav-link" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
+                <a href="#" class="nav-link production-menu-parent" onclick="toggleProductionMenu(event, this)" aria-expanded="false">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"></path><path d="M5 21V9l7-5 7 5v12"></path><path d="M9 21v-6h6v6"></path><path d="M8 10h8"></path></svg>
-                    บันทึกการผลิต
+                    <span style="flex:1;">บันทึกการผลิต</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
                 </a>
+                <div id="production-submenu" class="sidebar-submenu" hidden>
+                    <a href="#" class="nav-link submenu-item" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
+                        <span style="width:20px; text-align:center;">•</span>
+                        บันทึกงานใหม่
+                    </a>
+                    <a href="#" class="nav-link submenu-item" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
+                        <span style="width:20px; text-align:center;">•</span>
+                        REWORK
+                    </a>
+                    <a href="#" class="nav-link submenu-item" data-permission="screen.read" onclick="switchTab('screen-tab', this)">
+                        <span style="width:20px; text-align:center;">•</span>
+                        Screen
+                    </a>
+                </div>
                 <a href="#" class="nav-link checklist-menu-parent" data-permission="checklist.read" onclick="toggleChecklistMenu(event, this)" aria-expanded="false">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path><path d="m16 16 1.5 1.5L21 14"></path></svg>
                     <span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
@@ -805,14 +819,6 @@
                         ตรวจเช็กอุปกรณ์
                     </a>
                 </div>
-                <a href="#" class="nav-link" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4-5 5 5 5"></path><path d="M4 9h10a6 6 0 0 1 6 6v5"></path></svg>
-                    REWORK
-                </a>
-                <a href="#" class="nav-link" data-permission="screen.read" onclick="switchTab('screen-tab', this)">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
-                    Screen
-                </a>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
                     Event (บันทึก 5M1E)
@@ -1751,6 +1757,20 @@
 
     <!-- MOBILE BOTTOM NAVIGATION BAR (Android & iOS Smartphones) -->
     <nav class="mobile-bottom-nav">
+        <div id="mobile-production-menu" class="mobile-checklist-menu mobile-production-menu" hidden>
+            <button type="button" class="mobile-checklist-option mobile-production-option" data-permission="daily_report.read" onclick="openProductionTab('daily-report-tab', event, this)">
+                <span class="mobile-checklist-option-icon">📝</span>
+                <span>บันทึกงานใหม่</span>
+            </button>
+            <button type="button" class="mobile-checklist-option mobile-production-option" data-permission="rework.read" onclick="openProductionTab('rework-tab', event, this)">
+                <span class="mobile-checklist-option-icon">↩</span>
+                <span>REWORK</span>
+            </button>
+            <button type="button" class="mobile-checklist-option mobile-production-option" data-permission="screen.read" onclick="openProductionTab('screen-tab', event, this)">
+                <span class="mobile-checklist-option-icon">▣</span>
+                <span>Screen</span>
+            </button>
+        </div>
         <div id="mobile-checklist-menu" class="mobile-checklist-menu" hidden>
             <button type="button" class="mobile-checklist-option" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)">
                 <span class="mobile-checklist-option-icon">☑</span>
@@ -1782,25 +1802,13 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
                 <span>บันทึกงาน</span>
             </div>
-            <div class="mobile-nav-item" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>
-                <span>ฟอร์มผลิต</span>
-            </div>
-            <div class="mobile-nav-item" data-permission="daily_report.read" onclick="switchTab('daily-report-tab', this)">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6M8 10h8"></path></svg>
+            <div class="mobile-nav-item mobile-checklist-trigger mobile-production-trigger" role="button" tabindex="0" data-production-menu="true" onclick="toggleMobileProductionMenu(event, this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') toggleMobileProductionMenu(event, this)" aria-expanded="false" aria-controls="mobile-production-menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6M8 10h8"/></svg>
                 <span>บันทึกการผลิต</span>
             </div>
             <div class="mobile-nav-item mobile-checklist-trigger" role="button" tabindex="0" data-mobile-checklist="true" data-permission="checklist.read" onclick="toggleMobileChecklistMenu(event, this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') toggleMobileChecklistMenu(event, this)" aria-expanded="false" aria-controls="mobile-checklist-menu">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m16 16 1.5 1.5L21 14"/></svg>
                 <span>เช็กลิสก่อนเริ่มงาน</span>
-            </div>
-            <div class="mobile-nav-item" data-permission="rework.read" onclick="switchTab('rework-tab', this)">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5"/><path d="M4 9h10a6 6 0 0 1 6 6v5"/></svg>
-                <span>REWORK</span>
-            </div>
-            <div class="mobile-nav-item" data-permission="screen.read" onclick="switchTab('screen-tab', this)">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-                <span>Screen</span>
             </div>
             <div class="mobile-nav-item" data-permission="events.read" onclick="switchTab('event-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -2149,7 +2157,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=97.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.37.0"></script>
+    <script src="js/app.js?v=96.38.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
     <script src="js/screen.js?v=1.0.3"></script>
