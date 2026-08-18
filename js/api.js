@@ -990,6 +990,7 @@ const USER_PERMISSION_KEYS = [
     "inspection.create",
     "daily_report.read",
     "rework.read",
+    "screen.read",
     "checklist.read",
     "events.read",
     "history.read",
