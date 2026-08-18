@@ -244,6 +244,7 @@ async function sendDataToAPI(data) {
     const queryParams = new URLSearchParams({
         action: 'create',
         date: data.date || data.timestamp || '',
+        workType: data.workType || '',
         rust: String(data.rust || 0),
         dent: String(data.dent || 0),
         weld: String(data.weld || 0),
@@ -289,6 +290,7 @@ async function updateDataToAPI(data) {
         rowIndex: data.rowIndex || '',
         date: data.date || '',
         originalDate: data.originalDate || '',
+        workType: data.workType || '',
         rust: String(data.rust || 0),
         dent: String(data.dent || 0),
         weld: String(data.weld || 0),

@@ -415,6 +415,8 @@ function openInspectionModal() {
         if (titleEl) titleEl.innerText = "📝 บันทึกข้อมูลการตรวจเช็ค (Painting Inspection)";
 
         document.getElementById("inspectionForm").reset();
+        const workTypeInput = document.getElementById("workType");
+        if (workTypeInput) workTypeInput.value = "NEW";
         setCurrentDateTimeDefaults();
 
         switchTab("inspection-tab");
@@ -497,6 +499,9 @@ function editInspectionRecord(index) {
         } catch(e){}
     }
 
+    const workTypeInput = document.getElementById("workType");
+    if (workTypeInput) workTypeInput.value = normalizeInspectionWorkType(record.workType) || "";
+
     document.getElementById("rust").value = Number(record.rust) || 0;
     document.getElementById("dent").value = Number(record.dent) || 0;
     document.getElementById("weld").value = Number(record.weld) || 0;
@@ -571,6 +576,7 @@ async function handleFormSubmit(event) {
         rowIndex: editRowIndex,
         originalDate: editOriginalDate,
         date: formattedDateTime,
+        workType: normalizeInspectionWorkType(document.getElementById("workType").value),
         rust: Number(document.getElementById("rust").value) || 0,
         dent: Number(document.getElementById("dent").value) || 0,
         weld: Number(document.getElementById("weld").value) || 0,
@@ -1226,7 +1232,7 @@ function renderRecentTable(recordsData = inspectionRecords) {
 
     const recent = recordsData.slice(0, 5);
     if (recent.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
@@ -1245,6 +1251,7 @@ function renderRecentTable(recordsData = inspectionRecords) {
         return `
             <tr>
                 <td style="font-weight: 700; white-space: nowrap;">${dateFormatted}</td>
+                <td><span class="badge-defect badge-total">${inspectionWorkTypeLabel(r.workType)}</span></td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -1268,7 +1275,7 @@ function renderFullHistoryTable(records) {
     if (!tbody) return;
 
     if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 2rem;">ไม่พบข้อมูลการตรวจเช็ค</td></tr>`;
         return;
     }
 
@@ -1286,6 +1293,7 @@ function renderFullHistoryTable(records) {
         return `
             <tr>
                 <td style="font-weight: 800; color: #38bdf8; white-space: nowrap;">${dateFormatted}</td>
+                <td><span class="badge-defect badge-total">${inspectionWorkTypeLabel(r.workType)}</span></td>
                 <td><span class="badge-defect ${rust > 0 ? 'badge-has-defect' : 'badge-zero'}">${rust}</span></td>
                 <td><span class="badge-defect ${dent > 0 ? 'badge-has-defect' : 'badge-zero'}">${dent}</span></td>
                 <td><span class="badge-defect ${weld > 0 ? 'badge-has-defect' : 'badge-zero'}">${weld}</span></td>
@@ -1402,7 +1410,7 @@ function renderOutputDailyLegend(datasets = []) {
     }).join('');
 }
 
-function renderReworkStackedModelChart(records = []) {
+function renderReworkStackedModelChart(records = [], inspectionRecords = []) {
     const canvas = document.getElementById("topModelsChart");
     if (!canvas || typeof Chart === "undefined") return;
 
@@ -1426,7 +1434,7 @@ function renderReworkStackedModelChart(records = []) {
     const daily = new Map();
     filtered.forEach(row => {
         const date = dateKey(row && (row.date || row.Date));
-        if (!daily.has(date)) daily.set(date, { models: new Map(), defects: 0, output: 0 });
+        if (!daily.has(date)) daily.set(date, { models: new Map(), defects: 0, inspectionRejects: 0, output: 0 });
         const day = daily.get(date);
         const model = String(row && (row.model || row.Model) || "รุ่นอื่นๆ (Other)").trim() || "รุ่นอื่นๆ (Other)";
         const qty = Number(row && (row.prodQty || row.ProdQty || row.qty)) || 0;
@@ -1438,6 +1446,20 @@ function renderReworkStackedModelChart(records = []) {
         day.defects += defects;
         day.output += qty;
         modelTotals.set(model, (modelTotals.get(model) || 0) + qty);
+    });
+
+    (Array.isArray(inspectionRecords) ? inspectionRecords : []).forEach(row => {
+        const date = dateKey(row && (row.date || row.Date));
+        if (!date || (range.start && date < range.start) || (range.end && date > range.end)) return;
+        const rejectQty = typeof qc7InspectionRejectTotal === "function"
+            ? qc7InspectionRejectTotal(row)
+            : ["rust", "dent", "weld", "chemical", "oil"].reduce((sum, key) => sum + (Number(row && row[key]) || 0), 0);
+        if (rejectQty <= 0) return;
+        if (!daily.has(date)) daily.set(date, { models: new Map(), defects: 0, inspectionRejects: 0, output: 0 });
+        const day = daily.get(date);
+        day.inspectionRejects += rejectQty;
+        day.defects += rejectQty;
+        day.output += rejectQty;
     });
 
     const dates = [...daily.keys()].sort();
@@ -1463,9 +1485,10 @@ function renderReworkStackedModelChart(records = []) {
         const value = day.models.get(model) || { qty: 0, defects: 0 };
         return Math.max(0, value.qty - value.defects);
     });
-    const outputDefects = dates.map(date => daily.get(date).defects);
+    const outputDefects = dates.map(date => daily.get(date).defects - daily.get(date).inspectionRejects);
+    const inspectionRejects = dates.map(date => daily.get(date).inspectionRejects);
     const totalOutput = dates.map(date => daily.get(date).output);
-    const totalDefects = outputDefects;
+    const totalDefects = dates.map((date, index) => outputDefects[index] + inspectionRejects[index]);
     const defectRate = dates.map((date, index) => totalOutput[index] > 0
         ? Number(((totalDefects[index] / totalOutput[index]) * 100).toFixed(2)) : 0);
 
@@ -1494,6 +1517,16 @@ function renderReworkStackedModelChart(records = []) {
                     stack: "reworkStack",
                     order: 1
                 },
+                ...(inspectionRejects.some(value => value > 0) ? [{
+                    type: "bar",
+                    label: "ยอดคัดออกจากราว (REWORK)",
+                    data: inspectionRejects,
+                    backgroundColor: "#f97316",
+                    borderColor: "#f97316",
+                    borderRadius: 2,
+                    stack: "reworkStack",
+                    order: 1
+                }] : []),
                 {
                     type: "line",
                     label: "% ของเสีย REWORK",
@@ -1534,6 +1567,20 @@ function renderReworkStackedModelChart(records = []) {
     });
 }
 
+function normalizeInspectionWorkType(value) {
+    const raw = String(value == null ? "" : value).trim().toUpperCase();
+    if (raw === "REWORK" || raw.includes("REWORK") || raw.includes("รีเวิร์ค")) return "REWORK";
+    if (raw === "NEW" || raw.includes("งานใหม่")) return "NEW";
+    return "";
+}
+
+function inspectionWorkTypeLabel(value) {
+    const type = normalizeInspectionWorkType(value);
+    if (type === "REWORK") return "งาน REWORK";
+    if (type === "NEW") return "งานใหม่";
+    return "ยังไม่ระบุ";
+}
+
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
@@ -1549,15 +1596,17 @@ async function renderDailyReportCharts() {
         ? await fetchReworkReportDataFromAPI("", { scope: "reviewed" })
         : [];
     const reworkForRange = Array.isArray(reworkData) ? reworkData : [];
-    const inspectionForRange = Array.isArray(inspectionRecords)
+    const inspectionAllForRange = Array.isArray(inspectionRecords)
         ? inspectionRecords.filter(record => dashboardRecordInDateRange(record, range))
         : [];
+    const inspectionNewForRange = inspectionAllForRange.filter(record => normalizeInspectionWorkType(record.workType) === "NEW");
+    const inspectionReworkForRange = inspectionAllForRange.filter(record => normalizeInspectionWorkType(record.workType) === "REWORK");
 
-    // Render this comparison independently of the production KPI/chart data;
-    // it must still show Inspection-only days when outputdiary has no rows.
-    renderInspectionVsOutputChart(data || [], inspectionRecords, range);
+    // The production comparison uses only Inspection rows explicitly marked as
+    // NEW. REWORK Inspection rows are rendered in the dedicated REWORK chart.
+    renderInspectionVsOutputChart(data || [], inspectionNewForRange, range);
     
-    if ((!data || data.length === 0) && inspectionForRange.length === 0 && reworkForRange.length === 0) {
+    if ((!data || data.length === 0) && inspectionNewForRange.length === 0 && inspectionReworkForRange.length === 0 && reworkForRange.length === 0) {
         // Reset KPI Elements to 0
         const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
         const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
@@ -1575,7 +1624,7 @@ async function renderDailyReportCharts() {
 
         // Destroy Chart.js instances if empty
         if (outputDailyChartInstance) { outputDailyChartInstance.destroy(); outputDailyChartInstance = null; }
-        renderReworkStackedModelChart(reworkForRange);
+        renderReworkStackedModelChart(reworkForRange, inspectionReworkForRange);
         if (qualityYieldChartInstance) { qualityYieldChartInstance.destroy(); qualityYieldChartInstance = null; }
         globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
         return;
@@ -1586,7 +1635,7 @@ async function renderDailyReportCharts() {
         filteredData = filteredData.filter(r => dashboardRecordInDateRange(r, range));
     }
 
-    const inspectionRejectTotal = inspectionForRange.reduce((sum, record) =>
+    const inspectionRejectTotal = inspectionNewForRange.reduce((sum, record) =>
         sum + qc7InspectionRejectTotal(record), 0);
 
     // 1. Calculate KPIs
@@ -1666,7 +1715,7 @@ async function renderDailyReportCharts() {
     if (hasMoreModels && !activeModels.includes('รุ่นอื่นๆ (Other)')) {
         activeModels.push('รุ่นอื่นๆ (Other)');
     }
-    if (inspectionForRange.some(record => qc7InspectionRejectTotal(record) > 0)) {
+    if (inspectionNewForRange.some(record => qc7InspectionRejectTotal(record) > 0)) {
         activeModels.push(inspectionStackLabel);
     }
 
@@ -1731,7 +1780,7 @@ async function renderDailyReportCharts() {
     // Inspection rows do not contain a production model. They are added as a
     // separate stack segment so the chart keeps the outputdiary model split
     // while still including rack rejects in total production and waste.
-    inspectionForRange.forEach(record => {
+    inspectionNewForRange.forEach(record => {
         const dStr = qc7RecordDate(record);
         const rejectQty = qc7InspectionRejectTotal(record);
         if (!dStr || rejectQty <= 0) return;
@@ -1897,7 +1946,7 @@ async function renderDailyReportCharts() {
     }
 
     // 3. Render REWORK_Reviewed as the second stacked model chart.
-    renderReworkStackedModelChart(reworkForRange);
+    renderReworkStackedModelChart(reworkForRange, inspectionReworkForRange);
 
     // 4. Cache Quality Data & Render Quality Yield / NG Chart
     const pctOkList = datesList.map(d => {

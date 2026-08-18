@@ -1133,6 +1133,7 @@
                                 <thead>
                                     <tr>
                                         <th>วันที่</th>
+                                        <th>ส่วนงาน</th>
                                         <th>สนิม</th>
                                         <th>รอยบุบ</th>
                                         <th>สะเก็ดเชื่อม</th>
@@ -1145,7 +1146,7 @@
                                 </thead>
                                 <tbody id="recentTableBody">
                                     <tr>
-                                        <td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="10" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1625,6 +1626,7 @@
                                 <thead>
                                     <tr>
                                         <th>วันที่</th>
+                                        <th>ส่วนงาน</th>
                                         <th>สนิม (Rust)</th>
                                         <th>รอยบุบ (Dent)</th>
                                         <th>สะเก็ดเชื่อม (Weld)</th>
@@ -1637,7 +1639,7 @@
                                 </thead>
                                 <tbody id="fullHistoryTableBody">
                                     <tr>
-                                        <td colspan="9" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
+                                        <td colspan="10" style="text-align: center; color: #64748b; padding: 2rem;">กำลังโหลดข้อมูล...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1862,6 +1864,14 @@
                         <div class="form-group">
                             <label>⏰ เวลาที่ตรวจเช็ค</label>
                             <input type="time" id="time" class="form-control-custom" onclick="if(this.showPicker) this.showPicker();" style="color-scheme: dark; cursor: pointer;" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>🧩 ส่วนงานที่ตรวจเช็ค</label>
+                            <select id="workType" class="form-control-custom" required>
+                                <option value="NEW">งานใหม่</option>
+                                <option value="REWORK">งาน REWORK</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -2129,9 +2139,9 @@
     </script>
 
     <!-- JS Files -->
-    <script src="js/api.js?v=97.5.0"></script>
+    <script src="js/api.js?v=97.6.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.36.0"></script>
+    <script src="js/app.js?v=96.37.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
     <script src="js/screen.js?v=1.0.3"></script>

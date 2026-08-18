@@ -7,6 +7,7 @@ const DAILY_REPORT_COLOR_CODE_HEADER = "ColorCode";
 const DAILY_REPORT_DUST_HEADER = "Dust";
 const DAILY_REPORT_OIL_HEADER = "Oil";
 const DAILY_REPORT_RUST_HEADER = "Rust";
+const INSPECTION_WORK_TYPE_HEADER = "WorkType";
 const PARAMETER_CHECKLIST_SHEET_NAME = "ParameterChecklist";
 const WATER_PARAMETER_CHECKLIST_SHEET_NAME = "WaterParameterChecklist";
 const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
@@ -23,6 +24,59 @@ const REPORT_READ_MAX_COLUMNS = 64;
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
 const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
 const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
+
+function normalizeInspectionWorkType_(value) {
+  const raw = String(value == null ? "" : value).trim().toUpperCase();
+  if (raw === "REWORK" || raw.indexOf("REWORK") >= 0 || raw.indexOf("รีเวิร์ค") >= 0) return "REWORK";
+  if (raw === "NEW" || raw.indexOf("งานใหม่") >= 0) return "NEW";
+  return "";
+}
+
+function ensureInspectionWorkTypeColumn_(sheet) {
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  const existingIndex = headers.indexOf(INSPECTION_WORK_TYPE_HEADER);
+  if (existingIndex >= 0) return existingIndex + 1;
+  const newColumn = lastColumn + 1;
+  sheet.getRange(1, newColumn).setValue(INSPECTION_WORK_TYPE_HEADER);
+  return newColumn;
+}
+
+function ensureInspectionSheet_(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp", INSPECTION_WORK_TYPE_HEADER]);
+  } else {
+    ensureInspectionWorkTypeColumn_(sheet);
+  }
+  return sheet;
+}
+
+function inspectionRowValues_(sheet, payload, existingRow) {
+  ensureInspectionWorkTypeColumn_(sheet);
+  const lastColumn = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(String);
+  const row = Array.isArray(existingRow)
+    ? existingRow.slice(0, lastColumn).concat(Array(Math.max(0, lastColumn - existingRow.length)).fill(""))
+    : Array(lastColumn).fill("");
+  const values = {
+    Date: String(payload.date || formatDateStr(new Date(), true)),
+    Rust: Number(payload.rust) || 0,
+    Dent: Number(payload.dent) || 0,
+    Weld: Number(payload.weld) || 0,
+    Chemical: Number(payload.chemical) || 0,
+    Oil: Number(payload.oil) || 0,
+    Note: String(payload.note || ""),
+    Timestamp: new Date(),
+    [INSPECTION_WORK_TYPE_HEADER]: normalizeInspectionWorkType_(payload.workType)
+  };
+  Object.keys(values).forEach(name => {
+    const index = headers.indexOf(name);
+    if (index >= 0) row[index] = values[name];
+  });
+  return row.slice(0, lastColumn);
+}
 
 // Production catalog used by the daily report cascading selectors.
 const PART_MODEL_CATALOG = {
@@ -1102,7 +1156,7 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    let sheet = ss.getSheetByName(SHEET_NAME);
+    let sheet = ensureInspectionSheet_(ss);
 
     /* Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.
     // Keep the GET endpoint write-capable as well as the POST endpoint.
@@ -1184,10 +1238,7 @@ function doPost(e) {
     }
 
     */
-    if (!sheet) {
-      sheet = ss.insertSheet(SHEET_NAME);
-      sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp"]);
-    }
+    sheet = ensureInspectionSheet_(ss);
 
     let data = {};
     if (e && e.postData && e.postData.contents) {
@@ -1396,16 +1447,16 @@ function doPost(e) {
       }
 
       if (targetRowIndex && targetRowIndex >= 2 && targetRowIndex <= sheet.getLastRow()) {
-        sheet.getRange(targetRowIndex, 1, 1, 8).setValues([[
-          dateVal,
-          rustVal,
-          dentVal,
-          weldVal,
-          chemicalVal,
-          oilVal,
-          noteVal,
-          new Date()
-        ]]);
+        sheet.getRange(targetRowIndex, 1, 1, sheet.getLastColumn()).setValues([inspectionRowValues_(sheet, {
+          date: dateVal,
+          workType: data.workType || (e && e.parameter && e.parameter.workType) || "",
+          rust: rustVal,
+          dent: dentVal,
+          weld: weldVal,
+          chemical: chemicalVal,
+          oil: oilVal,
+          note: noteVal
+        }, values[targetRowIndex - 1])]);
         SpreadsheetApp.flush();
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "update", updatedRow: targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
       } else {
@@ -1627,16 +1678,16 @@ function doPost(e) {
       const oilVal = Number(data.oil || (e && e.parameter && e.parameter.oil)) || 0;
       const noteVal = data.note || (e && e.parameter && e.parameter.note) || "";
 
-      sheet.appendRow([
-        dateVal,
-        rustVal,
-        dentVal,
-        weldVal,
-        chemicalVal,
-        oilVal,
-        noteVal,
-        new Date()
-      ]);
+      sheet.appendRow(inspectionRowValues_(sheet, {
+        date: dateVal,
+        workType: data.workType || (e && e.parameter && e.parameter.workType) || "",
+        rust: rustVal,
+        dent: dentVal,
+        weld: weldVal,
+        chemical: chemicalVal,
+        oil: oilVal,
+        note: noteVal
+      }));
 
       SpreadsheetApp.flush();
 
@@ -2356,12 +2407,9 @@ function doGetJson_(e) {
     }
 
     // Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.
-    let sheet = ss.getSheetByName(SHEET_NAME);
+    let sheet = ensureInspectionSheet_(ss);
     if (action === "create") {
-      if (!sheet) {
-        sheet = ss.insertSheet(SHEET_NAME);
-        sheet.appendRow(["Date", "Rust", "Dent", "Weld", "Chemical", "Oil", "Note", "Timestamp"]);
-      }
+      sheet = ensureInspectionSheet_(ss);
       const dateVal = String((e && e.parameter && e.parameter.date) || formatDateStr(new Date(), true));
       const rustVal = Number((e && e.parameter && e.parameter.rust) || 0) || 0;
       const dentVal = Number((e && e.parameter && e.parameter.dent) || 0) || 0;
@@ -2369,7 +2417,17 @@ function doGetJson_(e) {
       const chemicalVal = Number((e && e.parameter && e.parameter.chemical) || 0) || 0;
       const oilVal = Number((e && e.parameter && e.parameter.oil) || 0) || 0;
       const noteVal = String((e && e.parameter && e.parameter.note) || "");
-      sheet.appendRow([dateVal, rustVal, dentVal, weldVal, chemicalVal, oilVal, noteVal, new Date()]);
+      const workTypeVal = String((e && e.parameter && e.parameter.workType) || "");
+      sheet.appendRow(inspectionRowValues_(sheet, {
+        date: dateVal,
+        workType: workTypeVal,
+        rust: rustVal,
+        dent: dentVal,
+        weld: weldVal,
+        chemical: chemicalVal,
+        oil: oilVal,
+        note: noteVal
+      }));
       SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "create" })).setMimeType(ContentService.MimeType.JSON);
     }
@@ -2383,6 +2441,7 @@ function doGetJson_(e) {
       const chemicalVal = Number((e && e.parameter && e.parameter.chemical) || 0) || 0;
       const oilVal = Number((e && e.parameter && e.parameter.oil) || 0) || 0;
       const noteVal = String((e && e.parameter && e.parameter.note) || "");
+      const workTypeVal = String((e && e.parameter && e.parameter.workType) || "");
       let targetRowIndex = Number((e && e.parameter && e.parameter.rowIndex) || 0);
       const originalDate = String((e && e.parameter && e.parameter.originalDate) || dateVal);
       const values = sheet.getDataRange().getValues();
@@ -2393,7 +2452,16 @@ function doGetJson_(e) {
         }
       }
       if (targetRowIndex && targetRowIndex >= 2 && targetRowIndex <= sheet.getLastRow()) {
-        sheet.getRange(targetRowIndex, 1, 1, 8).setValues([[dateVal, rustVal, dentVal, weldVal, chemicalVal, oilVal, noteVal, new Date()]]);
+        sheet.getRange(targetRowIndex, 1, 1, sheet.getLastColumn()).setValues([inspectionRowValues_(sheet, {
+          date: dateVal,
+          workType: workTypeVal,
+          rust: rustVal,
+          dent: dentVal,
+          weld: weldVal,
+          chemical: chemicalVal,
+          oil: oilVal,
+          note: noteVal
+        }, values[targetRowIndex - 1])]);
         SpreadsheetApp.flush();
         return ContentService.createTextOutput(JSON.stringify({ status: "success", action: "update", updatedRow: targetRowIndex })).setMimeType(ContentService.MimeType.JSON);
       }
@@ -2435,18 +2503,19 @@ function doGetJson_(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    const header = values.shift();
+    const header = values.shift().map(String);
 
     const result = values.map((r, i) => ({
       rowIndex: i + 2,
-      date: formatDateStr(r[0], true),
-      rust: Number(r[1]) || 0,
-      dent: Number(r[2]) || 0,
-      weld: Number(r[3]) || 0,
-      chemical: Number(r[4]) || 0,
-      oil: Number(r[5]) || 0,
-      note: r[6] || "",
-      timestamp: formatDateStr(r[7] || r[0], true)
+      date: formatDateStr(qcCell_(r, header, "Date", 0), true),
+      workType: normalizeInspectionWorkType_(qcCell_(r, header, INSPECTION_WORK_TYPE_HEADER, -1)),
+      rust: Number(qcCell_(r, header, "Rust", 1)) || 0,
+      dent: Number(qcCell_(r, header, "Dent", 2)) || 0,
+      weld: Number(qcCell_(r, header, "Weld", 3)) || 0,
+      chemical: Number(qcCell_(r, header, "Chemical", 4)) || 0,
+      oil: Number(qcCell_(r, header, "Oil", 5)) || 0,
+      note: qcCell_(r, header, "Note", 6) || "",
+      timestamp: formatDateStr(qcCell_(r, header, "Timestamp", 7) || qcCell_(r, header, "Date", 0), true)
     }));
 
     const requestedDate = String((e && e.parameter && e.parameter.date) || "").trim();
