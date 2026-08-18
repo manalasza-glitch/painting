@@ -510,70 +510,41 @@ async function refreshQCChecklistHistory(showFeedback = false) {
         renderQCReworkHistoryMessage("กำลังโหลดประวัติ REWORK...");
         if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
         try {
-            try {
-                const screenRecords = typeof fetchScreenReportDataFromAPI === "function"
-                    ? await fetchScreenReportDataFromAPI("", historyOptions)
-                    : [];
-                renderQCScreenHistory(screenRecords);
-            } catch (error) {
-                failures.push("SCREEN");
-                renderQCScreenHistoryMessage("โหลดประวัติ SCREEN ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-            }
-            try {
-                const reworkRecords = typeof fetchReworkReportDataFromAPI === "function"
-                    ? await fetchReworkReportDataFromAPI("", historyOptions)
-                    : [];
-                renderQCReworkHistory(reworkRecords);
-            } catch (error) {
-                failures.push("REWORK");
-                renderQCReworkHistoryMessage("โหลดประวัติ REWORK ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-            }
+            // Each history source is independent. Load them together so a
+            // slow Apps Script endpoint cannot keep every QC table blank.
+            const loadHistory = async (name, request, render, onError) => {
+                try {
+                    render(await request());
+                } catch (error) {
+                    failures.push(name);
+                    onError();
+                }
+            };
+            const tasks = [
+                loadHistory("SCREEN", () => typeof fetchScreenReportDataFromAPI === "function" ? fetchScreenReportDataFromAPI("", historyOptions) : [], renderQCScreenHistory, () => renderQCScreenHistoryMessage("โหลดประวัติ SCREEN ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true)),
+                loadHistory("REWORK", () => typeof fetchReworkReportDataFromAPI === "function" ? fetchReworkReportDataFromAPI("", historyOptions) : [], renderQCReworkHistory, () => renderQCReworkHistoryMessage("โหลดประวัติ REWORK ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true))
+            ];
             if (typeof fetchParameterChecklistDataFromAPI === "function") {
-                // Load the two populated history sheets first. The parameter
-                // sheet may be empty, and must never block the other tables.
-                try {
-                    const waterRecords = await fetchParameterChecklistDataFromAPI("", "water", { ...historyOptions, throwOnError: true });
-                    waterParameterChecklistHistory = Array.isArray(waterRecords)
-                        ? waterRecords.filter(record => String(record.checklistType || "water") === "water")
-                        : [];
-                    renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
-                } catch (error) {
-                    failures.push("ตรวจน้ำ");
-                    renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "โหลดประวัติการตรวจน้ำไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-                }
-
-                if (typeof fetchEquipmentChecklistDataFromAPI === "function") {
-                    try {
-                        equipmentChecklistHistory = await fetchEquipmentChecklistDataFromAPI("", { ...historyOptions, throwOnError: true });
+                tasks.push(
+                    loadHistory("ตรวจน้ำ", () => fetchParameterChecklistDataFromAPI("", "water", { ...historyOptions, throwOnError: true }), records => {
+                        waterParameterChecklistHistory = Array.isArray(records) ? records.filter(record => String(record.checklistType || "water") === "water") : [];
+                        renderParameterChecklistHistory("qcWaterChecklistHistoryBody", waterParameterChecklistHistory, "ยังไม่มีประวัติการตรวจน้ำ");
+                    }, () => renderQCChecklistHistoryMessage("qcWaterChecklistHistoryBody", "โหลดประวัติการตรวจน้ำไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true)),
+                    loadHistory("เช็กอุปกรณ์", () => typeof fetchEquipmentChecklistDataFromAPI === "function" ? fetchEquipmentChecklistDataFromAPI("", { ...historyOptions, throwOnError: true }) : [], records => {
+                        equipmentChecklistHistory = records;
                         renderEquipmentChecklistHistory();
-                    } catch (error) {
-                        failures.push("เช็กอุปกรณ์");
-                        renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "โหลดประวัติเช็กลิสอุปกรณ์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-                    }
-                }
-
-                try {
-                    const parameterRecords = await fetchParameterChecklistDataFromAPI("", "full", { ...historyOptions, throwOnError: true });
-                    parameterChecklistHistory = Array.isArray(parameterRecords)
-                        ? parameterRecords.filter(record => !record.checklistType || String(record.checklistType) === "full")
-                        : [];
-                    renderParameterChecklistHistory("qcParameterChecklistHistoryBody", parameterChecklistHistory, "ยังไม่มีประวัติการตรวจพารามิเตอร์");
-                } catch (error) {
-                    failures.push("พารามิเตอร์");
-                    renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "โหลดประวัติการตรวจพารามิเตอร์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true);
-                }
-
+                    }, () => renderQCChecklistHistoryMessage("qcEquipmentChecklistHistoryBody", "โหลดประวัติเช็กลิสอุปกรณ์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true)),
+                    loadHistory("พารามิเตอร์", () => fetchParameterChecklistDataFromAPI("", "full", { ...historyOptions, throwOnError: true }), records => {
+                        parameterChecklistHistory = Array.isArray(records) ? records.filter(record => !record.checklistType || String(record.checklistType) === "full") : [];
+                        renderParameterChecklistHistory("qcParameterChecklistHistoryBody", parameterChecklistHistory, "ยังไม่มีประวัติการตรวจพารามิเตอร์");
+                    }, () => renderQCChecklistHistoryMessage("qcParameterChecklistHistoryBody", "โหลดประวัติการตรวจพารามิเตอร์ไม่สำเร็จ กรุณากดรีเฟรชอีกครั้ง", true))
+                );
             }
-
-            // Keep the daily-production request last and await it. This page
-            // must never start it alongside SCREEN/REWORK/checklist requests.
+            await Promise.all(tasks);
             if (typeof refreshDailyReportHistory === "function") {
-                try {
-                    await refreshDailyReportHistory(historyOptions);
+                await loadHistory("พ่นสีรายวัน", () => refreshDailyReportHistory(historyOptions), () => {
                     if (typeof renderQCDailyReportHistory === "function") renderQCDailyReportHistory();
-                } catch (error) {
-                    failures.push("พ่นสีรายวัน");
-                }
+                }, () => {});
             }
 
             if (showFeedback && typeof showToast === "function") {
