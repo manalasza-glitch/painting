@@ -204,6 +204,11 @@
             gap: 1.5rem !important;
         }
 
+        /* Keep the two primary production charts visually balanced. */
+        .dashboard-production-chart-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
         .chart-card {
             background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85)) !important;
             border: 1px solid rgba(56, 189, 248, 0.25) !important;
@@ -1008,7 +1013,7 @@
                         </div>
 
                         <!-- Production Charts Grid 1: Daily Output & Top Models -->
-                        <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
+                        <div class="dashboard-grid dashboard-production-chart-grid" style="margin-bottom: 1.5rem;">
                             <!-- Output & Defect Daily Trend Chart -->
                             <div class="chart-card navy-theme dashboard-mobile-readable-chart">
                                 <div class="chart-header">
