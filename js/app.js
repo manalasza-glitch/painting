@@ -1402,18 +1402,153 @@ function renderOutputDailyLegend(datasets = []) {
     }).join('');
 }
 
+function renderReworkStackedModelChart(records = []) {
+    const canvas = document.getElementById("topModelsChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const range = getDashboardDateRange();
+    const dateKey = value => {
+        const raw = String(value == null ? "" : value).trim();
+        const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
+        const thai = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        return thai ? `${thai[3]}-${thai[2].padStart(2, "0")}-${thai[1].padStart(2, "0")}` : "";
+    };
+    const defectTotal = row => {
+        if (typeof reworkDashboardDefectTotal === "function") return reworkDashboardDefectTotal(row);
+        return Number(row && row.totalDefect) || 0;
+    };
+    const filtered = (Array.isArray(records) ? records : []).filter(row => {
+        const date = dateKey(row && (row.date || row.Date));
+        return date && (!range.start || date >= range.start) && (!range.end || date <= range.end);
+    });
+    const modelTotals = new Map();
+    const daily = new Map();
+    filtered.forEach(row => {
+        const date = dateKey(row && (row.date || row.Date));
+        if (!daily.has(date)) daily.set(date, { models: new Map(), defects: 0, output: 0 });
+        const day = daily.get(date);
+        const model = String(row && (row.model || row.Model) || "รุ่นอื่นๆ (Other)").trim() || "รุ่นอื่นๆ (Other)";
+        const qty = Number(row && (row.prodQty || row.ProdQty || row.qty)) || 0;
+        const defects = Math.min(defectTotal(row), qty);
+        const current = day.models.get(model) || { qty: 0, defects: 0 };
+        current.qty += qty;
+        current.defects += defects;
+        day.models.set(model, current);
+        day.defects += defects;
+        day.output += qty;
+        modelTotals.set(model, (modelTotals.get(model) || 0) + qty);
+    });
+
+    const dates = [...daily.keys()].sort();
+    if (!dates.length) {
+        if (topModelsChartInstance) topModelsChartInstance.destroy();
+        topModelsChartInstance = null;
+        return;
+    }
+    const sortedModels = [...modelTotals.entries()].sort((a, b) => b[1] - a[1]);
+    const topModels = sortedModels.slice(0, 8).map(([model]) => model);
+    const hasOther = sortedModels.length > topModels.length;
+    const otherLabel = "รุ่นอื่นๆ (Other)";
+    const activeModels = hasOther ? [...topModels, otherLabel] : topModels;
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#14b8a6", "#f97316", "#64748b"];
+    const modelColor = Object.fromEntries(activeModels.map((model, index) => [model, colors[index % colors.length]]));
+    const modelData = model => dates.map(date => {
+        const day = daily.get(date);
+        if (model === otherLabel) {
+            return [...day.models.entries()]
+                .filter(([name]) => !topModels.includes(name))
+                .reduce((sum, [, value]) => sum + Math.max(0, value.qty - value.defects), 0);
+        }
+        const value = day.models.get(model) || { qty: 0, defects: 0 };
+        return Math.max(0, value.qty - value.defects);
+    });
+    const outputDefects = dates.map(date => daily.get(date).defects);
+    const totalOutput = dates.map(date => daily.get(date).output);
+    const totalDefects = outputDefects;
+    const defectRate = dates.map((date, index) => totalOutput[index] > 0
+        ? Number(((totalDefects[index] / totalOutput[index]) * 100).toFixed(2)) : 0);
+
+    if (topModelsChartInstance) topModelsChartInstance.destroy();
+    topModelsChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: dates,
+            datasets: [
+                ...activeModels.map(model => ({
+                    type: "bar",
+                    label: model,
+                    data: modelData(model),
+                    backgroundColor: modelColor[model],
+                    borderRadius: 2,
+                    stack: "reworkStack",
+                    order: 2
+                })),
+                {
+                    type: "bar",
+                    label: "ของเสียจาก REWORK_Reviewed",
+                    data: outputDefects,
+                    backgroundColor: "#ef4444",
+                    borderColor: "#ef4444",
+                    borderRadius: 2,
+                    stack: "reworkStack",
+                    order: 1
+                },
+                {
+                    type: "line",
+                    label: "% ของเสีย REWORK",
+                    data: defectRate,
+                    yAxisID: "y1",
+                    borderColor: "#facc15",
+                    backgroundColor: "rgba(250, 204, 21, .15)",
+                    pointBackgroundColor: "#facc15",
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    tension: .3,
+                    fill: false,
+                    order: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        footer(items) {
+                            const index = items && items[0] ? items[0].dataIndex : -1;
+                            return index >= 0 ? `ยอด REWORK รวม: ${totalOutput[index].toLocaleString()} ชิ้น` : "";
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,.05)" } },
+                y: { stacked: true, beginAtZero: true, ticks: { color: "#94a3b8", precision: 0 }, grid: { color: "rgba(255,255,255,.08)" } },
+                y1: { position: "right", beginAtZero: true, max: Math.max(5, Math.ceil(Math.max(...defectRate, 0) * 1.25 / 5) * 5), ticks: { color: "#facc15", callback: value => `${value}%` }, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+}
+
 async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
     const range = getDashboardDateRange();
     const hasDateFilter = Boolean(range.start || range.end);
-    const apiDateFilter = range.start && range.end && range.start === range.end ? range.start : "";
     // The dashboard must use QC-approved production rows.  Pending rows are
     // intentionally excluded from production KPIs and the main stacked chart.
     // Fetch the full reviewed history and apply the dashboard date range here
     // so Inspection-only dates are not lost when outputdiary has no row for a
     // selected day.
     const data = await fetchDailyReportDataFromAPI("", { scope: "reviewed" });
+    const reworkData = typeof fetchReworkReportDataFromAPI === "function"
+        ? await fetchReworkReportDataFromAPI("", { scope: "reviewed" })
+        : [];
+    const reworkForRange = Array.isArray(reworkData) ? reworkData : [];
     const inspectionForRange = Array.isArray(inspectionRecords)
         ? inspectionRecords.filter(record => dashboardRecordInDateRange(record, range))
         : [];
@@ -1422,7 +1557,7 @@ async function renderDailyReportCharts() {
     // it must still show Inspection-only days when outputdiary has no rows.
     renderInspectionVsOutputChart(data || [], inspectionRecords, range);
     
-    if ((!data || data.length === 0) && inspectionForRange.length === 0) {
+    if ((!data || data.length === 0) && inspectionForRange.length === 0 && reworkForRange.length === 0) {
         // Reset KPI Elements to 0
         const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
         const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
@@ -1440,7 +1575,7 @@ async function renderDailyReportCharts() {
 
         // Destroy Chart.js instances if empty
         if (outputDailyChartInstance) { outputDailyChartInstance.destroy(); outputDailyChartInstance = null; }
-        if (topModelsChartInstance) { topModelsChartInstance.destroy(); topModelsChartInstance = null; }
+        renderReworkStackedModelChart(reworkForRange);
         if (qualityYieldChartInstance) { qualityYieldChartInstance.destroy(); qualityYieldChartInstance = null; }
         globalQualityChartCache = { datesList: [], pctOkList: [], pctNgList: [] };
         return;
@@ -1761,73 +1896,8 @@ async function renderDailyReportCharts() {
         });
     }
 
-    // 3. Render Top 5 Models Chart (Horizontal Bar Layout for Perfect Space Fitting)
-    const sortedModels = Object.keys(modelMap).sort((a, b) => modelMap[b] - modelMap[a]).slice(0, 5);
-    const topModelQtyList = sortedModels.map(m => modelMap[m]);
-
-    const ctxModels = document.getElementById("topModelsChart");
-    if (ctxModels && typeof Chart !== 'undefined') {
-        if (topModelsChartInstance) {
-            topModelsChartInstance.destroy();
-        }
-
-        // Format labels into multi-line arrays if long to fit space cleanly
-        const formattedLabels = sortedModels.map(m => {
-            const fullStr = getModelWithGroupLabel(m);
-            if (fullStr.includes(' (')) {
-                const parts = fullStr.split(' (');
-                return [parts[0].trim(), '(' + parts.slice(1).join(' (').trim()];
-            }
-            return fullStr;
-        });
-
-        topModelsChartInstance = new Chart(ctxModels, {
-            type: 'bar',
-            data: {
-                labels: formattedLabels,
-                datasets: [{
-                    label: 'ยอดผลิต (ชิ้น)',
-                    data: topModelQtyList,
-                    backgroundColor: [
-                        '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
-                    ],
-                    borderRadius: { topRight: 8, bottomRight: 8 }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y', // Horizontal Bar for perfect space fitting
-                plugins: {
-                    legend: { display: false },
-                    zoom: {
-                        pan: { enabled: true, mode: 'y' },
-                        zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'y' }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `ยอดผลิต: ${context.raw.toLocaleString()} ชิ้น`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: '#94a3b8', font: { family: 'Sarabun', size: 10 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                    },
-                    y: {
-                        ticks: {
-                            color: '#e2e8f0',
-                            font: { family: 'Sarabun', size: 10, weight: '500' }
-                        },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
+    // 3. Render REWORK_Reviewed as the second stacked model chart.
+    renderReworkStackedModelChart(reworkForRange);
 
     // 4. Cache Quality Data & Render Quality Yield / NG Chart
     const pctOkList = datesList.map(d => {

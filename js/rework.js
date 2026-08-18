@@ -542,7 +542,7 @@ async function loadReworkDashboardChart(forceRefresh = false) {
     try {
         if (!reworkDashboardRecordsCache) {
             if (!reworkDashboardLoadPromise) {
-                reworkDashboardLoadPromise = fetchReworkReportDataFromAPI()
+                reworkDashboardLoadPromise = fetchReworkReportDataFromAPI("", { scope: "reviewed" })
                     .then(rows => Array.isArray(rows) ? rows : [])
                     .finally(() => { reworkDashboardLoadPromise = null; });
             }
