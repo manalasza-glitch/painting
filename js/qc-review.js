@@ -382,7 +382,10 @@
         menu.id = 'mobile-qc-review-submenu';
         menu.className = 'mobile-qc-review-submenu';
         menu.innerHTML = '<button type="button" data-qc-review-view="pending">รอตรวจ</button><button type="button" data-qc-review-view="reviewed">ตรวจแล้ว</button>';
-        parent.insertAdjacentElement('afterend', menu);
+        // Keep the iOS popup outside the horizontally-scrollable nav strip.
+        // A fixed descendant of that scroller can become the touch hit-test
+        // layer in Safari and prevent the other bottom-nav items from firing.
+        document.body.appendChild(menu);
         menu.querySelectorAll('[data-qc-review-view]').forEach(button => button.addEventListener('click', event => {
             event.preventDefault();
             openQCReviewView(button.dataset.qcReviewView, button);
@@ -449,6 +452,7 @@
                 max-height: 0;
                 opacity: 0;
                 overflow-y: hidden;
+                visibility: hidden;
                 pointer-events: none;
                 transform: translate(-50%, 8px);
                 transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
@@ -456,6 +460,7 @@
             .mobile-qc-review-submenu.is-open {
                 max-height: 54px;
                 opacity: 1;
+                visibility: visible;
                 pointer-events: auto;
                 transform: translate(-50%, 0);
             }
@@ -468,6 +473,8 @@
                 padding: 7px 13px;
                 font: inherit;
                 white-space: nowrap;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
             }
             .qc-review-menu-parent {
                 display: flex;
@@ -598,6 +605,21 @@
         addDesktopSubmenu(desktop);
         addMobileSubmenu(mobile);
         setReviewSubmenuOpen(false);
+        if (document.documentElement.dataset.qcReviewOutsideTouchBound !== 'true') {
+            const closeOnOutsideTouch = event => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (!target) return;
+                if (target.closest('.mobile-qc-review-submenu, [data-qc-review-view]')) return;
+                if (target.closest('.mobile-nav-item[data-permission="qc.read"], .sidebar-nav a.nav-link[data-permission="qc.read"]')) return;
+                setReviewSubmenuOpen(false);
+            };
+            // iOS Safari may not synthesize a click after a touch inside a
+            // horizontally scrolling bottom navigation. Close at the touch
+            // phase so the next nav item remains tappable.
+            document.addEventListener('pointerdown', closeOnOutsideTouch, true);
+            document.addEventListener('touchstart', closeOnOutsideTouch, { capture: true, passive: true });
+            document.documentElement.dataset.qcReviewOutsideTouchBound = 'true';
+        }
         document.querySelectorAll('.sidebar-nav a.nav-link:not([data-permission="qc.read"]), .mobile-nav-item:not([data-permission="qc.read"])').forEach(link => {
             link.addEventListener('click', () => setReviewSubmenuOpen(false));
         });
