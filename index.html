@@ -1108,8 +1108,8 @@
                         </div>
 
                         <!-- SCREEN Chart: sourced from the dedicated SCREEN sheet. -->
-                        <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
-                            <div class="chart-card navy-theme dashboard-mobile-readable-chart" style="grid-column: 1 / -1;">
+                        <div class="dashboard-grid dashboard-screen-quality-grid" style="margin-bottom: 2rem;">
+                            <div class="chart-card navy-theme dashboard-mobile-readable-chart">
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h7M7 16h4"></path></svg>
@@ -1124,16 +1124,14 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="chart-container-wrapper dashboard-rework-chart-wrapper">
+                                <div class="chart-container-wrapper dashboard-rework-chart-wrapper" style="height: 220px; max-height: 230px;">
                                     <canvas id="screenDailyChart"></canvas>
                                     <div id="screenDailyChartEmpty" class="dashboard-rework-empty" hidden>ยังไม่มีข้อมูล SCREEN ในช่วงวันที่ที่เลือก</div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Production Charts Grid 2: Quality % Yield & % NG (Full Width) -->
-                        <div class="dashboard-grid" style="margin-bottom: 2rem;">
-                            <div class="chart-card navy-theme dashboard-mobile-readable-chart" style="grid-column: 1 / -1;">
+                        <!-- Quality % Yield & % NG -->
+                            <div class="chart-card navy-theme dashboard-mobile-readable-chart">
                                 <div class="chart-header">
                                     <div class="chart-title">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -1150,7 +1148,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="chart-container-wrapper" style="height: 250px; max-height: 280px; overflow: hidden; position: relative;">
+                                <div class="chart-container-wrapper" style="height: 220px; max-height: 230px; overflow: hidden; position: relative;">
                                     <canvas id="qualityYieldChart"></canvas>
                                 </div>
                             </div>
