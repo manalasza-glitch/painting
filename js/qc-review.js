@@ -457,6 +457,14 @@
                 transform: translate(-50%, 8px);
                 transition: max-height .22s ease, opacity .18s ease, transform .22s ease;
             }
+            /* The floating submenu belongs to the mobile bottom navigation.
+               Keep it out of the desktop layout, where QC has an inline
+               sidebar submenu instead. */
+            @media (min-width: 769px) {
+                .mobile-qc-review-submenu {
+                    display: none !important;
+                }
+            }
             .mobile-qc-review-submenu.is-open {
                 max-height: 54px;
                 opacity: 1;
