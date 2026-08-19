@@ -619,6 +619,13 @@
 
     function init() {
         injectStyles();
+        const desktopSidebar = document.querySelector('.app-sidebar');
+        const mobileNav = document.querySelector('.mobile-bottom-nav');
+        if (desktopSidebar && mobileNav && desktopSidebar.getBoundingClientRect().width > 0) {
+            mobileNav.style.setProperty('display', 'none', 'important');
+            mobileNav.style.setProperty('visibility', 'hidden', 'important');
+            mobileNav.style.setProperty('pointer-events', 'none', 'important');
+        }
         bindDailyDetailClicks();
         const desktop = document.querySelector('.sidebar-nav a.nav-link[data-permission="qc.read"]');
         const mobile = document.querySelector('.mobile-nav-item[data-permission="qc.read"]');
