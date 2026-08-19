@@ -1669,9 +1669,17 @@
                     <div class="qc7-page-header">
                         <div>
                             <h1 class="page-title">QC 7 TOOL</h1>
-                            <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ รวมข้อมูลจาก outputdiary และ Inspection</p>
+                            <p class="qc7-subtitle">เครื่องมือควบคุมคุณภาพ 7 ประการ เลือกแหล่งข้อมูล Reviewed เพื่อวิเคราะห์ได้ตามประเภทงาน · ยอดคัดออกจากราวแยกตาม WorkType ใน Inspection</p>
                         </div>
                         <div class="qc7-toolbar">
+                            <label for="qc7SourceFilter">วิเคราะห์จาก</label>
+                            <select id="qc7SourceFilter" onchange="changeQC7Source(this.value)">
+                                <option value="all">รวมทุกแหล่งข้อมูล</option>
+                                <option value="new">งานใหม่ · outputdiary_Reviewed</option>
+                                <option value="rework">REWORK · REWORK_Reviewed</option>
+                                <option value="screen">SCREEN · SCREEN_Reviewed</option>
+                                <option value="unassigned">คัดออกจากราว · ยังไม่ระบุประเภท</option>
+                            </select>
                             <label for="qc7DateFilter">ตั้งแต่</label>
                             <input type="date" id="qc7DateFilter" onchange="queueQC7DateRangeChange()" onclick="if(this.showPicker) this.showPicker();">
                             <label for="qc7DateFilterEnd">ถึง</label>
@@ -1870,6 +1878,7 @@
                             <select id="workType" class="form-control-custom" required>
                                 <option value="NEW">งานใหม่</option>
                                 <option value="REWORK">งาน REWORK</option>
+                                <option value="SCREEN">งาน SCREEN</option>
                             </select>
                         </div>
 
@@ -2129,7 +2138,7 @@
     <!-- JS Files -->
     <script src="js/api.js?v=97.7.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.40.0"></script>
+    <script src="js/app.js?v=96.42.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
     <script src="js/screen.js?v=1.0.4"></script>

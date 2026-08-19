@@ -1610,6 +1610,7 @@ function renderReworkStackedModelChart(records = [], inspectionRecords = []) {
 
 function normalizeInspectionWorkType(value) {
     const raw = String(value == null ? "" : value).trim().toUpperCase();
+    if (raw === "SCREEN" || raw.includes("SCREEN")) return "SCREEN";
     if (raw === "REWORK" || raw.includes("REWORK") || raw.includes("รีเวิร์ค")) return "REWORK";
     if (raw === "NEW" || raw.includes("งานใหม่")) return "NEW";
     return "";
@@ -1617,6 +1618,7 @@ function normalizeInspectionWorkType(value) {
 
 function inspectionWorkTypeLabel(value) {
     const type = normalizeInspectionWorkType(value);
+    if (type === "SCREEN") return "งาน SCREEN";
     if (type === "REWORK") return "งาน REWORK";
     if (type === "NEW") return "งานใหม่";
     return "ยังไม่ระบุ";
@@ -2279,6 +2281,16 @@ let qc7CombinedRecords = [];
 let qc7DataLoaded = false;
 let qc7DataLoading = false;
 let qc7LoadPromise = null;
+let qc7SelectedSource = 'all';
+let qc7RawData = { inspection: [], new: [], rework: [], screen: [] };
+
+const qc7SourceOptions = [
+    { key: 'all', label: 'รวมทุกแหล่งข้อมูล' },
+    { key: 'new', label: 'งานใหม่ · outputdiary_Reviewed' },
+    { key: 'rework', label: 'REWORK · REWORK_Reviewed' },
+    { key: 'screen', label: 'SCREEN · SCREEN_Reviewed' },
+    { key: 'unassigned', label: 'คัดออกจากราว · ยังไม่ระบุประเภท' }
+];
 
 const qc7DefectTypes = [
     { key: 'rust', label: 'สนิม', color: '#f59e0b' },
@@ -2320,7 +2332,18 @@ function qc7InspectionRejectTotal(record) {
         .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
 }
 
-function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
+function qc7InspectionSource(record) {
+    const raw = String(record && (record.workType || record.WorkType || '')).trim().toUpperCase();
+    if (raw.includes('SCREEN')) return 'screen';
+    if (raw.includes('REWORK') || raw.includes('รีเวิร์ค')) return 'rework';
+    if (raw === 'NEW' || raw.includes('งานใหม่')) return 'new';
+    // Existing Inspection rows without WorkType cannot be assigned to a
+    // production sheet safely. Keep them visible in "all" and expose them in
+    // a separate option instead of silently counting them as งานใหม่.
+    return 'unassigned';
+}
+
+function buildQC7CombinedRecords(inspectionRows = [], sourceRows = {}, sourceFilter = qc7SelectedSource) {
     const byDate = new Map();
     const ensureDay = date => {
         if (!date) return null;
@@ -2348,7 +2371,13 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
         return byDate.get(date);
     };
 
+    const selectedSources = sourceFilter === 'all'
+        ? ['new', 'rework', 'screen', 'unassigned']
+        : [sourceFilter];
+    const selectedSourceSet = new Set(selectedSources);
+
     (Array.isArray(inspectionRows) ? inspectionRows : []).forEach(record => {
+        if (!selectedSourceSet.has(qc7InspectionSource(record))) return;
         const day = ensureDay(qc7RecordDate(record));
         if (!day) return;
         day.inspectionRecordCount += 1;
@@ -2360,29 +2389,37 @@ function buildQC7CombinedRecords(inspectionRows = [], outputRows = []) {
         day.rackRejects += qc7InspectionRejectTotal(record);
     });
 
-    (Array.isArray(outputRows) ? outputRows : []).forEach(record => {
-        const day = ensureDay(qc7RecordDate(record));
-        if (!day) return;
-        day.outputRecordCount += 1;
-        day.prodQty += qc7Number(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty']);
+    const rowsBySource = [
+        ['new', sourceRows.new],
+        ['rework', sourceRows.rework],
+        ['screen', sourceRows.screen]
+    ];
+    rowsBySource.forEach(([source, rows]) => {
+        if (!selectedSourceSet.has(source)) return;
+        (Array.isArray(rows) ? rows : []).forEach(record => {
+            const day = ensureDay(qc7RecordDate(record));
+            if (!day) return;
+            day.outputRecordCount += 1;
+            day.prodQty += qc7Number(record, ['prodQty', 'ProdQty', 'prod_qty', 'qty']);
 
-        const outputDefects = qc7OutputDefectTotal(record);
-        day.outputDiaryDefects += outputDefects;
-        day.dent += qc7Number(record, ['dent']);
-        day.colorDrop += qc7Number(record, ['colorDrop']);
-        day.thinPaint += qc7Number(record, ['thinPaint']);
-        day.thickPaint += qc7Number(record, ['thickPaint']);
-        day.waterStain += qc7Number(record, ['waterStain']);
-        day.oil += qc7Number(record, ['oil']);
-        day.rust += qc7Number(record, ['rust']);
-        day.dust += qc7Number(record, ['dust']);
-        day.otherDefect += qc7Number(record, ['otherDefect']);
+            const outputDefects = qc7OutputDefectTotal(record);
+            day.outputDiaryDefects += outputDefects;
+            day.dent += qc7Number(record, ['dent']);
+            day.colorDrop += qc7Number(record, ['colorDrop']);
+            day.thinPaint += qc7Number(record, ['thinPaint']);
+            day.thickPaint += qc7Number(record, ['thickPaint']);
+            day.waterStain += qc7Number(record, ['waterStain']);
+            day.oil += qc7Number(record, ['oil']);
+            day.rust += qc7Number(record, ['rust']);
+            day.dust += qc7Number(record, ['dust']);
+            day.otherDefect += qc7Number(record, ['otherDefect']);
 
-        // Keep the displayed defect categories consistent with the sheet's
-        // explicit total, even when a legacy row omitted one category field.
-        const listedDefects = ['rust', 'dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
-            .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
-        day.otherDefect += Math.max(0, outputDefects - listedDefects);
+            // Keep the displayed defect categories consistent with the sheet's
+            // explicit total, even when a legacy row omitted one category field.
+            const listedDefects = ['rust', 'dent', 'colorDrop', 'thinPaint', 'thickPaint', 'waterStain', 'oil', 'dust', 'otherDefect']
+                .reduce((sum, key) => sum + qc7Number(record, [key]), 0);
+            day.otherDefect += Math.max(0, outputDefects - listedDefects);
+        });
     });
 
     return Array.from(byDate.values()).map(day => {
@@ -2415,14 +2452,27 @@ async function loadQC7Data(force = false) {
                 ? await fetchInspectionDataFromAPI('')
                 : (Array.isArray(inspectionRecords) ? inspectionRecords : []);
             const outputRows = typeof fetchDailyReportDataFromAPI === 'function'
-                ? await fetchDailyReportDataFromAPI('')
+                ? await fetchDailyReportDataFromAPI('', { scope: 'reviewed' })
                 : (typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []);
-            qc7CombinedRecords = buildQC7CombinedRecords(inspectionRows, outputRows);
+            const reworkRows = typeof fetchReworkReportDataFromAPI === 'function'
+                ? await fetchReworkReportDataFromAPI('', { scope: 'reviewed' })
+                : [];
+            const screenRows = typeof fetchScreenReportDataFromAPI === 'function'
+                ? await fetchScreenReportDataFromAPI('', { scope: 'reviewed' })
+                : [];
+            qc7RawData = {
+                inspection: Array.isArray(inspectionRows) ? inspectionRows : [],
+                new: Array.isArray(outputRows) ? outputRows : [],
+                rework: Array.isArray(reworkRows) ? reworkRows : [],
+                screen: Array.isArray(screenRows) ? screenRows : []
+            };
+            qc7CombinedRecords = buildQC7CombinedRecords(qc7RawData.inspection, qc7RawData, qc7SelectedSource);
             qc7DataLoaded = true;
             return qc7CombinedRecords;
         } catch (error) {
             console.warn('Unable to load QC 7 TOOL data:', error);
             qc7CombinedRecords = [];
+            qc7RawData = { inspection: [], new: [], rework: [], screen: [] };
             qc7DataLoaded = false;
             return [];
         } finally {
@@ -2502,6 +2552,24 @@ function qc7FilteredRecords() {
     return range.start || range.end ? rows.filter(record => qc7RecordInDateRange(record, range)) : rows;
 }
 
+function qc7SourceLabel(sourceKey = qc7SelectedSource) {
+    const option = qc7SourceOptions.find(item => item.key === sourceKey);
+    return option ? option.label : qc7SourceOptions[0].label;
+}
+
+function changeQC7Source(sourceKey) {
+    const valid = qc7SourceOptions.some(item => item.key === sourceKey) ? sourceKey : 'all';
+    qc7SelectedSource = valid;
+    const select = document.getElementById('qc7SourceFilter');
+    if (select && select.value !== valid) select.value = valid;
+    if (qc7DataLoaded) {
+        qc7CombinedRecords = buildQC7CombinedRecords(qc7RawData.inspection, qc7RawData, qc7SelectedSource);
+        renderQC7Tools();
+    } else {
+        loadQC7Data();
+    }
+}
+
 function showAllQC7Data() {
     const startInput = document.getElementById('qc7DateFilter');
     const endInput = document.getElementById('qc7DateFilterEnd');
@@ -2516,6 +2584,8 @@ function initQC7Tools() {
     const endInput = document.getElementById('qc7DateFilterEnd');
     if (startInput && !startInput.value) startInput.value = today;
     if (endInput && !endInput.value) endInput.value = startInput && startInput.value ? startInput.value : today;
+    const sourceSelect = document.getElementById('qc7SourceFilter');
+    if (sourceSelect) sourceSelect.value = qc7SelectedSource;
     renderQC7Tools();
     loadQC7Data();
 }
@@ -2550,7 +2620,7 @@ function renderQC7Tools() {
     const records = qc7FilteredRecords();
     const checkSheet = document.getElementById('qc7CheckSheet');
     if (qc7DataLoading && !qc7DataLoaded) {
-        if (checkSheet) checkSheet.innerHTML = '<div class="qc7-empty-state">กำลังโหลดข้อมูลจาก outputdiary และ Inspection...</div>';
+        if (checkSheet) checkSheet.innerHTML = '<div class="qc7-empty-state">กำลังโหลดข้อมูลจาก outputdiary_Reviewed, REWORK_Reviewed, SCREEN_Reviewed และ Inspection...</div>';
         qc7DestroyCharts();
         const stratificationBody = document.getElementById('qc7StratificationBody');
         if (stratificationBody) stratificationBody.innerHTML = '<tr><td colspan="5" class="qc7-empty-state">กำลังโหลดข้อมูล...</td></tr>';
@@ -2755,3 +2825,4 @@ window.openQC7Tools = openQC7Tools;
 window.initQC7Tools = initQC7Tools;
 window.renderQC7Tools = renderQC7Tools;
 window.showAllQC7Data = showAllQC7Data;
+window.changeQC7Source = changeQC7Source;

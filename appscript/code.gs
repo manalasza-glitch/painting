@@ -27,6 +27,7 @@ const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "insp
 
 function normalizeInspectionWorkType_(value) {
   const raw = String(value == null ? "" : value).trim().toUpperCase();
+  if (raw === "SCREEN" || raw.indexOf("SCREEN") >= 0) return "SCREEN";
   if (raw === "REWORK" || raw.indexOf("REWORK") >= 0 || raw.indexOf("รีเวิร์ค") >= 0) return "REWORK";
   if (raw === "NEW" || raw.indexOf("งานใหม่") >= 0) return "NEW";
   return "";
