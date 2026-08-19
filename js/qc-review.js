@@ -337,7 +337,14 @@
 
     function setReviewSubmenuOpen(open) {
         const expanded = !!open;
+        const desktopSidebar = document.querySelector('.app-sidebar');
+        const desktopIsVisible = desktopSidebar && desktopSidebar.getBoundingClientRect().width > 0;
+        if (desktopIsVisible) {
+            const mobileMenu = document.getElementById('mobile-qc-review-submenu');
+            if (mobileMenu) mobileMenu.remove();
+        }
         document.querySelectorAll('.qc-review-submenu, .mobile-qc-review-submenu').forEach(menu => {
+            if (desktopIsVisible && menu.classList.contains('mobile-qc-review-submenu')) return;
             menu.classList.toggle('is-open', expanded);
             menu.setAttribute('aria-hidden', expanded ? 'false' : 'true');
         });
