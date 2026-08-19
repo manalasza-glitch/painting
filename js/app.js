@@ -2586,11 +2586,11 @@ function showAllQC7Data() {
 }
 
 function initQC7Tools() {
-    const today = getStandardISODate(new Date().toISOString());
     const startInput = document.getElementById('qc7DateFilter');
     const endInput = document.getElementById('qc7DateFilterEnd');
-    if (startInput && !startInput.value) startInput.value = today;
-    if (endInput && !endInput.value) endInput.value = startInput && startInput.value ? startInput.value : today;
+    // Leave the range empty on first open so QC 7 shows the available
+    // Reviewed history immediately. Users can still enter a date range to
+    // narrow the analysis, and existing selections are preserved on revisit.
     const sourceSelect = document.getElementById('qc7SourceFilter');
     if (sourceSelect) sourceSelect.value = qc7SelectedSource;
     renderQC7Tools();
