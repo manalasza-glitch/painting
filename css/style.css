@@ -3823,6 +3823,24 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   margin: 0 0 2rem;
 }
 
+/* Keep the compact SCREEN and Yield cards balanced instead of inheriting the
+   dashboard's wider 1.8fr / 1.2fr chart split. */
+.dashboard-screen-quality-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch;
+}
+
+.dashboard-screen-quality-grid > .chart-card {
+  min-width: 0;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .dashboard-screen-quality-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 .dashboard-rework-title-bar {
   border-bottom: 2px solid rgba(203, 213, 225, 0.9);
   padding-bottom: 0.55rem;
