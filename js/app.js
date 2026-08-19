@@ -1610,7 +1610,6 @@ function renderReworkStackedModelChart(records = [], inspectionRecords = []) {
 
 function normalizeInspectionWorkType(value) {
     const raw = String(value == null ? "" : value).trim().toUpperCase();
-    if (raw === "SCREEN" || raw.includes("SCREEN")) return "SCREEN";
     if (raw === "REWORK" || raw.includes("REWORK") || raw.includes("รีเวิร์ค")) return "REWORK";
     if (raw === "NEW" || raw.includes("งานใหม่")) return "NEW";
     return "";
@@ -1618,7 +1617,6 @@ function normalizeInspectionWorkType(value) {
 
 function inspectionWorkTypeLabel(value) {
     const type = normalizeInspectionWorkType(value);
-    if (type === "SCREEN") return "งาน SCREEN";
     if (type === "REWORK") return "งาน REWORK";
     if (type === "NEW") return "งานใหม่";
     return "ยังไม่ระบุ";
