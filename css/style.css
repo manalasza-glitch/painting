@@ -1386,6 +1386,42 @@ button, input, textarea, select {
   font-weight: 700;
 }
 
+.qc7-toolbar select {
+  min-height: 40px;
+  min-width: 220px;
+  max-width: 270px;
+  padding: 0.45rem 2.15rem 0.45rem 0.75rem;
+  color: #f8fafc;
+  color-scheme: dark;
+  background-color: #0b1329;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #38bdf8 50%),
+    linear-gradient(135deg, #38bdf8 50%, transparent 50%);
+  background-position: calc(100% - 15px) 17px, calc(100% - 10px) 17px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.qc7-toolbar select:hover,
+.qc7-toolbar select:focus {
+  border-color: #38bdf8;
+  background-color: #101d38;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+}
+
+.qc7-toolbar select option {
+  color: #f8fafc;
+  background: #0b1329;
+}
+
 .qc7-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1628,6 +1664,10 @@ button, input, textarea, select {
   }
   .qc7-toolbar input {
     flex: 1;
+  }
+  .qc7-toolbar select {
+    flex: 1 1 220px;
+    max-width: none;
   }
 }
 
