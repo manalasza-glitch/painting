@@ -1314,36 +1314,11 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle register
+    // Handle register. The script lock closes the race where two requests
+    // check the sheet before either one has appended the new employee.
     if (action === "register") {
-      let uSheet = getOrCreateUsersSheet(ss);
-      const empId = String((data && data.employeeId) || (e && e.parameter && e.parameter.employeeId) || "").trim();
-      const name = String((data && data.displayName) || (e && e.parameter && e.parameter.displayName) || "").trim();
-      const dept = String((data && data.department) || (e && e.parameter && e.parameter.department) || "Engineer").trim();
-      const passHash = String((data && data.passwordHash) || (e && e.parameter && e.parameter.passwordHash) || "").trim();
-
-      const values = uSheet.getDataRange().getValues();
-      for (let i = 1; i < values.length; i++) {
-        if (String(values[i][0]).trim() === empId) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" })).setMimeType(ContentService.MimeType.JSON);
-        }
-      }
-
-      const isFirstUser = values.length <= 1;
-      const role = isFirstUser ? "Super Admin" : "Inspector";
-      const status = isFirstUser ? "Active" : "Pending";
-      const permissions = getDefaultPermissions(role);
-      const nowStr = formatDateStr(new Date(), true);
-
-      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, "", JSON.stringify(permissions)]);
-      SpreadsheetApp.flush();
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "success",
-        isSuperAdmin: isFirstUser,
-        role: role,
-        userStatus: status
-      })).setMimeType(ContentService.MimeType.JSON);
+      const result = registerUserRecord_(ss, data || {}, "Engineer");
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getUsers
@@ -1727,6 +1702,46 @@ function getOrCreateUsersSheet(ss) {
   return uSheet;
 }
 
+function registerUserRecord_(ss, payload, defaultDepartment) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+
+    const data = payload || {};
+    const uSheet = getOrCreateUsersSheet(ss);
+    const empId = String(data.employeeId || "").trim();
+    const name = String(data.displayName || "").trim();
+    const dept = String(data.department || defaultDepartment || "Engineer").trim();
+    const passHash = String(data.passwordHash || "").trim();
+
+    if (!empId) {
+      return { status: "error", message: "กรุณาระบุรหัสพนักงาน" };
+    }
+
+    const values = uSheet.getDataRange().getValues();
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][0] || "").trim() === empId) {
+        return { status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" };
+      }
+    }
+
+    const isFirstUser = values.length <= 1;
+    const role = isFirstUser ? "Super Admin" : "Inspector";
+    const status = isFirstUser ? "Active" : "Pending";
+    const permissions = getDefaultPermissions(role);
+    const nowStr = formatDateStr(new Date(), true);
+
+    uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, "", JSON.stringify(permissions)]);
+    SpreadsheetApp.flush();
+
+    return { status: "success", isSuperAdmin: isFirstUser, role: role, userStatus: status };
+  } catch (error) {
+    return { status: "error", message: error && error.message ? error.message : "ไม่สามารถลงทะเบียนได้" };
+  } finally {
+    try { lock.releaseLock(); } catch (releaseError) {}
+  }
+}
+
 // Keep the normal JSON response for fetch() callers, but also support a safe
 // JSONP callback. Apps Script /exec uses a short-lived redirect; a browser
 // script request can follow that redirect reliably when fetch() receives a
@@ -1837,36 +1852,10 @@ function doGetJson_(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ไม่พบรหัสพนักงานนี้ในระบบ" })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Handle register
+    // Handle register using the same locked writer as POST requests.
     if (action === "register") {
-      let uSheet = getOrCreateUsersSheet(ss);
-      const empId = String((e && e.parameter && e.parameter.employeeId) || "").trim();
-      const name = String((e && e.parameter && e.parameter.displayName) || "").trim();
-      const dept = String((e && e.parameter && e.parameter.department) || "แผนกพ่นสี").trim();
-      const passHash = String((e && e.parameter && e.parameter.passwordHash) || "").trim();
-
-      const values = uSheet.getDataRange().getValues();
-      for (let i = 1; i < values.length; i++) {
-        if (String(values[i][0]).trim() === empId) {
-          return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "รหัสพนักงานนี้ลงทะเบียนไว้แล้ว" })).setMimeType(ContentService.MimeType.JSON);
-        }
-      }
-
-      const isFirstUser = values.length <= 1;
-      const role = isFirstUser ? "Super Admin" : "Inspector";
-      const status = isFirstUser ? "Active" : "Pending";
-      const permissions = getDefaultPermissions(role);
-      const nowStr = formatDateStr(new Date(), true);
-
-      uSheet.appendRow([empId, name, dept, passHash, role, status, nowStr, "", JSON.stringify(permissions)]);
-      SpreadsheetApp.flush();
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "success",
-        isSuperAdmin: isFirstUser,
-        role: role,
-        userStatus: status
-      })).setMimeType(ContentService.MimeType.JSON);
+      const result = registerUserRecord_(ss, e && e.parameter ? e.parameter : {}, "แผนกพ่นสี");
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Handle getUsers

@@ -1010,6 +1010,36 @@ function normalizeUserPermissions(permissions, role, employeeId) {
     return permissions.filter(key => USER_PERMISSION_KEYS.includes(String(key)));
 }
 
+// A registration request must create one account card even if an old sheet
+// contains duplicate rows. Prefer the usable account state when duplicates
+// exist so an approved user is not hidden by a stale Pending row.
+function deduplicateUsers(users = []) {
+    const statusRank = { Active: 3, Pending: 2, Disabled: 1 };
+    const uniqueUsers = new Map();
+
+    (Array.isArray(users) ? users : []).forEach(user => {
+        const employeeId = String(user && user.employeeId || "").trim();
+        if (!employeeId) return;
+
+        const key = employeeId.toLowerCase();
+        const current = uniqueUsers.get(key);
+        if (!current) {
+            uniqueUsers.set(key, user);
+            return;
+        }
+
+        const currentRank = statusRank[String(current.status || "").trim()] || 0;
+        const nextRank = statusRank[String(user.status || "").trim()] || 0;
+        const currentDate = Date.parse(current.createdAt || current.lastLogin || "") || 0;
+        const nextDate = Date.parse(user.createdAt || user.lastLogin || "") || 0;
+        if (nextRank > currentRank || (nextRank === currentRank && nextDate > currentDate)) {
+            uniqueUsers.set(key, user);
+        }
+    });
+
+    return [...uniqueUsers.values()];
+}
+
 async function checkBootstrapAPI() {
     return { isBootstrap: false };
 }
@@ -1096,7 +1126,8 @@ async function loginUserAPI(employeeId, passwordHash) {
 async function registerUserAPI(userData) {
     const baseUrl = getApiUrl();
 
-    // 1. Guaranteed Cloud Dispatch to Google Sheets API
+    // Send exactly one cloud request. The old implementation dispatched both
+    // GET and POST, so Apps Script appended the same registration twice.
     if (baseUrl) {
         try {
             const queryParams = new URLSearchParams({
@@ -1108,20 +1139,23 @@ async function registerUserAPI(userData) {
             }).toString();
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + queryParams;
 
-            fetch(url, { method: "GET", mode: "no-cors", cache: "no-cache" });
-            fetch(baseUrl, {
-                method: "POST",
-                mode: "no-cors",
-                cache: "no-cache",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "register", ...userData })
+            const response = await fetch(withApiRequestNonce(url), {
+                method: "GET",
+                cache: "no-store",
+                headers: { "Accept": "application/json" }
             });
+
+            if (!response.ok) throw new Error(`Register user: HTTP ${response.status}`);
+            const result = await response.json();
+            // Preserve backend duplicate/error responses. Do not turn a
+            // rejected cloud registration into a misleading local success.
+            return result && typeof result === "object" ? result : { status: "error", message: "ไม่สามารถยืนยันการสมัครได้" };
         } catch (e) {
-            console.warn("Cloud register dispatch failed:", e);
+            console.warn("Cloud register failed, using local fallback:", e);
         }
     }
 
-    // 2. Guaranteed Local Registration Fallback
+    // Use local storage only when the cloud request itself is unavailable.
     return saveUserLocallyFallback(userData);
 }
 
@@ -1182,10 +1216,10 @@ async function getUsersAPI() {
             const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'action=getUsers';
             const json = await fetchAppsScriptJsonWithRetry(url, "Get users", { attempts: 1, timeoutMs: 15000 });
             if (json && json.status === "success" && Array.isArray(json.users)) {
-                const users = json.users.map(user => ({
+                const users = deduplicateUsers(json.users.map(user => ({
                     ...user,
                     permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
-                }));
+                })));
                 localStorage.setItem("PAINTING_LOCAL_USERS", JSON.stringify(users));
                 return users;
             }
@@ -1197,10 +1231,10 @@ async function getUsersAPI() {
     try {
         const cached = localStorage.getItem("PAINTING_LOCAL_USERS");
         const users = cached ? JSON.parse(cached) : [];
-        return Array.isArray(users) ? users.map(user => ({
+        return Array.isArray(users) ? deduplicateUsers(users.map(user => ({
             ...user,
             permissions: normalizeUserPermissions(user.permissions, user.role, user.employeeId)
-        })) : [];
+        }))) : [];
     } catch (e) {
         return [];
     }
