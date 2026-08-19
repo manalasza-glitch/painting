@@ -378,6 +378,8 @@
 
     function addMobileSubmenu(parent) {
         if (!parent || document.getElementById('mobile-qc-review-submenu')) return;
+        const desktopSidebar = document.querySelector('.app-sidebar');
+        if (desktopSidebar && getComputedStyle(desktopSidebar).display !== 'none') return;
         // Only create the floating popup when the mobile bottom navigation is
         // actually active. This also handles desktop browsers with zoom or
         // device emulation that report a narrow CSS viewport.
