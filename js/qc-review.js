@@ -378,6 +378,11 @@
 
     function addMobileSubmenu(parent) {
         if (!parent || document.getElementById('mobile-qc-review-submenu')) return;
+        // Only create the floating popup when the mobile bottom navigation is
+        // actually active. This also handles desktop browsers with zoom or
+        // device emulation that report a narrow CSS viewport.
+        const mobileNav = parent.closest('.mobile-bottom-nav');
+        if (!mobileNav || getComputedStyle(mobileNav).display === 'none') return;
         const menu = document.createElement('div');
         menu.id = 'mobile-qc-review-submenu';
         menu.className = 'mobile-qc-review-submenu';
@@ -460,7 +465,7 @@
             /* The floating submenu belongs to the mobile bottom navigation.
                Keep it out of the desktop layout, where QC has an inline
                sidebar submenu instead. */
-            @media (min-width: 769px) {
+            @media (min-width: 769px), (pointer: fine) {
                 .mobile-qc-review-submenu {
                     display: none !important;
                 }
