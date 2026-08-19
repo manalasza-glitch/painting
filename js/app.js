@@ -2443,21 +2443,30 @@ async function loadQC7Data(force = false) {
     renderQC7Tools();
     const load = (async () => {
         try {
-            // Apps Script web apps issue a redirect per request. Keep these
-            // sheet reads sequential so the browser does not open several
-            // redirects at once and overload the deployment.
-            const inspectionRows = typeof fetchInspectionDataFromAPI === 'function'
-                ? await fetchInspectionDataFromAPI('')
-                : (Array.isArray(inspectionRecords) ? inspectionRecords : []);
-            const outputRows = typeof fetchDailyReportDataFromAPI === 'function'
-                ? await fetchDailyReportDataFromAPI('', { scope: 'reviewed' })
-                : (typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []);
-            const reworkRows = typeof fetchReworkReportDataFromAPI === 'function'
-                ? await fetchReworkReportDataFromAPI('', { scope: 'reviewed' })
-                : [];
-            const screenRows = typeof fetchScreenReportDataFromAPI === 'function'
-                ? await fetchScreenReportDataFromAPI('', { scope: 'reviewed' })
-                : [];
+            // QC 7 reads four independent sources. Use the normal JSON fetch
+            // with a bounded timeout for this screen so a slow JSONP redirect
+            // or one unavailable sheet cannot leave the whole page spinning.
+            const qc7RetryOptions = {
+                preferJsonp: false,
+                allowJsonp: false,
+                attempts: 1,
+                timeoutMs: 12000,
+                skipQueue: true
+            };
+            const [inspectionRows, outputRows, reworkRows, screenRows] = await Promise.all([
+                typeof fetchInspectionDataFromAPI === 'function'
+                    ? fetchInspectionDataFromAPI('', { retryOptions: qc7RetryOptions })
+                    : Promise.resolve(Array.isArray(inspectionRecords) ? inspectionRecords : []),
+                typeof fetchDailyReportDataFromAPI === 'function'
+                    ? fetchDailyReportDataFromAPI('', { scope: 'reviewed', retryOptions: qc7RetryOptions })
+                    : Promise.resolve(typeof getSavedDailyReportRecords === 'function' ? getSavedDailyReportRecords() : []),
+                typeof fetchReworkReportDataFromAPI === 'function'
+                    ? fetchReworkReportDataFromAPI('', { scope: 'reviewed', retryOptions: qc7RetryOptions })
+                    : Promise.resolve([]),
+                typeof fetchScreenReportDataFromAPI === 'function'
+                    ? fetchScreenReportDataFromAPI('', { scope: 'reviewed', retryOptions: qc7RetryOptions })
+                    : Promise.resolve([])
+            ]);
             qc7RawData = {
                 inspection: Array.isArray(inspectionRows) ? inspectionRows : [],
                 new: Array.isArray(outputRows) ? outputRows : [],

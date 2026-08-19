@@ -188,7 +188,7 @@ async function fetchAppsScriptJsonWithRetry(url, operation, retryOptions = {}) {
 }
 
 // Fetch historical inspection records from Google Sheet API
-async function fetchInspectionDataFromAPI(dateFilter = "") {
+async function fetchInspectionDataFromAPI(dateFilter = "", options = {}) {
     const url = getApiUrl();
     const requestedDate = String(dateFilter || "").trim();
     const cacheKey = requestedDate ? `PAINTING_INSPECTION_CACHE_${requestedDate}` : "PAINTING_INSPECTION_CACHE";
@@ -196,7 +196,11 @@ async function fetchInspectionDataFromAPI(dateFilter = "") {
 
     try {
         const requestUrl = url + (url.includes('?') ? '&' : '?') + (requestedDate ? `date=${encodeURIComponent(requestedDate)}` : '');
-        const data = await fetchAppsScriptJsonWithRetry(requestUrl, "Get inspection data", { attempts: 2, timeoutMs: 15000 });
+        const data = await fetchAppsScriptJsonWithRetry(
+            requestUrl,
+            "Get inspection data",
+            options.retryOptions || { attempts: 2, timeoutMs: 15000 }
+        );
         let records = [];
         if (Array.isArray(data)) {
             records = data;
