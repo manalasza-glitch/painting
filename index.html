@@ -1107,6 +1107,30 @@
                             </div>
                         </div>
 
+                        <!-- SCREEN Chart: sourced from the dedicated SCREEN sheet. -->
+                        <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
+                            <div class="chart-card navy-theme dashboard-mobile-readable-chart" style="grid-column: 1 / -1;">
+                                <div class="chart-header">
+                                    <div class="chart-title">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h7M7 16h4"></path></svg>
+                                        <span>สถิติงาน SCREEN</span>
+                                    </div>
+                                    <div class="dashboard-rework-chart-actions">
+                                        <span class="dashboard-rework-summary"><strong id="dashboardScreenTotal">0</strong> ชิ้น</span>
+                                        <span class="dashboard-rework-summary dashboard-rework-summary-defect">ของเสีย <strong id="dashboardScreenDefectTotal">0</strong> ชิ้น</span>
+                                        <button type="button" class="dashboard-rework-refresh" onclick="loadScreenDashboardChart(true)" title="รีเฟรชข้อมูล SCREEN" aria-label="รีเฟรชข้อมูล SCREEN">↻</button>
+                                        <button class="btn-chart-expand" onclick="openChartFullscreen('screenDailyChart', 'สถิติงาน SCREEN')" title="ขยายเต็มหน้าจอ">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-container-wrapper dashboard-rework-chart-wrapper">
+                                    <canvas id="screenDailyChart"></canvas>
+                                    <div id="screenDailyChartEmpty" class="dashboard-rework-empty" hidden>ยังไม่มีข้อมูล SCREEN ในช่วงวันที่ที่เลือก</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Production Charts Grid 2: Quality % Yield & % NG (Full Width) -->
                         <div class="dashboard-grid" style="margin-bottom: 2rem;">
                             <div class="chart-card navy-theme dashboard-mobile-readable-chart" style="grid-column: 1 / -1;">
@@ -2157,10 +2181,10 @@
     <!-- JS Files -->
     <script src="js/api.js?v=97.7.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
-    <script src="js/app.js?v=96.38.0"></script>
+    <script src="js/app.js?v=96.39.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
-    <script src="js/screen.js?v=1.0.3"></script>
+    <script src="js/screen.js?v=1.0.4"></script>
     <script src="js/parameter-checklist.js?v=1.12.12"></script>
     <script src="js/equipment-checklist.js?v=1.4.1"></script>
     <script src="js/qc-review.js?v=1.0.36"></script>

@@ -775,6 +775,9 @@ function renderDashboard() {
     if (typeof window.loadReworkDashboardChart === "function") {
         window.loadReworkDashboardChart();
     }
+    if (typeof window.loadScreenDashboardChart === "function") {
+        window.loadScreenDashboardChart();
+    }
 
     const hasInspectionRows = Array.isArray(inspectionRecords) && inspectionRecords.length > 0;
     if (!hasInspectionRows) {
