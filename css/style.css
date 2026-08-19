@@ -4073,3 +4073,91 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     max-width: 100% !important;
   }
 }
+
+/* Final iPad layout guard: keep SCREEN fields inside their grid cells on
+   Safari/Chrome native selects, where long option text can paint outside the
+   control when the tablet still shows the desktop sidebar. */
+@media (min-width: 769px) and (max-width: 1180px) {
+  #screen-tab .dr-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #screen-tab .dr-grid-9 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  #screen-tab .dr-grid-2,
+  #screen-tab .dr-grid-3,
+  #screen-tab .dr-grid-4,
+  #screen-tab .dr-grid-9 {
+    min-width: 0 !important;
+  }
+
+  #screen-tab .dr-grid-2 > .form-group,
+  #screen-tab .dr-grid-3 > .form-group,
+  #screen-tab .dr-grid-4 > .form-group,
+  #screen-tab .dr-grid-9 > .form-group {
+    min-width: 0 !important;
+  }
+
+  #screen-tab .form-control,
+  #screen-tab select {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* iPad portrait: give the time selector a full row and reduce the bottom
+   navigation height without removing any menu item. */
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+  #screen-tab .dr-grid-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #screen-tab .dr-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #screen-tab .dr-grid-9 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  #screen-tab .form-control,
+  #screen-tab select {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .mobile-bottom-nav {
+    max-height: 4.3rem !important;
+  }
+
+  .mobile-nav-items {
+    gap: 0.15rem !important;
+    padding: 0.18rem 0.3rem !important;
+  }
+
+  .mobile-nav-item {
+    min-width: 62px !important;
+    max-width: 84px !important;
+    padding: 0.18rem 0.25rem !important;
+    gap: 0.08rem !important;
+    font-size: 0.62rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .mobile-nav-item svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .main-wrapper {
+    padding-bottom: 4.8rem !important;
+  }
+}
