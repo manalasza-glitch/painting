@@ -72,8 +72,35 @@ function inspectionRowValues_(sheet, payload, existingRow) {
     Timestamp: new Date(),
     [INSPECTION_WORK_TYPE_HEADER]: normalizeInspectionWorkType_(payload.workType)
   };
+
+  // The existing Inspection tab uses Thai headers (วันที่, งานเป็นสนิม,
+  // เวลา, ...), while newly-created tabs use the English headers above.
+  // Match both layouts and fall back to the original column positions so a
+  // new save cannot create a row containing only WorkType.
+  const aliases = {
+    Date: ["Date", "วันที่", "วันที่ตรวจเช็ค"],
+    Rust: ["Rust", "งานเป็นสนิม", "สนิม"],
+    Dent: ["Dent", "รอยบุบ"],
+    Weld: ["Weld", "สะเก็ดรอยเชื่อม", "สะเก็ดเชื่อม"],
+    Chemical: ["Chemical", "คราบน้ำยา"],
+    Oil: ["Oil", "คราบน้ำมัน"],
+    Note: ["Note", "หมายเหตุ"],
+    Timestamp: ["Timestamp", "เวลา", "เวลาที่บันทึก"],
+    [INSPECTION_WORK_TYPE_HEADER]: [INSPECTION_WORK_TYPE_HEADER, "ประเภทงาน", "ส่วนงานที่ตรวจเช็ค"]
+  };
+  const fallbackIndexes = { Date: 0, Rust: 1, Dent: 2, Weld: 3, Chemical: 4, Oil: 5, Note: 6, Timestamp: 7, [INSPECTION_WORK_TYPE_HEADER]: 8 };
+  const normalizedHeaders = headers.map(header => String(header || "").trim().toLowerCase());
+
+  const findIndex = name => {
+    const names = (aliases[name] || [name]).map(alias => String(alias).trim().toLowerCase());
+    const matched = normalizedHeaders.findIndex(header => names.includes(header));
+    if (matched >= 0) return matched;
+    const fallback = Number(fallbackIndexes[name]);
+    return fallback < lastColumn ? fallback : -1;
+  };
+
   Object.keys(values).forEach(name => {
-    const index = headers.indexOf(name);
+    const index = findIndex(name);
     if (index >= 0) row[index] = values[name];
   });
   return row.slice(0, lastColumn);
