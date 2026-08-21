@@ -1430,25 +1430,83 @@ button, input, textarea, select {
 }
 
 .qc7-summary-card {
+  --qc7-accent: #38bdf8;
+  --qc7-border: rgba(56, 189, 248, 0.3);
+  --qc7-tint: rgba(56, 189, 248, 0.12);
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
   padding: 1rem 1.1rem;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: linear-gradient(145deg, var(--qc7-tint), rgba(15, 23, 42, 0.92) 72%);
+  border: 1px solid var(--qc7-border);
   border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(2, 6, 23, 0.12);
+}
+
+.qc7-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--qc7-accent);
+  box-shadow: 0 0 16px var(--qc7-accent);
+}
+
+.qc7-summary-days {
+  --qc7-accent: #60a5fa;
+  --qc7-border: rgba(96, 165, 250, 0.36);
+  --qc7-tint: rgba(59, 130, 246, 0.18);
+}
+
+.qc7-summary-production {
+  --qc7-accent: #22d3ee;
+  --qc7-border: rgba(34, 211, 238, 0.36);
+  --qc7-tint: rgba(6, 182, 212, 0.16);
+}
+
+.qc7-summary-defects {
+  --qc7-accent: #fb7185;
+  --qc7-border: rgba(251, 113, 133, 0.38);
+  --qc7-tint: rgba(225, 29, 72, 0.18);
+}
+
+.qc7-summary-good {
+  --qc7-accent: #34d399;
+  --qc7-border: rgba(52, 211, 153, 0.36);
+  --qc7-tint: rgba(5, 150, 105, 0.17);
+}
+
+.qc7-summary-ng {
+  --qc7-accent: #fbbf24;
+  --qc7-border: rgba(251, 191, 36, 0.4);
+  --qc7-tint: rgba(217, 119, 6, 0.18);
+}
+
+.qc7-summary-top-defect {
+  --qc7-accent: #c084fc;
+  --qc7-border: rgba(192, 132, 252, 0.38);
+  --qc7-tint: rgba(126, 34, 206, 0.18);
+}
+
+.qc7-summary-average {
+  --qc7-accent: #fb923c;
+  --qc7-border: rgba(251, 146, 60, 0.38);
+  --qc7-tint: rgba(234, 88, 12, 0.17);
 }
 
 .qc7-summary-label {
-  color: #94a3b8;
+  color: color-mix(in srgb, var(--qc7-accent) 72%, #cbd5e1);
   font-size: 0.8rem;
   font-weight: 700;
 }
 
 .qc7-summary-card strong {
-  color: #38bdf8;
+  color: var(--qc7-accent);
   font-size: 1.45rem;
   line-height: 1.15;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--qc7-accent) 30%, transparent);
 }
 
 .qc7-summary-card small {
