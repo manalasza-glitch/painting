@@ -2284,9 +2284,9 @@ let qc7RawData = { inspection: [], new: [], rework: [], screen: [] };
 
 const qc7SourceOptions = [
     { key: 'all', label: 'รวมทุกแหล่งข้อมูล' },
-    { key: 'new', label: 'งานใหม่ · outputdiary_Reviewed' },
-    { key: 'rework', label: 'REWORK · REWORK_Reviewed' },
-    { key: 'screen', label: 'SCREEN · SCREEN_Reviewed' },
+    { key: 'new', label: 'งานใหม่' },
+    { key: 'rework', label: 'REWORK' },
+    { key: 'screen', label: 'SCREEN' },
     { key: 'unassigned', label: 'คัดออกจากราว · ยังไม่ระบุประเภท' }
 ];
 
