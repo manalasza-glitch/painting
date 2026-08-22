@@ -883,6 +883,88 @@ async function fetchPartModelsFromAPI() {
 }
 
 // ==========================================
+// Spare parts inventory API Functions
+// ==========================================
+
+const SPARE_PARTS_CACHE_KEY = "PAINTING_SPARE_PARTS_CACHE";
+
+async function fetchSparePartsFromAPI() {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) return { parts: [], transactions: [] };
+
+    try {
+        const url = baseUrl + (baseUrl.includes("?") ? "&" : "?") + "action=getSpareParts";
+        const result = await fetchAppsScriptJsonWithRetry(url, "โหลดคลังอะไหล่", { attempts: 2, timeoutMs: 15000 });
+        const inventory = {
+            parts: Array.isArray(result?.parts) ? result.parts : [],
+            transactions: Array.isArray(result?.transactions) ? result.transactions : []
+        };
+        localStorage.setItem(SPARE_PARTS_CACHE_KEY, JSON.stringify(inventory));
+        return inventory;
+    } catch (error) {
+        console.warn("Failed to fetch spare parts inventory:", error);
+        try {
+            const cached = JSON.parse(localStorage.getItem(SPARE_PARTS_CACHE_KEY) || "{}");
+            return { parts: Array.isArray(cached.parts) ? cached.parts : [], transactions: Array.isArray(cached.transactions) ? cached.transactions : [] };
+        } catch (cacheError) {
+            return { parts: [], transactions: [] };
+        }
+    }
+}
+
+async function saveSparePartToAPI(part) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูลคลังอะไหล่");
+    const params = new URLSearchParams({
+        action: "saveSparePart",
+        partId: part.partId || "",
+        partName: part.partName || "",
+        category: part.category || "",
+        machine: part.machine || "",
+        unit: part.unit || "ชิ้น",
+        openingStock: String(part.openingStock || 0),
+        minStock: String(part.minStock || 0),
+        maxStock: String(part.maxStock || 0),
+        location: part.location || "",
+        supplier: part.supplier || "",
+        notes: part.notes || ""
+    }).toString();
+    activeSyncRequests++;
+    updateSyncUI();
+    try {
+        const response = await fetch(withApiRequestNonce(baseUrl + (baseUrl.includes("?") ? "&" : "?") + params), { method: "GET", cache: "no-store" });
+        return await requireJsonResponse(response, "บันทึกข้อมูลอะไหล่");
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
+    }
+}
+
+async function recordSparePartTransactionToAPI(transaction) {
+    const baseUrl = getApiUrl();
+    if (!baseUrl) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูลคลังอะไหล่");
+    const params = new URLSearchParams({
+        action: "recordSparePartTransaction",
+        partId: transaction.partId || "",
+        type: transaction.type || "",
+        quantity: String(transaction.quantity || 0),
+        reference: transaction.reference || "",
+        machine: transaction.machine || "",
+        recorder: transaction.recorder || "",
+        note: transaction.note || ""
+    }).toString();
+    activeSyncRequests++;
+    updateSyncUI();
+    try {
+        const response = await fetch(withApiRequestNonce(baseUrl + (baseUrl.includes("?") ? "&" : "?") + params), { method: "GET", cache: "no-store" });
+        return await requireJsonResponse(response, "บันทึกรายการคลังอะไหล่");
+    } finally {
+        activeSyncRequests = Math.max(0, activeSyncRequests - 1);
+        updateSyncUI();
+    }
+}
+
+// ==========================================
 // 5M1E Event Management API Functions
 // ==========================================
 
@@ -997,6 +1079,7 @@ const USER_PERMISSION_KEYS = [
     "screen.read",
     "checklist.read",
     "events.read",
+    "spare_parts.read",
     "history.read",
     "users.manage"
 ];

@@ -823,6 +823,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
                     Event (บันทึก 5M1E)
                 </a>
+                <a href="#" class="nav-link" data-permission="spare_parts.read" onclick="switchTab('spare-parts-tab', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"></path><path d="M4 7.5 12 12l8-4.5M12 12v9"></path><path d="M8 5.25 16 10"></path></svg>
+                    คลังอะไหล่
+                </a>
                 <a href="#" class="nav-link" data-permission="users.manage" onclick="switchTab('settings-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     จัดการผู้ใช้งาน
@@ -1453,6 +1457,85 @@
                     </div>
                 </section>
 
+                <!-- TAB: SPARE PARTS (คลังอะไหล่เครื่องจักร) -->
+                <section id="spare-parts-tab" class="tab-page spare-parts-page" data-permission="spare_parts.read" style="display: none;">
+                    <div class="spare-parts-header">
+                        <div>
+                            <h1 class="page-title">🧰 คลังอะไหล่เครื่องจักร</h1>
+                            <p class="spare-parts-subtitle">ติดตามอะไหล่คงเหลือ รับเข้า–เบิกออก และประวัติการใช้งานกับเครื่องจักร</p>
+                        </div>
+                        <div class="spare-parts-header-actions">
+                            <button type="button" class="spare-parts-btn secondary" onclick="refreshSpareParts(true)">↻ รีเฟรช</button>
+                            <button type="button" class="spare-parts-btn primary" onclick="toggleSparePartMasterForm()">＋ เพิ่มอะไหล่</button>
+                        </div>
+                    </div>
+
+                    <div class="spare-parts-kpi-grid">
+                        <div class="spare-kpi-card cyan"><span class="spare-kpi-label">รายการอะไหล่</span><strong id="sparePartsSkuCount">0</strong><small>รายการในทะเบียน</small></div>
+                        <div class="spare-kpi-card blue"><span class="spare-kpi-label">คงเหลือรวม</span><strong id="sparePartsStockCount">0</strong><small>หน่วยทั้งหมด</small></div>
+                        <div class="spare-kpi-card amber"><span class="spare-kpi-label">ต้องเติมสต็อก</span><strong id="sparePartsLowStockCount">0</strong><small>ต่ำกว่าจุดสั่งซื้อ</small></div>
+                        <div class="spare-kpi-card violet"><span class="spare-kpi-label">เบิกออกทั้งหมด</span><strong id="sparePartsIssuedCount">0</strong><small>จากประวัติการเบิก</small></div>
+                    </div>
+
+                    <div id="sparePartMasterFormCard" class="spare-parts-card" hidden>
+                        <div class="spare-parts-card-heading">
+                            <div><h2>เพิ่มข้อมูลอะไหล่</h2><p>เริ่มต้นด้วยรายการที่มีอยู่ และเพิ่มรายการใหม่ได้ภายหลัง</p></div>
+                            <button type="button" class="spare-parts-icon-btn" onclick="toggleSparePartMasterForm()" aria-label="ปิดฟอร์ม">×</button>
+                        </div>
+                        <form id="sparePartMasterForm" class="spare-master-form" onsubmit="saveSparePartMaster(event)">
+                            <div class="spare-form-grid">
+                                <label>รหัสอะไหล่<input id="spareMasterPartId" class="form-control" placeholder="เว้นว่างให้ระบบสร้างให้"></label>
+                                <label>ชื่ออะไหล่*<input id="spareMasterPartName" class="form-control" required placeholder="เช่น หัวเทียน"></label>
+                                <label>ประเภท<input id="spareMasterCategory" class="form-control" placeholder="เช่น ระบบลม / ไฟฟ้า"></label>
+                                <label>เครื่องจักรที่ใช้<input id="spareMasterMachine" class="form-control" placeholder="ยังไม่ระบุได้"></label>
+                                <label>หน่วยนับ<input id="spareMasterUnit" class="form-control" value="ชิ้น"></label>
+                                <label>ยอดตั้งต้น<input id="spareMasterOpeningStock" class="form-control" type="number" min="0" step="0.01" value="0"></label>
+                                <label>จุดสั่งซื้อขั้นต่ำ<input id="spareMasterMinStock" class="form-control" type="number" min="0" step="0.01" value="0"></label>
+                                <label>จำนวนสูงสุดที่ควรมี<input id="spareMasterMaxStock" class="form-control" type="number" min="0" step="0.01" value="0"></label>
+                                <label>ตำแหน่งจัดเก็บ<input id="spareMasterLocation" class="form-control" placeholder="เช่น ชั้น A-01"></label>
+                                <label>ผู้ขาย / แหล่งซื้อ<input id="spareMasterSupplier" class="form-control" placeholder="ถ้ามี"></label>
+                                <label class="spare-form-wide">หมายเหตุ<textarea id="spareMasterNotes" class="form-control" rows="2" placeholder="รายละเอียดเพิ่มเติม"></textarea></label>
+                            </div>
+                            <div class="spare-form-actions"><button type="submit" class="spare-parts-btn primary">บันทึกอะไหล่</button></div>
+                        </form>
+                    </div>
+
+                    <div class="spare-parts-card spare-transaction-card">
+                        <div class="spare-parts-card-heading">
+                            <div><h2>รับเข้า–เบิกออกจากคลัง</h2><p>ทุกการเคลื่อนไหวจะถูกเก็บเป็นประวัติพร้อมเครื่องจักรและงานที่เกี่ยวข้อง</p></div>
+                        </div>
+                        <form id="sparePartTransactionForm" class="spare-transaction-form" onsubmit="submitSparePartTransaction(event)">
+                            <div class="spare-form-grid">
+                                <label>อะไหล่*<select id="spareTransactionPartId" class="form-control" required><option value="">กำลังโหลด...</option></select></label>
+                                <label>ประเภทรายการ*<select id="spareTransactionType" class="form-control" required><option value="IN">รับเข้า</option><option value="OUT">เบิกออก</option><option value="RETURN">คืนคลัง</option></select></label>
+                                <label>จำนวน*<input id="spareTransactionQuantity" class="form-control" type="number" min="0.01" step="0.01" required placeholder="0"></label>
+                                <label>เครื่องจักร / จุดใช้งาน<input id="spareTransactionMachine" class="form-control" placeholder="เช่น เครื่องพ่นสี 01"></label>
+                                <label>อ้างอิงงานซ่อม / Event<input id="spareTransactionReference" class="form-control" placeholder="เช่น WO-001 หรือ Event"></label>
+                                <label>หมายเหตุ<input id="spareTransactionNote" class="form-control" placeholder="รายละเอียดเพิ่มเติม"></label>
+                            </div>
+                            <div class="spare-form-actions"><button type="submit" class="spare-parts-btn primary">บันทึกรายการ</button></div>
+                        </form>
+                    </div>
+
+                    <div class="spare-parts-card">
+                        <div class="spare-parts-card-heading spare-table-heading">
+                            <div><h2>ทะเบียนอะไหล่และยอดคงเหลือ</h2><p>สถานะจะเตือนเมื่อยอดต่ำกว่าจุดสั่งซื้อที่กำหนด</p></div>
+                            <div class="spare-filter-row">
+                                <input id="sparePartSearch" class="form-control" placeholder="ค้นหารหัสหรือชื่ออะไหล่" oninput="renderSparePartsTable()">
+                                <select id="sparePartStatusFilter" class="form-control" onchange="renderSparePartsTable()"><option value="">ทุกสถานะ</option><option value="low">ต้องเติมสต็อก</option><option value="ok">ปกติ</option><option value="unset">ยังไม่ตั้งจุดสั่งซื้อ</option></select>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table spare-parts-table"><thead><tr><th>รหัส</th><th>ชื่ออะไหล่</th><th>ประเภท</th><th>เครื่องจักร</th><th>คงเหลือ</th><th>จุดสั่งซื้อ</th><th>ตำแหน่ง</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="sparePartsTableBody"><tr><td colspan="9" class="spare-empty-state">กำลังโหลดข้อมูลอะไหล่...</td></tr></tbody></table>
+                        </div>
+                    </div>
+
+                    <div class="spare-parts-card">
+                        <div class="spare-parts-card-heading"><div><h2>ประวัติการเคลื่อนไหวล่าสุด</h2><p>ใช้ตรวจสอบว่าอะไหล่ถูกนำไปใช้กับงานหรือเครื่องจักรใด</p></div></div>
+                        <div class="table-responsive"><table class="data-table spare-parts-table"><thead><tr><th>วันที่ / เวลา</th><th>อะไหล่</th><th>รายการ</th><th>จำนวน</th><th>เครื่องจักร</th><th>อ้างอิง</th><th>ผู้บันทึก</th></tr></thead><tbody id="sparePartsTransactionsBody"><tr><td colspan="7" class="spare-empty-state">ยังไม่มีประวัติการเคลื่อนไหว</td></tr></tbody></table></div>
+                    </div>
+                </section>
+
                 <!-- TAB: DAILY REPORT (บันทึกงานใหม่) -->
                 <section id="daily-report-tab" class="tab-page" data-permission="daily_report.read" style="display: none;">
                     <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; flex-direction: row;">
@@ -1809,6 +1892,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 <span>Event 5M1E</span>
             </div>
+            <div class="mobile-nav-item" data-permission="spare_parts.read" onclick="switchTab('spare-parts-tab', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg>
+                <span>คลังอะไหล่</span>
+            </div>
             <div class="mobile-nav-item" data-permission="users.manage" onclick="switchTab('settings-tab', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
                 <span>ผู้ใช้งาน</span>
@@ -2138,6 +2225,7 @@
     <script src="js/api.js?v=97.9.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.46.0"></script>
+    <script src="js/spare-parts.js?v=1.0.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
     <script src="js/screen.js?v=1.0.4"></script>

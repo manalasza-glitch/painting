@@ -421,6 +421,10 @@ function switchTab(tabId, element) {
         if (typeof renderEventsTab === 'function') {
             renderEventsTab();
         }
+    } else if (tabId === "spare-parts-tab") {
+        if (typeof initSparePartsModule === 'function') {
+            initSparePartsModule();
+        }
     } else if (tabId === "history-tab") {
         if (inspectionDataScope !== "all") {
             loadDataFromAPI(true, "").then(() => {

@@ -14,6 +14,8 @@ const EQUIPMENT_CHECKLIST_SHEET_NAME = "EquipmentChecklist";
 const REWORK_SHEET_NAME = "REWORK";
 // Dedicated storage for the Screen checklist menu (created on first use).
 const SCREEN_SHEET_NAME = "SCREEN";
+const SPARE_PARTS_SHEET_NAME = "SpareParts";
+const SPARE_PARTS_TRANSACTIONS_SHEET_NAME = "SparePartsTransactions";
 const QC_PENDING_SUFFIX = "_Pending";
 const QC_REVIEWED_SUFFIX = "_Reviewed";
 const QC_MIGRATION_SOURCES = ["ParameterChecklist", "WaterParameterChecklist", "EquipmentChecklist", "SCREEN", "REWORK", "outputdiary"];
@@ -22,8 +24,8 @@ const REPORT_READ_MAX_ROWS = 5000;
 // bounded so one malformed tab cannot make every QC request time out.
 const REPORT_READ_MAX_COLUMNS = 64;
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
-const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read", "users.manage"];
-const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "history.read"];
+const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read", "history.read", "users.manage"];
+const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read", "history.read"];
 
 function normalizeInspectionWorkType_(value) {
   const raw = String(value == null ? "" : value).trim().toUpperCase();
@@ -1769,6 +1771,249 @@ function registerUserRecord_(ss, payload, defaultDepartment) {
   }
 }
 
+// =========================================================
+// Spare parts inventory
+// =========================================================
+const SPARE_PARTS_MASTER_HEADERS_ = [
+  "PartId", "PartName", "Category", "Machine", "Unit", "OpeningStock",
+  "MinStock", "MaxStock", "Location", "Supplier", "Notes", "CreatedAt",
+  "UpdatedAt", "Active"
+];
+const SPARE_PARTS_TRANSACTION_HEADERS_ = [
+  "TransactionId", "Timestamp", "PartId", "Type", "Quantity", "Reference",
+  "Machine", "Recorder", "Note"
+];
+
+function getOrCreateSparePartsSheet_(ss) {
+  let sheet = ss.getSheetByName(SPARE_PARTS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SPARE_PARTS_SHEET_NAME);
+    sheet.getRange(1, 1, 1, SPARE_PARTS_MASTER_HEADERS_.length).setValues([SPARE_PARTS_MASTER_HEADERS_]);
+  } else if (sheet.getLastColumn() < SPARE_PARTS_MASTER_HEADERS_.length) {
+    const headers = sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn())).getValues()[0].map(String);
+    SPARE_PARTS_MASTER_HEADERS_.forEach(header => {
+      if (headers.indexOf(header) < 0) {
+        sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+        headers.push(header);
+      }
+    });
+  }
+
+  // Seed only an empty new catalogue. Existing user data is never overwritten.
+  if (sheet.getLastRow() <= 1) {
+    const now = new Date();
+    const starterParts = [
+      ["SP-001", "หัวเทียน", "ไฟฟ้า / จุดระเบิด", "ยังไม่ระบุ", "ชิ้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-002", "ทรานฟอร์เมอร์", "ไฟฟ้า", "ยังไม่ระบุ", "ชิ้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-003", "สายพาน", "ระบบขับเคลื่อน", "ยังไม่ระบุ", "เส้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-004", "จ๊กแขวนงาน", "แขวนงาน", "ยังไม่ระบุ", "ชิ้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-005", "ปืนพ่นสี", "ระบบพ่นสี", "ยังไม่ระบุ", "กระบอก", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-006", "สายสี", "ระบบสี", "ยังไม่ระบุ", "เส้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-007", "สายลม", "ระบบลม", "ยังไม่ระบุ", "เส้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true],
+      ["SP-008", "ฟิลเตอร์", "กรองอากาศ / สี", "ยังไม่ระบุ", "ชิ้น", 0, 0, 0, "ยังไม่ระบุ", "", "", now, now, true]
+    ];
+    sheet.getRange(2, 1, starterParts.length, SPARE_PARTS_MASTER_HEADERS_.length).setValues(starterParts);
+    SpreadsheetApp.flush();
+  }
+  return sheet;
+}
+
+function getOrCreateSparePartsTransactionsSheet_(ss) {
+  let sheet = ss.getSheetByName(SPARE_PARTS_TRANSACTIONS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SPARE_PARTS_TRANSACTIONS_SHEET_NAME);
+    sheet.getRange(1, 1, 1, SPARE_PARTS_TRANSACTION_HEADERS_.length).setValues([SPARE_PARTS_TRANSACTION_HEADERS_]);
+    SpreadsheetApp.flush();
+  }
+  return sheet;
+}
+
+function sparePartsHeaderMap_(headers) {
+  const map = {};
+  (headers || []).forEach((header, index) => { map[String(header || "").trim()] = index; });
+  return map;
+}
+
+function sparePartNumber_(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function sparePartTransactionDelta_(type, quantity) {
+  const qty = Math.abs(sparePartNumber_(quantity));
+  const normalized = String(type || "").trim().toUpperCase();
+  if (normalized === "OUT") return -qty;
+  return qty;
+}
+
+function readSparePartsInventory_(ss) {
+  const masterSheet = getOrCreateSparePartsSheet_(ss);
+  const transactionSheet = getOrCreateSparePartsTransactionsSheet_(ss);
+  const masterLastColumn = Math.max(1, masterSheet.getLastColumn());
+  const masterHeaders = masterSheet.getRange(1, 1, 1, masterLastColumn).getDisplayValues()[0].map(String);
+  const masterMap = sparePartsHeaderMap_(masterHeaders);
+  const masterRows = masterSheet.getLastRow() > 1
+    ? masterSheet.getRange(2, 1, masterSheet.getLastRow() - 1, masterLastColumn).getValues()
+    : [];
+
+  const transactionLastColumn = Math.max(1, transactionSheet.getLastColumn());
+  const transactionHeaders = transactionSheet.getRange(1, 1, 1, transactionLastColumn).getDisplayValues()[0].map(String);
+  const transactionMap = sparePartsHeaderMap_(transactionHeaders);
+  const transactionRows = transactionSheet.getLastRow() > 1
+    ? transactionSheet.getRange(2, 1, transactionSheet.getLastRow() - 1, transactionLastColumn).getValues()
+    : [];
+  const deltas = {};
+  const transactions = transactionRows.map((row, index) => {
+    const partId = String(row[transactionMap.PartId] || "").trim();
+    const type = String(row[transactionMap.Type] || "").trim().toUpperCase();
+    const quantity = Math.abs(sparePartNumber_(row[transactionMap.Quantity]));
+    if (partId) deltas[partId] = sparePartNumber_(deltas[partId]) + sparePartTransactionDelta_(type, quantity);
+    return {
+      rowIndex: index + 2,
+      transactionId: String(row[transactionMap.TransactionId] || ""),
+      timestamp: formatDateStr(row[transactionMap.Timestamp], true),
+      partId: partId,
+      type: type,
+      quantity: quantity,
+      reference: String(row[transactionMap.Reference] || ""),
+      machine: String(row[transactionMap.Machine] || ""),
+      recorder: String(row[transactionMap.Recorder] || ""),
+      note: String(row[transactionMap.Note] || "")
+    };
+  }).reverse();
+
+  const parts = masterRows.map((row, index) => {
+    const partId = String(row[masterMap.PartId] || "").trim();
+    const openingStock = sparePartNumber_(row[masterMap.OpeningStock]);
+    const minStock = sparePartNumber_(row[masterMap.MinStock]);
+    const maxStock = sparePartNumber_(row[masterMap.MaxStock]);
+    const onHand = openingStock + sparePartNumber_(deltas[partId]);
+    return {
+      rowIndex: index + 2,
+      partId: partId,
+      partName: String(row[masterMap.PartName] || ""),
+      category: String(row[masterMap.Category] || ""),
+      machine: String(row[masterMap.Machine] || ""),
+      unit: String(row[masterMap.Unit] || "ชิ้น"),
+      openingStock: openingStock,
+      minStock: minStock,
+      maxStock: maxStock,
+      onHand: onHand,
+      location: String(row[masterMap.Location] || ""),
+      supplier: String(row[masterMap.Supplier] || ""),
+      notes: String(row[masterMap.Notes] || ""),
+      active: row[masterMap.Active] !== false && String(row[masterMap.Active] || "true").toLowerCase() !== "false",
+      status: minStock > 0 ? (onHand <= minStock ? "low" : "ok") : "unset"
+    };
+  }).filter(part => part.partId && part.active);
+
+  return { parts: parts, transactions: transactions };
+}
+
+function saveSparePartRecord_(ss, payload) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    const sheet = getOrCreateSparePartsSheet_(ss);
+    const inventory = readSparePartsInventory_(ss);
+    const masterLastColumn = Math.max(1, sheet.getLastColumn());
+    const headers = sheet.getRange(1, 1, 1, masterLastColumn).getDisplayValues()[0].map(String);
+    const map = sparePartsHeaderMap_(headers);
+    const requestedId = String(payload.partId || "").trim();
+    const name = String(payload.partName || "").trim();
+    if (!name) return { status: "error", message: "กรุณาระบุชื่ออะไหล่" };
+
+    let partId = requestedId;
+    if (!partId) {
+      const maxId = inventory.parts.reduce((max, part) => {
+        const number = Number(String(part.partId || "").replace(/\D/g, "")) || 0;
+        return Math.max(max, number);
+      }, 0);
+      partId = "SP-" + String(maxId + 1).padStart(3, "0");
+    }
+
+    const rowValues = Array(masterLastColumn).fill("");
+    const now = new Date();
+    const values = {
+      PartId: partId,
+      PartName: name,
+      Category: String(payload.category || "").trim(),
+      Machine: String(payload.machine || "").trim(),
+      Unit: String(payload.unit || "ชิ้น").trim() || "ชิ้น",
+      OpeningStock: Math.max(0, sparePartNumber_(payload.openingStock)),
+      MinStock: Math.max(0, sparePartNumber_(payload.minStock)),
+      MaxStock: Math.max(0, sparePartNumber_(payload.maxStock)),
+      Location: String(payload.location || "").trim(),
+      Supplier: String(payload.supplier || "").trim(),
+      Notes: String(payload.notes || "").trim(),
+      CreatedAt: now,
+      UpdatedAt: now,
+      Active: true
+    };
+
+    let targetRow = 0;
+    const valuesInSheet = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, masterLastColumn).getValues() : [];
+    for (let i = 0; i < valuesInSheet.length; i++) {
+      if (String(valuesInSheet[i][map.PartId] || "").trim() === partId) { targetRow = i + 2; break; }
+    }
+    if (targetRow) {
+      const oldCreatedAt = valuesInSheet[targetRow - 2][map.CreatedAt];
+      values.CreatedAt = oldCreatedAt || now;
+      Object.keys(values).forEach(key => { if (map[key] >= 0) rowValues[map[key]] = values[key]; });
+      sheet.getRange(targetRow, 1, 1, masterLastColumn).setValues([rowValues]);
+    } else {
+      Object.keys(values).forEach(key => { if (map[key] >= 0) rowValues[map[key]] = values[key]; });
+      sheet.appendRow(rowValues);
+    }
+    SpreadsheetApp.flush();
+    return { status: "success", partId: partId, action: "saveSparePart" };
+  } catch (error) {
+    return { status: "error", message: error && error.message ? error.message : "บันทึกข้อมูลอะไหล่ไม่สำเร็จ" };
+  } finally {
+    try { lock.releaseLock(); } catch (releaseError) {}
+  }
+}
+
+function recordSparePartTransaction_(ss, payload) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    const partId = String(payload.partId || "").trim();
+    const type = String(payload.type || "").trim().toUpperCase();
+    const quantity = Math.abs(sparePartNumber_(payload.quantity));
+    if (!partId || !["IN", "OUT", "RETURN"].includes(type) || quantity <= 0) {
+      return { status: "error", message: "ข้อมูลรายการรับเข้า–เบิกออกไม่ครบถ้วน" };
+    }
+
+    const inventory = readSparePartsInventory_(ss);
+    const part = inventory.parts.find(item => item.partId === partId);
+    if (!part) return { status: "error", message: "ไม่พบอะไหล่รายการนี้" };
+    if (type === "OUT" && quantity > part.onHand) {
+      return { status: "error", message: `ยอดคงเหลือ ${part.onHand} ${part.unit} ไม่พอสำหรับการเบิก` };
+    }
+
+    const sheet = getOrCreateSparePartsTransactionsSheet_(ss);
+    const transactionId = "SPTX-" + new Date().getTime();
+    sheet.appendRow([
+      transactionId,
+      new Date(),
+      partId,
+      type,
+      quantity,
+      String(payload.reference || "").trim(),
+      String(payload.machine || "").trim(),
+      String(payload.recorder || "").trim() || "ไม่ระบุผู้บันทึก",
+      String(payload.note || "").trim()
+    ]);
+    SpreadsheetApp.flush();
+    return { status: "success", action: "recordSparePartTransaction", transactionId: transactionId };
+  } catch (error) {
+    return { status: "error", message: error && error.message ? error.message : "บันทึกรายการคลังอะไหล่ไม่สำเร็จ" };
+  } finally {
+    try { lock.releaseLock(); } catch (releaseError) {}
+  }
+}
+
 // Keep the normal JSON response for fetch() callers, but also support a safe
 // JSONP callback. Apps Script /exec uses a short-lived redirect; a browser
 // script request can follow that redirect reliably when fetch() receives a
@@ -2421,6 +2666,25 @@ function doGetJson_(e) {
         }
       }
       return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Spare parts inventory reads and writes. The static frontend uses GET so
+    // the same endpoint works reliably from GitHub Pages without a CORS preflight.
+    if (action === "getSpareParts") {
+      const inventory = readSparePartsInventory_(ss);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        parts: inventory.parts,
+        transactions: inventory.transactions.slice(0, 100)
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "saveSparePart") {
+      return ContentService.createTextOutput(JSON.stringify(saveSparePartRecord_(ss, e && e.parameter ? e.parameter : {}))).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === "recordSparePartTransaction") {
+      return ContentService.createTextOutput(JSON.stringify(recordSparePartTransaction_(ss, e && e.parameter ? e.parameter : {}))).setMimeType(ContentService.MimeType.JSON);
     }
 
     // Inspection writes are sent as GET by the web client for Apps Script CORS compatibility.

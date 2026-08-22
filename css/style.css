@@ -1193,6 +1193,266 @@ button, input, textarea, select {
   #qc-history-tab .qc-history-detail-table > tbody > tr > td:nth-child(6)::before { content: "หมายเหตุ"; }
 }
 
+/* =========================================================
+   Spare parts inventory
+   ========================================================= */
+.spare-parts-page {
+    padding-bottom: 2rem;
+}
+
+.spare-parts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.spare-parts-subtitle {
+    margin: .35rem 0 0;
+    color: #94a3b8;
+    font-size: .9rem;
+}
+
+.spare-parts-header-actions,
+.spare-form-actions,
+.spare-filter-row {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.spare-parts-btn {
+    border: 1px solid rgba(56, 189, 248, .35);
+    border-radius: 11px;
+    padding: .68rem 1rem;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+    white-space: nowrap;
+}
+
+.spare-parts-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.spare-parts-btn.primary {
+    color: #fff;
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    box-shadow: 0 7px 20px rgba(37, 99, 235, .28);
+}
+
+.spare-parts-btn.secondary {
+    color: #bae6fd;
+    background: rgba(14, 116, 144, .18);
+}
+
+.spare-parts-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.spare-kpi-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 112px;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(56, 189, 248, .24);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(30, 41, 59, .98), rgba(15, 23, 42, .96));
+    box-shadow: 0 12px 28px rgba(2, 8, 23, .16);
+}
+
+.spare-kpi-card::after {
+    position: absolute;
+    right: -28px;
+    bottom: -38px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+    opacity: .1;
+}
+
+.spare-kpi-card.cyan { color: #22d3ee; }
+.spare-kpi-card.blue { color: #60a5fa; }
+.spare-kpi-card.amber { color: #fbbf24; }
+.spare-kpi-card.violet { color: #a78bfa; }
+
+.spare-kpi-label,
+.spare-kpi-card small {
+    display: block;
+    color: #94a3b8;
+}
+
+.spare-kpi-label {
+    font-size: .84rem;
+    font-weight: 700;
+}
+
+.spare-kpi-card strong {
+    display: block;
+    margin: .18rem 0;
+    color: currentColor;
+    font-size: 1.85rem;
+    line-height: 1;
+}
+
+.spare-kpi-card small {
+    font-size: .72rem;
+}
+
+.spare-parts-card {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(56, 189, 248, .25);
+    border-radius: 17px;
+    background: linear-gradient(145deg, rgba(30, 41, 59, .96), rgba(15, 23, 42, .98));
+    box-shadow: 0 13px 30px rgba(2, 8, 23, .14);
+}
+
+.spare-parts-card[hidden] {
+    display: none;
+}
+
+.spare-parts-card-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.spare-parts-card-heading h2 {
+    margin: 0;
+    color: #38bdf8;
+    font-size: 1.05rem;
+}
+
+.spare-parts-card-heading p {
+    margin: .25rem 0 0;
+    color: #94a3b8;
+    font-size: .78rem;
+}
+
+.spare-parts-icon-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(148, 163, 184, .35);
+    border-radius: 9px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, .8);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.spare-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+}
+
+.spare-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    color: #cbd5e1;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.spare-form-wide {
+    grid-column: 1 / -1;
+}
+
+.spare-form-actions {
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.spare-filter-row .form-control {
+    min-width: 175px;
+}
+
+.spare-table-heading {
+    align-items: center;
+}
+
+.spare-parts-table {
+    min-width: 940px;
+}
+
+.spare-parts-table th {
+    color: #bae6fd;
+    white-space: nowrap;
+}
+
+.spare-parts-table td {
+    color: #e2e8f0;
+    vertical-align: middle;
+}
+
+.spare-stock-value {
+    color: #67e8f9;
+    font-weight: 800;
+}
+
+.spare-status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: .3rem .6rem;
+    font-size: .72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.spare-status-badge.low { color: #fecaca; background: rgba(239, 68, 68, .16); border: 1px solid rgba(248, 113, 113, .35); }
+.spare-status-badge.ok { color: #a7f3d0; background: rgba(16, 185, 129, .15); border: 1px solid rgba(52, 211, 153, .32); }
+.spare-status-badge.unset { color: #fde68a; background: rgba(245, 158, 11, .14); border: 1px solid rgba(251, 191, 36, .3); }
+
+.spare-row-action {
+    border: 1px solid rgba(56, 189, 248, .4);
+    border-radius: 8px;
+    padding: .34rem .55rem;
+    color: #7dd3fc;
+    background: rgba(14, 116, 144, .15);
+    font: inherit;
+    font-size: .72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.spare-empty-state {
+    padding: 2rem !important;
+    color: #94a3b8 !important;
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .spare-parts-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .spare-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+    .spare-parts-header,
+    .spare-table-heading { flex-direction: column; }
+    .spare-parts-header-actions,
+    .spare-filter-row { width: 100%; }
+    .spare-parts-header-actions .spare-parts-btn { flex: 1; }
+    .spare-filter-row .form-control { min-width: 0; width: 100%; }
+    .spare-parts-kpi-grid,
+    .spare-form-grid { grid-template-columns: 1fr; }
+    .spare-form-wide { grid-column: auto; }
+    .spare-parts-card { padding: .9rem; }
+}
+
 .btn-add-staff {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
