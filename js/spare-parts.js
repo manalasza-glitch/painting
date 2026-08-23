@@ -198,8 +198,16 @@ function ensureSparePartImageInput() {
     const form = document.getElementById('sparePartMasterForm');
     if (!form || document.getElementById('spareMasterImage')) return;
     const input = document.createElement('input');
-    input.id = 'spareMasterImage'; input.type = 'file'; input.accept = 'image/*';
-    form.appendChild(input);
+    input.id = 'spareMasterImage'; input.type = 'file'; input.accept = 'image/*'; input.style.display = 'none';
+    const picker = document.createElement('label');
+    picker.htmlFor = 'spareMasterImage'; picker.className = 'spare-image-picker';
+    picker.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #159ed3;border-radius:10px;background:linear-gradient(135deg,#123454,#0d223d);color:#dff6ff;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.2);';
+    picker.textContent = '📷 เลือกรูปภาพ';
+    const name = document.createElement('span');
+    name.className = 'spare-image-name'; name.textContent = 'ยังไม่ได้เลือกไฟล์';
+    name.style.cssText = 'display:block;margin-top:7px;color:#94a9bd;font-size:12px;';
+    input.addEventListener('change', () => { name.textContent = input.files && input.files[0] ? input.files[0].name : 'ยังไม่ได้เลือกไฟล์'; });
+    form.appendChild(picker); form.appendChild(input); form.appendChild(name);
 }
 function toggleSparePartMasterForm() {
     const card = document.getElementById("sparePartMasterFormCard");
