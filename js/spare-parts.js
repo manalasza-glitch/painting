@@ -268,3 +268,5 @@ async function submitSparePartTransaction(event) {
     }
 }
 
+
+// spare part image upload enabled
