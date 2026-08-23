@@ -220,6 +220,22 @@ function currentSparePartRecorder() {
     return String(window.PaintingAuth?.currentUser?.displayName || window.PaintingAuth?.currentUser?.employeeId || "ไม่ระบุผู้บันทึก");
 }
 
+function readSparePartImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadSparePartImageToAPI(file) {
+    const imageBase64 = await readSparePartImageFile(file);
+    const params = new URLSearchParams({ action: 'uploadSparePartImage', imageBase64, imageName: file.name || 'spare-part-image', imageMime: file.type || 'image/jpeg' }).toString();
+    const url = getApiUrl() + (getApiUrl().includes('?') ? '&' : '?') + params;
+    return fetchAppsScriptJsonWithRetry(url, 'อัปโหลดรูปอะไหล่', { attempts: 1, timeoutMs: 30000, jsonpTimeoutMs: 30000 });
+}
+
 async function saveSparePartMaster(event) {
     event?.preventDefault();
     const payload = {
@@ -240,6 +256,11 @@ async function saveSparePartMaster(event) {
         return;
     }
     try {
+        const imageFile = document.getElementById('spareMasterImage')?.files?.[0];
+        if (imageFile) {
+            const uploadResult = await uploadSparePartImageToAPI(imageFile);
+            if (uploadResult?.status !== 'success') throw new Error(uploadResult?.message || 'อัปโหลดรูปไม่สำเร็จ');
+        }
         const result = await saveSparePartToAPI(payload);
         if (result?.status !== "success") throw new Error(result?.message || "บันทึกข้อมูลไม่สำเร็จ");
         sparePartShowToast("บันทึกข้อมูลอะไหล่แล้ว", "success");
