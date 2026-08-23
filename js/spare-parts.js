@@ -95,6 +95,7 @@ function refreshSpareParts(force = true) {
 }
 
 function renderSparePartsPage() {
+    ensureSparePartImageInput();
     const parts = Array.isArray(sparePartsInventoryState.parts) ? sparePartsInventoryState.parts : [];
     const transactions = Array.isArray(sparePartsInventoryState.transactions) ? sparePartsInventoryState.transactions : [];
     const lowStock = parts.filter(part => sparePartStatus(part).key === "low").length;
@@ -184,6 +185,14 @@ function selectSparePartForTransaction(partId) {
     document.getElementById("sparePartTransactionForm")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+function ensureSparePartImageInput() {
+    const form = document.getElementById('sparePartMasterForm');
+    if (!form || document.getElementById('spareMasterImage')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'form-group spare-image-upload';
+    wrap.innerHTML = '<label for=spareMasterImage>รูปภาพอะไหล่</label><input id=spareMasterImage type=file accept=image/*><small>เลือกรูปภาพประกอบอะไหล่</small>';
+    form.appendChild(wrap);
+}
 function toggleSparePartMasterForm() {
     const card = document.getElementById("sparePartMasterFormCard");
     if (!card) return;
