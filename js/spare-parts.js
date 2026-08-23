@@ -146,7 +146,7 @@ function renderSparePartsTable() {
             <td>${sparePartEscapeHtml(part.partName)}</td>
             <td>${sparePartEscapeHtml(part.category || "-")}</td>
             <td>${sparePartEscapeHtml(part.machine || "-")}</td>
-            <td><span class="spare-stock-value">${sparePartFormatNumber(part.onHand)} ${sparePartEscapeHtml(part.unit)}</span></td>
+            <td><span class="spare-stock-value" style="color:`${Number(part.onHand || 0) < 1 ? '#ff4d6d' : '#22d3ee'}`;font-weight:800;">`${sparePartFormatNumber(part.onHand)} ${sparePartEscapeHtml(part.unit)}`</span></td>
             <td>${Number(part.minStock) > 0 ? sparePartFormatNumber(part.minStock) : "-"}</td>
             <td>${sparePartEscapeHtml(part.location || "-")}</td>
             <td><span class="spare-status-badge ${status.key}">${status.label}</span></td>
