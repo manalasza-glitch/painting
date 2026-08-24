@@ -32,8 +32,13 @@ function renderMaintenancePlans(){
   body.innerHTML=plans.map((p,i)=>'<tr><td>'+maintenanceEsc(p.machine)+'</td><td>'+maintenanceEsc(p.planName)+'</td><td>'+maintenanceEsc(p.frequency)+'</td><td>'+maintenanceEsc(p.nextDue)+'</td><td>'+maintenanceEsc(p.owner)+'</td><td><span class="maintenance-status '+(p.status==='เสร็จแล้ว'?'done':'planned')+'">'+maintenanceEsc(p.status)+'</span></td><td><button type=button class="spare-parts-btn secondary" onclick="completeMaintenancePlan('+i+')">เสร็จแล้ว</button></td></tr>').join('');
 }
 async function loadMaintenancePlansFromCloud(){
+  const local=maintenancePlans();
   try { const base=getApiUrl(); const url=base+(base.includes('?')?'&':'?')+'action=getMaintenancePlans&_request='+Date.now(); const result=await fetchAppsScriptJsonWithRetry(url,'โหลดแผนบำรุงรักษา',{attempts:2,timeoutMs:15000});
-    if(Array.isArray(result?.plans)){ localStorage.setItem(MAINTENANCE_PLAN_KEY,JSON.stringify(result.plans)); renderMaintenancePlans(); }
+    if(Array.isArray(result?.plans) && result.plans.length===0 && local.length){
+      for(const plan of local){ try { await saveMaintenancePlanToCloud(plan); } catch(e) {} }
+      localStorage.setItem(MAINTENANCE_PLAN_KEY,JSON.stringify(local));
+    } else if(Array.isArray(result?.plans)){ localStorage.setItem(MAINTENANCE_PLAN_KEY,JSON.stringify(result.plans)); }
+    renderMaintenancePlans();
   } catch(e){ console.warn('Maintenance cloud load failed',e); }
 }
 async function saveMaintenancePlanToCloud(plan){
