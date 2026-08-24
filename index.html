@@ -801,23 +801,18 @@
                         Screen
                     </a>
                 </div>
-                <a href="#" class="nav-link checklist-menu-parent" data-permission="checklist.read" onclick="toggleChecklistMenu(event, this)" aria-expanded="false">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8M8 12h8M8 16h5"></path><path d="m16 16 1.5 1.5L21 14"></path></svg>
-                    <span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
+                <a href="#" class="nav-link checklist-menu-parent" data-permission="checklist.read" onclick="toggleMaintenanceMenu(event, this)" aria-expanded="false">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    <span style="flex:1;">Maintenance Plan</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
                 </a>
-                <div id="checklist-submenu" class="sidebar-submenu" hidden>
-                    <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)">
-                        <span style="width:20px; text-align:center;">•</span>
-                        รายการตรวจเช็กพารามิเตอร์
-                    </a>
-                    <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('water', event, this)">
-                        <span style="width:20px; text-align:center;">•</span>
-                        วัดค่าน้ำ
-                    </a>
-                    <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openEquipmentChecklist(event, this)">
-                        <span style="width:20px; text-align:center;">•</span>
-                        ตรวจเช็กอุปกรณ์
-                    </a>
+                <div id="maintenance-submenu" class="sidebar-submenu" hidden>
+                    <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openMaintenancePlan(event, this)"><span style="width:20px; text-align:center;">•</span>แผนบำรุงรักษา</a>
+                    <a href="#" class="nav-link submenu-item checklist-menu-parent" data-permission="checklist.read" onclick="toggleChecklistMenu(event, this)" aria-expanded="false"><span style="width:20px; text-align:center;">•</span><span style="flex:1;">เช็กลิสก่อนเริ่มงาน</span><span class="checklist-menu-caret" aria-hidden="true">▾</span></a>
+                    <div id="checklist-submenu" class="sidebar-submenu" hidden>
+                        <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('full', event, this)"><span style="width:20px; text-align:center;">•</span>รายการตรวจเช็กพารามิเตอร์</a>
+                        <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openParameterChecklistMode('water', event, this)"><span style="width:20px; text-align:center;">•</span>วัดค่าน้ำ</a>
+                        <a href="#" class="nav-link submenu-item" data-permission="checklist.read" onclick="openEquipmentChecklist(event, this)"><span style="width:20px; text-align:center;">•</span>ตรวจเช็กอุปกรณ์</a>
+                    </div>
                 </div>
                 <a href="#" class="nav-link" data-permission="events.read" onclick="switchTab('event-tab', this)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
@@ -1457,6 +1452,28 @@
                     </div>
                 </section>
 
+                <!-- TAB: MAINTENANCE PLAN -->
+                <section id="maintenance-plan-tab" class="tab-page" data-permission="checklist.read" style="display:none;">
+                    <div class="section-title-bar" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <div><h1 class="page-title" style="font-size:1.25rem;margin:0;">🛠 Maintenance Plan</h1><span style="color:#94a3b8;font-size:.82rem;">วางแผนและติดตามงานบำรุงรักษาเครื่องจักร</span></div>
+                        <span style="color:#22d3ee;font-weight:800;">ทั้งหมด <strong id="maintenancePlanCount">0</strong> แผน</span>
+                    </div>
+                    <div class="dr-card" style="margin-top:1rem;">
+                        <h3 class="dr-section-title">เพิ่มแผนบำรุงรักษา</h3>
+                        <form onsubmit="submitMaintenancePlan(event)" class="dr-grid-3">
+                            <div class="form-group"><label>เครื่องจักร / จุดใช้งาน</label><input id="maintenanceMachine" class="form-control" placeholder="เช่น เครื่องพ่นสี 01" required></div>
+                            <div class="form-group"><label>ชื่องานบำรุงรักษา</label><input id="maintenancePlanName" class="form-control" placeholder="เช่น ตรวจสายพาน" required></div>
+                            <div class="form-group"><label>รอบการทำงาน</label><select id="maintenanceFrequency" class="form-control"><option>รายวัน</option><option>รายสัปดาห์</option><option>รายเดือน</option><option>รายไตรมาส</option><option>รายปี</option></select></div>
+                            <div class="form-group"><label>กำหนดวันถัดไป</label><input id="maintenanceNextDue" type="date" class="form-control" required></div>
+                            <div class="form-group"><label>ผู้รับผิดชอบ</label><input id="maintenanceOwner" class="form-control" placeholder="ชื่อผู้รับผิดชอบ"></div>
+                            <div class="form-group" style="display:flex;align-items:end;"><button type="submit" class="btn-primary-custom" style="width:100%;padding:.75rem;border:0;border-radius:12px;color:#fff;font-weight:800;background:linear-gradient(135deg,#0284c7,#2563eb);cursor:pointer;">＋ เพิ่มแผน</button></div>
+                        </form>
+                    </div>
+                    <div class="dr-card" style="margin-top:1rem;overflow:auto;">
+                        <h3 class="dr-section-title">รายการแผนบำรุงรักษา</h3>
+                        <table class="data-table" style="width:100%;"><thead><tr><th>เครื่องจักร</th><th>งาน</th><th>รอบ</th><th>กำหนดวัน</th><th>ผู้รับผิดชอบ</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="maintenancePlanTableBody"></tbody></table>
+                    </div>
+                </section>
                 <!-- TAB: SPARE PARTS (คลังอะไหล่เครื่องจักร) -->
                 <section id="spare-parts-tab" class="tab-page spare-parts-page" data-permission="spare_parts.read" style="display: none;">
                     <div class="spare-parts-header">
@@ -2225,7 +2242,7 @@
     <script src="js/api.js?v=97.9.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.46.0"></script>
-    <script src="js/spare-parts.js?v=1.0.0"></script>
+    <script src="js/spare-parts.js?v=1.0.0"></script><script src="js/maintenance.js?v=1.0.0"></script>
     <script src="js/daily-report.js?v=94.1.19"></script>
     <script src="js/rework.js?v=1.2.6"></script>
     <script src="js/screen.js?v=1.0.4"></script>
