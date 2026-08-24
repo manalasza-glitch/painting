@@ -1,4 +1,5 @@
 const MAINTENANCE_PLAN_KEY = 'PAINTING_MAINTENANCE_PLANS';
+function toggleMaintenanceMenu(event, link){ if(event) event.preventDefault(); const menu=document.getElementById('maintenance-submenu'); if(!menu) return; menu.hidden=!menu.hidden; if(link) link.setAttribute('aria-expanded', String(!menu.hidden)); }
 function maintenanceEsc(value){ return String(value == null ? '' : value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function maintenancePlans(){ try { const v=JSON.parse(localStorage.getItem(MAINTENANCE_PLAN_KEY)||'[]'); return Array.isArray(v)?v:[]; } catch(e){ return []; } }
 function openMaintenancePlan(event, link){ if(event) event.preventDefault(); switchTab('maintenance-plan-tab', link); renderMaintenancePlans(); }
