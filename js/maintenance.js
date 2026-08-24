@@ -45,5 +45,14 @@ async function saveMaintenancePlanToCloud(plan){
   const base=getApiUrl(); const params=new URLSearchParams({action:'saveMaintenancePlan',planId:plan.planId||'',machine:plan.machine||'',planName:plan.planName||'',frequency:plan.frequency||'',nextDue:plan.nextDue||'',owner:plan.owner||'',status:plan.status||'วางแผนแล้ว'}).toString();
   return fetchAppsScriptJsonWithRetry(base+(base.includes('?')?'&':'?')+params+'&_request='+Date.now(),'บันทึกแผนบำรุงรักษา',{attempts:2,timeoutMs:15000});
 }
-async async function completeMaintenancePlan(index){ const rows=maintenancePlans(); if(!rows[index]) return; try { const result=await completeMaintenancePlanToCloud(rows[index].planId); if(result?.status!=='success') throw new Error(result?.message||'อัปเดตไม่สำเร็จ'); rows[index].status='เสร็จแล้ว'; rows[index].completedAt=new Date().toISOString(); localStorage.setItem(MAINTENANCE_PLAN_KEY,JSON.stringify(rows)); renderMaintenancePlans(); } catch(e){ if(typeof showToast==='function') showToast(e.message||'อัปเดตแผนไม่สำเร็จ','error'); } }
+async function completeMaintenancePlanToCloud(planId){
+  const base=getApiUrl(); const params=new URLSearchParams({action:'completeMaintenancePlan',planId:planId||''}).toString();
+  return fetchAppsScriptJsonWithRetry(base+(base.includes('?')?'&':'?')+params+'&_request='+Date.now(),'อัปเดตแผนบำรุงรักษา',{attempts:2,timeoutMs:15000});
+}
+async function completeMaintenancePlan(index){
+  const rows=maintenancePlans(); if(!rows[index]) return;
+  try { const result=await completeMaintenancePlanToCloud(rows[index].planId); if(result?.status!=='success') throw new Error(result?.message||'อัปเดตไม่สำเร็จ');
+    rows[index].status='เสร็จแล้ว'; rows[index].completedAt=new Date().toISOString(); localStorage.setItem(MAINTENANCE_PLAN_KEY,JSON.stringify(rows)); renderMaintenancePlans();
+  } catch(e){ if(typeof showToast==='function') showToast(e.message||'อัปเดตแผนไม่สำเร็จ','error'); }
+}
 document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ checkMaintenanceAlerts(); loadMaintenancePlansFromCloud(); },600); });
