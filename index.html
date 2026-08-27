@@ -801,6 +801,11 @@
                         Screen
                     </a>
                 </div>
+
+                <a href="#rtv-tab" class="nav-link" data-permission="dashboard.read" onclick="openRTVTab(event, this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16v13H4z"></path><path d="M8 7V5h8v2M8 12h8M8 16h5"></path></svg>
+                    RTV
+                </a>
                 <a href="#" class="nav-link checklist-menu-parent" data-permission="checklist.read" onclick="toggleMaintenanceMenu(event, this)" aria-expanded="false">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
                     <span style="flex:1;">Maintenance Plan</span><span class="checklist-menu-caret" aria-hidden="true">▾</span>
@@ -1452,6 +1457,51 @@
                     </div>
                 </section>
 
+
+                <!-- TAB: RTV (Returned To Vendor / งานตีกลับแก้ไข) -->
+                <section id="rtv-tab" class="tab-page" data-permission="dashboard.read" style="display:none;">
+                    <style>
+                        .rtv-kpi-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
+                        .rtv-kpi { padding:1rem 1.15rem; border:1px solid rgba(56,189,248,.25); border-radius:14px; background:linear-gradient(145deg,rgba(15,23,42,.95),rgba(30,41,59,.8)); }
+                        .rtv-kpi small { display:block; color:#94a3b8; font-weight:700; margin-bottom:.25rem; }
+                        .rtv-kpi strong { color:#fb7185; font-size:1.55rem; }
+                        .rtv-type-badge { display:inline-flex; padding:.25rem .6rem; border-radius:999px; font-size:.78rem; font-weight:800; white-space:nowrap; }
+                        .rtv-type-badge.new { color:#7dd3fc; background:rgba(14,165,233,.16); border:1px solid rgba(56,189,248,.35); }
+                        .rtv-type-badge.rework { color:#c4b5fd; background:rgba(139,92,246,.16); border:1px solid rgba(167,139,250,.35); }
+                        .rtv-type-badge.screen { color:#fcd34d; background:rgba(245,158,11,.16); border:1px solid rgba(251,191,36,.35); }
+                        @media(max-width:760px){ .rtv-kpi-grid { grid-template-columns:1fr; } }
+                    </style>
+                    <div class="section-title-bar" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <div><h1 class="page-title" style="font-size:1.25rem;margin:0;">↩ RTV</h1><span style="color:#94a3b8;font-size:.82rem;">บันทึกงานที่มีปัญหาและส่งกลับมาแก้ไข โดยเทียบกับวันที่พ่น</span></div>
+                        <span style="color:#fb7185;font-weight:800;">ทั้งหมด <strong id="rtvRecordCount">0</strong> รายการ</span>
+                    </div>
+                    <div class="dr-card" style="margin-top:1rem;">
+                        <h3 class="dr-section-title">บันทึกงานตีกลับ</h3>
+                        <p style="color:#94a3b8;margin-top:-.35rem;">ระบบจะนำจำนวน RTV ไปหักจากยอดผลิตของประเภทงานเดียวกันใน “วันที่พ่น” ทั้งงานใหม่, REWORK และ SCREEN</p>
+                        <form id="rtvForm" onsubmit="submitRTVRecord(event)" class="dr-grid-3">
+                            <div class="form-group"><label for="rtvPaintDate">วันที่พ่น*</label><input id="rtvPaintDate" type="date" class="form-control" required></div>
+                            <div class="form-group"><label for="rtvWorkType">ประเภทงาน*</label><select id="rtvWorkType" class="form-control" required><option value="NEW">งานใหม่</option><option value="REWORK">REWORK</option><option value="SCREEN">SCREEN</option></select></div>
+                            <div class="form-group"><label for="rtvReturnQty">จำนวนตีกลับ*</label><input id="rtvReturnQty" type="number" class="form-control" min="1" step="1" required placeholder="เช่น 5"></div>
+                            <div class="form-group"><label for="rtvProductGroup">กลุ่มผลิตภัณฑ์</label><input id="rtvProductGroup" class="form-control" placeholder="ถ้ามี"></div>
+                            <div class="form-group"><label for="rtvPartCategory">ประเภทชิ้นงาน</label><input id="rtvPartCategory" class="form-control" placeholder="ถ้ามี"></div>
+                            <div class="form-group"><label for="rtvModel">รุ่นงาน / รหัส</label><input id="rtvModel" class="form-control" placeholder="ถ้ามี"></div>
+                            <div class="form-group"><label for="rtvColor">สี</label><input id="rtvColor" class="form-control" placeholder="ถ้ามี"></div>
+                            <div class="form-group"><label for="rtvReference">อ้างอิงงาน / ใบแจ้ง</label><input id="rtvReference" class="form-control" placeholder="เช่น WO-001"></div>
+                            <div class="form-group"><label for="rtvRecorder">ผู้บันทึก</label><input id="rtvRecorder" class="form-control" placeholder="ชื่อผู้บันทึก"></div>
+                            <div class="form-group" style="grid-column:1/-1;"><label for="rtvProblem">ปัญหาที่ส่งกลับมาแก้ไข*</label><textarea id="rtvProblem" class="form-control" rows="3" required placeholder="ระบุอาการหรือปัญหาที่พบ"></textarea></div>
+                            <div class="form-group" style="grid-column:1/-1;display:flex;justify-content:flex-end;"><button id="rtvSubmitButton" type="submit" class="btn-primary-custom" style="min-width:190px;">💾 บันทึก RTV</button></div>
+                        </form>
+                    </div>
+                    <div class="rtv-kpi-grid">
+                        <div class="rtv-kpi"><small>งานใหม่ที่ตีกลับ</small><strong id="rtvTotalNEW">0</strong> <span>ชิ้น</span></div>
+                        <div class="rtv-kpi"><small>REWORK ที่ตีกลับ</small><strong id="rtvTotalREWORK">0</strong> <span>ชิ้น</span></div>
+                        <div class="rtv-kpi"><small>SCREEN ที่ตีกลับ</small><strong id="rtvTotalSCREEN">0</strong> <span>ชิ้น</span></div>
+                    </div>
+                    <div class="dr-card" style="margin-top:1rem;overflow:auto;">
+                        <h3 class="dr-section-title">ประวัติรายการ RTV</h3>
+                        <table class="data-table" style="width:100%;min-width:980px;"><thead><tr><th>วันที่พ่น</th><th>ประเภทงาน</th><th>รุ่นงาน/รหัส</th><th>จำนวน</th><th>ปัญหา</th><th>อ้างอิง</th><th>ผู้บันทึก</th><th>สถานะ</th><th>บันทึกเมื่อ</th></tr></thead><tbody id="rtvTableBody"></tbody></table>
+                    </div>
+                </section>
                 <!-- TAB: MAINTENANCE PLAN -->
                 <section id="maintenance-plan-tab" class="tab-page" data-permission="checklist.read" style="display:none;">
                     <div class="section-title-bar" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
@@ -2241,6 +2291,7 @@
 
     <!-- JS Files -->
     <script src="js/api.js?v=97.9.0"></script>
+<script src="js/rtv.js?v=1.0.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.46.0"></script>
     <script src="js/spare-parts.js?v=1.0.1"></script><script src="js/maintenance.js?v=1.0.2"></script>
