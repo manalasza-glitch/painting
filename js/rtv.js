@@ -43,7 +43,6 @@ function rtvNormalizeRecord(row) {
         productGroup: String(row && (row.productGroup || row.ProductGroup) || ""),
         partCategory: String(row && (row.partCategory || row.PartCategory) || ""),
         model: String(row && (row.model || row.Model) || ""),
-        color: String(row && (row.color || row.Color) || ""),
         returnQty: Number(row && (row.returnQty ?? row.ReturnQty ?? row.qty)) || 0,
         problem: String(row && (row.problem || row.Problem) || ""),
         reference: String(row && (row.reference || row.Reference) || ""),
@@ -100,7 +99,7 @@ async function saveRTVRecordToAPI(record) {
     const params = new URLSearchParams({
         action: "saveRTVRecord", rtvId: record.rtvId || "", paintDate: record.paintDate || "",
         workType: rtvWorkType(record.workType), productGroup: record.productGroup || "",
-        partCategory: record.partCategory || "", model: record.model || "", color: record.color || "",
+        partCategory: record.partCategory || "", model: record.model || "",
         returnQty: String(record.returnQty || 0), problem: record.problem || "",
         reference: record.reference || "", recorder: record.recorder || "", status: record.status || "รอติดตาม"
     }).toString();
@@ -125,7 +124,6 @@ async function submitRTVRecord(event) {
         productGroup: document.getElementById("rtvProductGroup")?.value.trim() || "",
         partCategory: document.getElementById("rtvPartCategory")?.value.trim() || "",
         model: document.getElementById("rtvModel")?.value.trim() || "",
-        color: document.getElementById("rtvColor")?.value.trim() || "",
         returnQty: Number(document.getElementById("rtvReturnQty")?.value) || 0,
         problem: document.getElementById("rtvProblem")?.value.trim() || "",
         reference: document.getElementById("rtvReference")?.value.trim() || "",
