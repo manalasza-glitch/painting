@@ -1630,6 +1630,7 @@ async function renderDailyReportCharts() {
     if (typeof fetchDailyReportDataFromAPI !== 'function') return;
 
     const range = getDashboardDateRange();
+    if (typeof loadRTVRecords === "function") await loadRTVRecords();
     const hasDateFilter = Boolean(range.start || range.end);
     // The dashboard must use QC-approved production rows.  Pending rows are
     // intentionally excluded from production KPIs and the main stacked chart.
@@ -1641,6 +1642,9 @@ async function renderDailyReportCharts() {
         ? await fetchReworkReportDataFromAPI("", { scope: "reviewed" })
         : [];
     const reworkForRange = Array.isArray(reworkData) ? reworkData : [];
+    const outputDataForDashboard = typeof applyRTVAdjustments === "function"
+        ? applyRTVAdjustments(Array.isArray(data) ? data : [], "NEW")
+        : (Array.isArray(data) ? data : []);
     const inspectionAllForRange = Array.isArray(inspectionRecords)
         ? inspectionRecords.filter(record => dashboardRecordInDateRange(record, range))
         : [];
@@ -1649,9 +1653,9 @@ async function renderDailyReportCharts() {
 
     // The production comparison uses only Inspection rows explicitly marked as
     // NEW. REWORK Inspection rows are rendered in the dedicated REWORK chart.
-    renderInspectionVsOutputChart(data || [], inspectionNewForRange, range);
+    renderInspectionVsOutputChart(outputDataForDashboard, inspectionNewForRange, range);
     
-    if ((!data || data.length === 0) && inspectionNewForRange.length === 0 && inspectionReworkForRange.length === 0 && reworkForRange.length === 0) {
+    if ((!outputDataForDashboard || outputDataForDashboard.length === 0) && inspectionNewForRange.length === 0 && inspectionReworkForRange.length === 0 && reworkForRange.length === 0) {
         // Reset KPI Elements to 0
         const kpiProdTotalQty = document.getElementById('kpiProdTotalQty');
         const kpiProdTotalDefects = document.getElementById('kpiProdTotalDefects');
@@ -1675,7 +1679,7 @@ async function renderDailyReportCharts() {
         return;
     }
 
-    let filteredData = Array.isArray(data) ? data : [];
+    let filteredData = outputDataForDashboard;
     if (hasDateFilter) {
         filteredData = filteredData.filter(r => dashboardRecordInDateRange(r, range));
     }
