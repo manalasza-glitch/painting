@@ -20,6 +20,19 @@ function formatEventTime(value) {
     return raw;
 }
 
+function eventDateTimeValue(evt) {
+    const rawDate = evt && (evt.date || evt.timestamp);
+    const datePart = typeof getStandardISODate === "function"
+        ? getStandardISODate(rawDate)
+        : String(rawDate || "").slice(0, 10);
+    const timePart = formatEventTime(evt && (evt.time || evt.timestamp));
+    const safeTime = /^\d{2}:\d{2}$/.test(timePart) ? timePart : "00:00";
+    const parsed = new Date(datePart + "T" + safeTime + ":00");
+    if (!Number.isNaN(parsed.getTime())) return parsed.getTime();
+    const fallback = new Date(rawDate || 0).getTime();
+    return Number.isNaN(fallback) ? 0 : fallback;
+}
+
 // Color map and icons for 5M1E Categories
 const EVENT_CATEGORY_CONFIG = {
     "Man": { label: "Man (คน / พนักงาน)", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)", icon: "👨‍🌾" },
@@ -75,6 +88,9 @@ function renderEventsTab() {
             (e.recorder && e.recorder.toLowerCase().includes(keyword))
         );
     }
+
+    // เรียงข้อมูลจากล่าสุดลงไป โดยเทียบวันที่และเวลา
+    filtered = filtered.slice().sort((a, b) => eventDateTimeValue(b) - eventDateTimeValue(a));
 
     // Update KPI summary cards
     const counts = { Man: 0, Machine: 0, Material: 0, Method: 0, Measurement: 0, Environment: 0 };
