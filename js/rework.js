@@ -426,9 +426,10 @@ function renderReworkDashboardChart(records) {
     const range = typeof getDashboardDateRange === "function"
         ? getDashboardDateRange()
         : { start: "", end: "" };
+    const adjustedRecords = typeof applyRTVAdjustments === "function" ? applyRTVAdjustments(records, "REWORK") : (Array.isArray(records) ? records : []);
     const grouped = new Map();
 
-    (Array.isArray(records) ? records : []).forEach(row => {
+    adjustedRecords.forEach(row => {
         const dateKey = reworkDashboardDateKey(row && (row.date || row.Date));
         if (!dateKey) return;
         if (range.start && dateKey < range.start) return;
