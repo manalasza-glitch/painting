@@ -1471,10 +1471,11 @@ function renderReworkStackedModelChart(records = [], inspectionRecords = []) {
         if (typeof reworkDashboardDefectTotal === "function") return reworkDashboardDefectTotal(row);
         return Number(row && row.totalDefect) || 0;
     };
-    const filtered = (Array.isArray(records) ? records : []).filter(row => {
+    const filtered = adjustedRecords.filter(row => {
         const date = dateKey(row && (row.date || row.Date));
         return date && (!range.start || date >= range.start) && (!range.end || date <= range.end);
     });
+    const adjustedRecords = typeof applyRTVAdjustments === "function" ? applyRTVAdjustments(records, "REWORK") : (Array.isArray(records) ? records : []);
     const modelTotals = new Map();
     const daily = new Map();
     filtered.forEach(row => {
