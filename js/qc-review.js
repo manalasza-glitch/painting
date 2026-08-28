@@ -129,6 +129,53 @@
         button.dataset.qcDetailHandledAt = String(Date.now());
     }
 
+
+    function qcReviewDetailValue(record, keys, fallback = '-') {
+        for (const key of keys) {
+            const value = record && record[key];
+            if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+        }
+        return fallback;
+    }
+
+    function renderQCReviewDetail(record, source, row) {
+        const data = record || {};
+        const isRework = source === 'REWORK';
+        const fields = [
+            ['วันที่พ่น', qcReviewDetailValue(data, ['date', 'Date'])],
+            ['เวลาที่บันทึก', qcReviewDetailValue(data, ['timestamp', 'Timestamp'])],
+            ['กลุ่มผลิตภัณฑ์', qcReviewDetailValue(data, ['productGroup', 'ProductGroup'])],
+            ['รุ่นงาน', qcReviewDetailValue(data, ['model', 'Model'])],
+            ['ช่วงเวลา', qcReviewDetailValue(data, ['timeSlot', 'TimeSlot'])],
+            ['สี', qcReviewDetailValue(data, ['color', 'Color'])],
+            ['ยอดผลิต', qcReviewDetailValue(data, ['prodQty', 'ProdQty', 'prod_qty', 'qty'], 0)],
+            ['ยอดเสีย', qcReviewDetailValue(data, ['totalDefect', 'TotalDefect'], 0)],
+            ['ผู้บันทึก', row && row.cells[6] ? row.cells[6].textContent.trim() : '-'],
+            ['สถานะ', row && row.cells[7] ? row.cells[7].textContent.trim() : '-']
+        ];
+        const title = isRework ? 'รายละเอียดงาน REWORK' : 'รายละเอียดรายการ';
+        return \`<div class="qc-review-detail-panel">
+            <div class="qc-review-detail-title">↳ \${escapeHtml(title)}</div>
+            <div class="qc-review-detail-grid">
+                \${fields.map(([label, value]) => \`<div class="qc-review-detail-item"><span>\${escapeHtml(label)}</span><strong>\${escapeHtml(value)}</strong></div>\`).join('')}
+            </div>
+        </div>\`;
+    }
+
+    function toggleQCReviewDetail(button, event) {
+        if (!button) return;
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const detailRow = button.closest('tr')?.nextElementSibling;
+        if (!detailRow || !detailRow.classList.contains('qc-review-detail-row')) return;
+        const isOpen = detailRow.style.display === 'table-row';
+        detailRow.dataset.qcDetailExpanded = isOpen ? 'false' : 'true';
+        detailRow.style.display = isOpen ? 'none' : 'table-row';
+        button.textContent = isOpen ? 'ดูรายละเอียด' : 'ซ่อนรายละเอียด';
+    }
+
     function bindDailyDetailClicks() {
         if (document.documentElement.dataset.qcDailyDetailDelegated === 'true') return;
         document.documentElement.dataset.qcDailyDetailDelegated = 'true';
@@ -176,10 +223,21 @@
             const key = reviewKey(source, row, index);
             row.dataset.qcReviewKey = key;
             const status = state.statuses[key] && normalizeStatus(state.statuses[key].status);
-            const detail = row.nextElementSibling && (
+            let detail = row.nextElementSibling && (
                 row.nextElementSibling.classList.contains('qc-review-detail-row')
                 || row.nextElementSibling.classList.contains('qc-history-detail-row')
             ) ? row.nextElementSibling : null;
+            if (!detail && source === 'REWORK') {
+                detail = document.createElement('tr');
+                detail.className = 'qc-review-detail-row';
+                detail.dataset.qcDetailExpanded = 'false';
+                detail.style.display = 'none';
+                const detailCell = document.createElement('td');
+                detailCell.colSpan = headerRow ? headerRow.cells.length : row.cells.length;
+                detailCell.innerHTML = renderQCReviewDetail(readRecordRef(row), source, row);
+                detail.appendChild(detailCell);
+                row.insertAdjacentElement('afterend', detail);
+            }
             if (detail) {
                 const outerCell = detail.querySelector(':scope > td[colspan]');
                 if (outerCell && headerRow) outerCell.colSpan = headerRow.cells.length;
@@ -200,13 +258,38 @@
             const cell = document.createElement('td');
             cell.className = 'qc-review-cell';
             cell.style.textAlign = 'center';
-            if (state.view === 'reviewed') {
+            if (source === 'REWORK') {
+                const badge = status !== 'rejected'
+                    ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
+                    : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
+                cell.classList.add('qc-review-rework-cell');
+                cell.innerHTML = state.view === 'reviewed'
+                    ? '<button type="button" class="qc-review-detail-button" title="ดูรายละเอียดรายการ REWORK">ดูรายละเอียด</button>' + badge
+                    : '<button type="button" class="qc-review-detail-button" title="ดูรายละเอียดรายการ REWORK">ดูรายละเอียด</button>'
+                        + '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
+                const detailButton = cell.querySelector('.qc-review-detail-button');
+                if (detailButton) detailButton.addEventListener('click', event => toggleQCReviewDetail(detailButton, event));
+                if (state.view !== 'reviewed') {
+                    const actionButton = cell.querySelector('button.qc-review-action');
+                    const handleReviewPointer = event => {
+                        if (actionButton.disabled) return;
+                        decide(event, actionButton, source, row, key, readRecordRef(row));
+                    };
+                    // Start on pointerdown so the user gets immediate feedback even
+                    // when the browser does not synthesize a later click event.
+                    actionButton.addEventListener('pointerdown', handleReviewPointer, true);
+                    actionButton.addEventListener('pointerup', handleReviewPointer, true);
+                    actionButton.addEventListener('click', handleReviewPointer, true);
+                    actionButton.onpointerdown = handleReviewPointer;
+                    actionButton.onclick = handleReviewPointer;
+                }
+            } else if (state.view === 'reviewed') {
                 cell.innerHTML = status !== 'rejected'
                     ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
             } else {
                 cell.innerHTML = '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
-                const actionButton = cell.querySelector('button');
+                const actionButton = cell.querySelector('button.qc-review-action');
                 const handleReviewPointer = event => {
                     if (actionButton.disabled) return;
                     decide(event, actionButton, source, row, key, readRecordRef(row));
@@ -544,6 +627,85 @@
             .qc-review-complete:active {
                 background: #065f46;
                 transform: none;
+            }
+            .qc-review-rework-cell {
+                white-space: normal !important;
+            }
+            .qc-review-rework-cell .qc-review-detail-button,
+            .qc-review-rework-cell .qc-review-action {
+                display: block;
+                width: 100%;
+                min-width: 0;
+                margin: 3px auto;
+                padding: 4px 6px;
+                border-radius: 7px;
+                font-size: .76rem;
+                line-height: 1.25;
+                cursor: pointer;
+            }
+            .qc-review-detail-button {
+                border: 1px solid rgba(56, 189, 248, .55);
+                background: rgba(14, 116, 144, .18);
+                color: #7dd3fc;
+                font-weight: 800;
+                transition: background-color .15s ease, border-color .15s ease;
+            }
+            .qc-review-detail-button:hover,
+            .qc-review-detail-button:focus-visible {
+                background: rgba(14, 165, 233, .3);
+                border-color: #38bdf8;
+                outline: none;
+            }
+            .qc-review-detail-row > td {
+                padding: 0 !important;
+                border-top: 0 !important;
+                background: rgba(8, 19, 42, .72);
+            }
+            .qc-review-detail-panel {
+                margin: .2rem .35rem .65rem;
+                padding: .7rem .85rem;
+                border: 1px solid rgba(56, 189, 248, .24);
+                border-radius: 10px;
+                background: rgba(15, 23, 42, .86);
+                text-align: left;
+            }
+            .qc-review-detail-title {
+                margin-bottom: .55rem;
+                color: #38bdf8;
+                font-weight: 800;
+                font-size: .9rem;
+            }
+            .qc-review-detail-grid {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: .45rem .75rem;
+            }
+            .qc-review-detail-item {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: .12rem;
+            }
+            .qc-review-detail-item span {
+                color: #94a3b8;
+                font-size: .72rem;
+            }
+            .qc-review-detail-item strong {
+                color: #f8fafc;
+                font-size: .8rem;
+                overflow-wrap: anywhere;
+            }
+            @media (max-width: 900px) {
+                .qc-review-detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            }
+            @media (max-width: 700px) {
+                .qc-review-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                .qc-review-detail-panel { margin: .15rem .2rem .5rem; padding: .6rem; }
+                .qc-review-rework-cell .qc-review-detail-button,
+                .qc-review-rework-cell .qc-review-action {
+                    font-size: .68rem;
+                    padding: 3px 2px;
+                }
             }
             .qc-review-badge {
                 display: inline-flex;
