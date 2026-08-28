@@ -138,28 +138,75 @@
         return fallback;
     }
 
-    function renderQCReviewDetail(record, source, row) {
+        function renderQCReviewDetail(record, source, row) {
         const data = record || {};
-        const isRework = source === 'REWORK';
+        const isRework = source === "REWORK";
+        const rowText = (index, fallback = "-") => row && row.cells[index]
+            ? String(row.cells[index].textContent || "").replace(/\s+/g, " ").trim() || fallback
+            : fallback;
+        const value = (keys, fallback = "-") => qcReviewDetailValue(data, keys, fallback);
+        if (isRework) {
+            const recorder = row && row.dataset && row.dataset.qcReviewRecorder
+                ? row.dataset.qcReviewRecorder
+                : rowText(6);
+            const fields = [
+                ["วันที่พ่น", value(["date", "Date"])],
+                ["Timestamp", value(["timestamp", "Timestamp"])],
+                ["กะ", value(["shift", "Shift"])],
+                ["ผู้บันทึก", recorder],
+                ["ผู้ตรวจ/หัวหน้า", value(["checker", "Checker", "inspector", "Inspector"])],
+                ["กลุ่มผลิตภัณฑ์", value(["productGroup", "ProductGroup"])],
+                ["ประเภทชิ้นงาน", value(["partCategory", "PartCategory", "partType", "PartType"])],
+                ["รุ่นงาน", value(["model", "Model"])],
+                ["ช่วงเวลา", value(["timeSlot", "TimeSlot"])],
+                ["สี", value(["color", "Color"])],
+                ["รหัสสี", value(["colorCode", "ColorCode"])],
+                ["ยอดผลิต (ชิ้น)", value(["prodQty", "ProdQty", "prod_qty", "qty"], 0)]
+            ];
+            const defectFields = [
+                ["สนิม", ["rust", "Rust"]],
+                ["รอยบุบ", ["dent", "Dent"]],
+                ["สะเก็ดรอยเชื่อม", ["colorDrop", "ColorDrop"]],
+                ["สีหนา/สีปูด", ["thinPaint", "ThinPaint"]],
+                ["คราบน้ำ/จาระบี", ["thickPaint", "ThickPaint"]],
+                ["คราบน้ำยา/คราบน้ำ", ["waterStain", "WaterStain"]],
+                ["คราบน้ำมัน", ["oil", "Oil"]],
+                ["เศษฝุ่น", ["dust", "Dust"]],
+                ["อื่นๆ", ["otherDefect", "OtherDefect", "other"]]
+            ];
+            const fieldMarkup = fields.map(([label, fieldValue]) => "<div class="qc-daily-detail-field"><span class="qc-daily-detail-label">"
+                + escapeHtml(label) + "</span><strong class="qc-daily-detail-value">" + escapeHtml(fieldValue) + "</strong></div>").join("");
+            const defectMarkup = defectFields.map(([label, keys]) => {
+                const defectValue = value(keys, 0);
+                const numericValue = Number(defectValue) || 0;
+                return "<div class="qc-daily-detail-field" + (numericValue > 0 ? " qc-rework-defect-has-value" : "") + ""><span class="qc-daily-detail-label">"
+                    + escapeHtml(label) + "</span><strong class="qc-daily-detail-value">" + escapeHtml(defectValue) + "</strong></div>";
+            }).join("");
+            const totalDefect = value(["totalDefect", "TotalDefect", "defectTotal", "DefectTotal"], 0);
+            return "<div class="qc-history-detail-wrap qc-rework-detail-wrap">"
+                + "<section class="qc-daily-detail-section qc-daily-detail-production"><h5>ข้อมูลการผลิต</h5>"
+                + "<div class="qc-daily-detail-grid">" + fieldMarkup + "</div></section>"
+                + "<section class="qc-daily-detail-section qc-daily-detail-defects"><h5>รายการของเสีย</h5>"
+                + "<div class="qc-daily-detail-grid">" + defectMarkup + "</div>"
+                + "<div class="qc-rework-total-field"><span>ของเสียรวม</span><strong>" + escapeHtml(totalDefect) + "</strong></div></section>"
+                + "</div>";
+        }
         const fields = [
-            ['วันที่พ่น', qcReviewDetailValue(data, ['date', 'Date'])],
-            ['เวลาที่บันทึก', qcReviewDetailValue(data, ['timestamp', 'Timestamp'])],
-            ['กลุ่มผลิตภัณฑ์', qcReviewDetailValue(data, ['productGroup', 'ProductGroup'])],
-            ['รุ่นงาน', qcReviewDetailValue(data, ['model', 'Model'])],
-            ['ช่วงเวลา', qcReviewDetailValue(data, ['timeSlot', 'TimeSlot'])],
-            ['สี', qcReviewDetailValue(data, ['color', 'Color'])],
-            ['ยอดผลิต', qcReviewDetailValue(data, ['prodQty', 'ProdQty', 'prod_qty', 'qty'], 0)],
-            ['ยอดเสีย', qcReviewDetailValue(data, ['totalDefect', 'TotalDefect'], 0)],
-            ['ผู้บันทึก', row && row.cells[6] ? row.cells[6].textContent.trim() : '-'],
-            ['สถานะ', row && row.cells[7] ? row.cells[7].textContent.trim() : '-']
+            ["วันที่พ่น", qcReviewDetailValue(data, ["date", "Date"])],
+            ["เวลาที่บันทึก", qcReviewDetailValue(data, ["timestamp", "Timestamp"])],
+            ["กลุ่มผลิตภัณฑ์", qcReviewDetailValue(data, ["productGroup", "ProductGroup"])],
+            ["รุ่นงาน", qcReviewDetailValue(data, ["model", "Model"])],
+            ["ช่วงเวลา", qcReviewDetailValue(data, ["timeSlot", "TimeSlot"])],
+            ["สี", qcReviewDetailValue(data, ["color", "Color"])],
+            ["ยอดผลิต", qcReviewDetailValue(data, ["prodQty", "ProdQty", "prod_qty", "qty"], 0)],
+            ["ยอดเสีย", qcReviewDetailValue(data, ["totalDefect", "TotalDefect"], 0)],
+            ["ผู้บันทึก", rowText(6)],
+            ["สถานะ", rowText(7)]
         ];
-        const title = isRework ? 'รายละเอียดงาน REWORK' : 'รายละเอียดรายการ';
-        return `<div class="qc-review-detail-panel">
-            <div class="qc-review-detail-title">↳ ${escapeHtml(title)}</div>
-            <div class="qc-review-detail-grid">
-                ${fields.map(([label, value]) => `<div class="qc-review-detail-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}
-            </div>
-        </div>`;
+        const title = "รายละเอียดรายการ";
+        return "<div class="qc-review-detail-panel"><div class="qc-review-detail-title">↳ " + escapeHtml(title) + "</div>"
+            + "<div class="qc-review-detail-grid">" + fields.map(([label, fieldValue]) => "<div class="qc-review-detail-item"><span>"
+                + escapeHtml(label) + "</span><strong>" + escapeHtml(fieldValue) + "</strong></div>").join("") + "</div></div>";
     }
 
     function toggleQCReviewDetail(button, event) {
@@ -225,10 +272,18 @@
             headerRow.appendChild(th);
         }
 
+        if (source === "REWORK" && headerRow && headerRow.cells[6]) {
+            headerRow.cells[6].textContent = "รายละเอียด";
+            headerRow.cells[6].classList.add("qc-rework-detail-heading");
+        }
+
         rows.forEach((row, index) => {
             const key = reviewKey(source, row, index);
             row.dataset.qcReviewKey = key;
             const status = state.statuses[key] && normalizeStatus(state.statuses[key].status);
+            if (source === "REWORK" && !row.dataset.qcReviewRecorder) {
+                row.dataset.qcReviewRecorder = row.cells[6] ? String(row.cells[6].textContent || "").replace(/\s+/g, " ").trim() : "-";
+            }
             let detail = row.nextElementSibling && (
                 row.nextElementSibling.classList.contains('qc-review-detail-row')
                 || row.nextElementSibling.classList.contains('qc-history-detail-row')
@@ -247,6 +302,20 @@
             if (detail) {
                 const outerCell = detail.querySelector(':scope > td[colspan]');
                 if (outerCell && headerRow) outerCell.colSpan = headerRow.cells.length;
+            }
+            if (source === "REWORK") {
+                const detailColumn = row.cells[6];
+                if (detailColumn) {
+                    detailColumn.classList.add("qc-rework-detail-column");
+                    if (!detailColumn.querySelector(".qc-review-detail-button")) {
+                        detailColumn.innerHTML = "<button type=button class=qc-review-detail-button>ดูรายละเอียด</button>";
+                    }
+                    const detailButton = detailColumn.querySelector(".qc-review-detail-button");
+                    if (detailButton && detailButton.dataset.qcReviewBound !== "true") {
+                        detailButton.dataset.qcReviewBound = "true";
+                        detailButton.addEventListener("click", event => toggleQCReviewDetail(detailButton, event));
+                    }
+                }
             }
             // Reviewed rows already come from *_Reviewed sheets. Keep them
             // visible even when a legacy review-key format does not match the
@@ -278,12 +347,9 @@
                     ? '<span class="qc-review-badge qc-review-pass">✓ ผ่าน</span>'
                     : '<span class="qc-review-badge qc-review-fail">✕ ไม่ผ่าน</span>';
                 cell.classList.add('qc-review-rework-cell');
-                cell.innerHTML = state.view === 'reviewed'
-                    ? '<button type="button" class="qc-review-detail-button" title="ดูรายละเอียดรายการ REWORK">ดูรายละเอียด</button>' + badge
-                    : '<button type="button" class="qc-review-detail-button" title="ดูรายละเอียดรายการ REWORK">ดูรายละเอียด</button>'
-                        + '<button type="button" class="qc-review-action qc-review-complete" data-qc-status="approved" title="ตรวจแล้ว">ตรวจแล้ว</button>';
-                const detailButton = cell.querySelector('.qc-review-detail-button');
-                if (detailButton) detailButton.addEventListener('click', event => toggleQCReviewDetail(detailButton, event));
+                cell.innerHTML = state.view === "reviewed"
+                    ? badge
+                    : "<button type=button class=qc-review-action qc-review-complete data-qc-status=approved>ตรวจแล้ว</button>";
                 if (state.view !== 'reviewed') {
                     const actionButton = cell.querySelector('button.qc-review-action');
                     const handleReviewPointer = event => {
@@ -731,6 +797,89 @@
                 word-break: keep-all !important;
                 overflow-wrap: normal !important;
             }
+            .qc-review-table.qc-rework-review-table th:nth-child(7),
+            .qc-review-table.qc-rework-review-table td:nth-child(7),
+            .qc-review-table.qc-rework-review-table th.qc-rework-detail-heading,
+            .qc-review-table.qc-rework-review-table .qc-rework-detail-column {
+                width: 150px !important;
+                min-width: 150px !important;
+            }
+            .qc-review-table.qc-rework-review-table .qc-rework-detail-column {
+                text-align: center;
+                white-space: nowrap !important;
+            }
+            .qc-review-table.qc-rework-review-table .qc-rework-detail-column .qc-review-detail-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: auto !important;
+                min-width: 128px !important;
+                padding: 6px 10px;
+                white-space: nowrap !important;
+                word-break: keep-all !important;
+                overflow-wrap: normal !important;
+            }
+            .qc-rework-detail-wrap { padding: .2rem 0; }
+            .qc-rework-detail-wrap .qc-daily-detail-section {
+                margin: .45rem .35rem .7rem;
+                padding: .7rem .8rem;
+                border: 1px solid rgba(56, 189, 248, .24);
+                border-radius: 12px;
+                background: rgba(8, 19, 42, .58);
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-section:last-child { margin-bottom: .35rem; }
+            .qc-rework-detail-wrap .qc-daily-detail-section h5 {
+                margin: 0 0 .6rem;
+                padding: 0 0 .55rem;
+                border-bottom: 1px solid rgba(56, 189, 248, .24);
+                color: #38bdf8;
+                font-size: 1rem;
+                font-weight: 800;
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: .55rem;
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-field, .qc-rework-total-field {
+                min-width: 0;
+                min-height: 2.35rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: .55rem;
+                padding: .45rem .65rem;
+                border: 1px solid rgba(56, 189, 248, .12);
+                border-radius: 10px;
+                background: rgba(8, 19, 42, .74);
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-label, .qc-rework-total-field span {
+                color: #38bdf8;
+                font-size: .78rem;
+                font-weight: 700;
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-value, .qc-rework-total-field strong {
+                color: #f8fafc;
+                font-size: .82rem;
+                font-weight: 800;
+                text-align: right;
+                overflow-wrap: anywhere;
+            }
+            .qc-rework-detail-wrap .qc-daily-detail-defects .qc-daily-detail-value { color: #94a3b8; }
+            .qc-rework-detail-wrap .qc-rework-defect-has-value {
+                border-color: rgba(248, 113, 113, .55);
+                background: rgba(127, 29, 29, .18);
+            }
+            .qc-rework-detail-wrap .qc-rework-defect-has-value .qc-daily-detail-value,
+            .qc-rework-total-field span, .qc-rework-total-field strong { color: #f87171; }
+            .qc-rework-total-field {
+                width: min(460px, 100%);
+                margin-top: .55rem;
+                border-color: rgba(248, 113, 113, .55);
+                background: rgba(127, 29, 29, .18);
+            }
+            @media (max-width: 900px) { .qc-rework-detail-wrap .qc-daily-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            @media (max-width: 600px) { .qc-rework-detail-wrap .qc-daily-detail-grid { grid-template-columns: 1fr; } }
             .table-responsive.qc-rework-review-responsive {
                 max-height: none !important;
                 overflow-x: auto !important;
