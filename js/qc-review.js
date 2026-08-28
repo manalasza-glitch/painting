@@ -93,8 +93,13 @@
 
     function reviewKey(source, row, index) {
         const values = Array.from(row.cells)
-            .filter(cell => !cell.classList.contains('qc-review-cell'))
-            .map(cell => String(cell.textContent || '').replace(/\s+/g, ' ').trim());
+            .filter(cell => !cell.classList.contains("qc-review-cell"))
+            .map(cell => {
+                if (source === "REWORK" && cell.classList.contains("qc-rework-detail-column")) {
+                    return row.dataset.qcReviewRecorder || "";
+                }
+                return String(cell.textContent || "").replace(/\s+/g, " ").trim();
+            });
         // Use the row's actual displayed values so a newly inserted record at
         // the top does not change the review key of older records.
         const table = row.closest('table');
@@ -174,21 +179,21 @@
                 ["เศษฝุ่น", ["dust", "Dust"]],
                 ["อื่นๆ", ["otherDefect", "OtherDefect", "other"]]
             ];
-            const fieldMarkup = fields.map(([label, fieldValue]) => "<div class="qc-daily-detail-field"><span class="qc-daily-detail-label">"
-                + escapeHtml(label) + "</span><strong class="qc-daily-detail-value">" + escapeHtml(fieldValue) + "</strong></div>").join("");
+            const fieldMarkup = fields.map(([label, fieldValue]) => "<div class=\"qc-daily-detail-field\"><span class=\"qc-daily-detail-label\">"
+                + escapeHtml(label) + "</span><strong class=\"qc-daily-detail-value\">" + escapeHtml(fieldValue) + "</strong></div>").join("");
             const defectMarkup = defectFields.map(([label, keys]) => {
                 const defectValue = value(keys, 0);
                 const numericValue = Number(defectValue) || 0;
-                return "<div class="qc-daily-detail-field" + (numericValue > 0 ? " qc-rework-defect-has-value" : "") + ""><span class="qc-daily-detail-label">"
-                    + escapeHtml(label) + "</span><strong class="qc-daily-detail-value">" + escapeHtml(defectValue) + "</strong></div>";
+                return "<div class=\"qc-daily-detail-field" + (numericValue > 0 ? " qc-rework-defect-has-value" : "") + "\"><span class=\"qc-daily-detail-label\">"
+                    + escapeHtml(label) + "</span><strong class=\"qc-daily-detail-value\">" + escapeHtml(defectValue) + "</strong></div>";
             }).join("");
             const totalDefect = value(["totalDefect", "TotalDefect", "defectTotal", "DefectTotal"], 0);
-            return "<div class="qc-history-detail-wrap qc-rework-detail-wrap">"
-                + "<section class="qc-daily-detail-section qc-daily-detail-production"><h5>ข้อมูลการผลิต</h5>"
-                + "<div class="qc-daily-detail-grid">" + fieldMarkup + "</div></section>"
-                + "<section class="qc-daily-detail-section qc-daily-detail-defects"><h5>รายการของเสีย</h5>"
-                + "<div class="qc-daily-detail-grid">" + defectMarkup + "</div>"
-                + "<div class="qc-rework-total-field"><span>ของเสียรวม</span><strong>" + escapeHtml(totalDefect) + "</strong></div></section>"
+            return "<div class=\"qc-history-detail-wrap qc-rework-detail-wrap\">"
+                + "<section class=\"qc-daily-detail-section qc-daily-detail-production\"><h5>ข้อมูลการผลิต</h5>"
+                + "<div class=\"qc-daily-detail-grid\">" + fieldMarkup + "</div></section>"
+                + "<section class=\"qc-daily-detail-section qc-daily-detail-defects\"><h5>รายการของเสีย</h5>"
+                + "<div class=\"qc-daily-detail-grid\">" + defectMarkup + "</div>"
+                + "<div class=\"qc-rework-total-field\"><span>ของเสียรวม</span><strong>" + escapeHtml(totalDefect) + "</strong></div></section>"
                 + "</div>";
         }
         const fields = [
@@ -204,8 +209,8 @@
             ["สถานะ", rowText(7)]
         ];
         const title = "รายละเอียดรายการ";
-        return "<div class="qc-review-detail-panel"><div class="qc-review-detail-title">↳ " + escapeHtml(title) + "</div>"
-            + "<div class="qc-review-detail-grid">" + fields.map(([label, fieldValue]) => "<div class="qc-review-detail-item"><span>"
+        return "<div class=\"qc-review-detail-panel\"><div class=\"qc-review-detail-title\">↳ " + escapeHtml(title) + "</div>"
+            + "<div class=\"qc-review-detail-grid\">" + fields.map(([label, fieldValue]) => "<div class=\"qc-review-detail-item\"><span>"
                 + escapeHtml(label) + "</span><strong>" + escapeHtml(fieldValue) + "</strong></div>").join("") + "</div></div>";
     }
 
