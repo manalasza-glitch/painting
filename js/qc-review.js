@@ -253,10 +253,19 @@
             row.style.display = rowVisible ? '' : 'none';
             // Keep a live save button stable while the observer watches table updates.
             if (state.view !== 'reviewed' && row.dataset.qcReviewSaving === 'true') return;
+            const reviewMode = state.view === 'reviewed' ? 'reviewed' : 'pending';
+            const reviewStatus = String(status || '');
             const old = row.querySelector('.qc-review-cell');
+            if (old
+                && old.dataset.qcReviewMode === reviewMode
+                && old.dataset.qcReviewStatus === reviewStatus) {
+                return;
+            }
             if (old) old.remove();
             const cell = document.createElement('td');
             cell.className = 'qc-review-cell';
+            cell.dataset.qcReviewMode = reviewMode;
+            cell.dataset.qcReviewStatus = reviewStatus;
             cell.style.textAlign = 'center';
             if (source === 'REWORK') {
                 const badge = status !== 'rejected'
