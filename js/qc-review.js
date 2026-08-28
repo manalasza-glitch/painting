@@ -731,10 +731,10 @@
                 word-break: keep-all !important;
                 overflow-wrap: normal !important;
             }
-            .qc-rework-review-responsive {
+            .table-responsive.qc-rework-review-responsive {
                 max-height: none !important;
                 overflow-x: auto !important;
-                overflow-y: visible !important;
+                overflow-y: hidden !important;
             }
             @media (max-width: 700px) {
                 .qc-review-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
