@@ -1592,11 +1592,19 @@ function renderReworkStackedModelChart(records = [], inspectionRecords = []) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
+            interaction: { mode: "index", intersect: true },
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    filter(item) {
+                        const value = Number(item && item.parsed && item.parsed.y) || 0;
+                        return item && item.dataset && item.dataset.type === "bar" && value > 0;
+                    },
                     callbacks: {
+                        label(context) {
+                            const value = Number(context && context.parsed && context.parsed.y) || 0;
+                            return `${context.dataset.label}: ${value.toLocaleString("th-TH")} ชิ้น`;
+                        },
                         footer(items) {
                             const index = items && items[0] ? items[0].dataIndex : -1;
                             return index >= 0 ? `ยอด REWORK รวม: ${totalOutput[index].toLocaleString()} ชิ้น` : "";
