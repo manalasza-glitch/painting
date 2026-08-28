@@ -154,12 +154,12 @@
             ['สถานะ', row && row.cells[7] ? row.cells[7].textContent.trim() : '-']
         ];
         const title = isRework ? 'รายละเอียดงาน REWORK' : 'รายละเอียดรายการ';
-        return \`<div class="qc-review-detail-panel">
-            <div class="qc-review-detail-title">↳ \${escapeHtml(title)}</div>
+        return `<div class="qc-review-detail-panel">
+            <div class="qc-review-detail-title">↳ ${escapeHtml(title)}</div>
             <div class="qc-review-detail-grid">
-                \${fields.map(([label, value]) => \`<div class="qc-review-detail-item"><span>\${escapeHtml(label)}</span><strong>\${escapeHtml(value)}</strong></div>\`).join('')}
+                ${fields.map(([label, value]) => `<div class="qc-review-detail-item"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}
             </div>
-        </div>\`;
+        </div>`;
     }
 
     function toggleQCReviewDetail(button, event) {
