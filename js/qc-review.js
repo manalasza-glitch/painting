@@ -814,6 +814,7 @@
                 white-space: nowrap !important;
             }
             .qc-review-table.qc-rework-review-table .qc-rework-detail-column .qc-review-detail-button {
+                border-radius: 9px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
