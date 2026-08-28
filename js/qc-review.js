@@ -354,7 +354,7 @@
                 cell.classList.add('qc-review-rework-cell');
                 cell.innerHTML = state.view === "reviewed"
                     ? badge
-                    : "<button type=button class=qc-review-action qc-review-complete data-qc-status=approved>ตรวจแล้ว</button>";
+                    : "<button type=button class=\"qc-review-action qc-review-complete\" data-qc-status=\"approved\">ตรวจแล้ว</button>";
                 if (state.view !== 'reviewed') {
                     const actionButton = cell.querySelector('button.qc-review-action');
                     const handleReviewPointer = event => {
