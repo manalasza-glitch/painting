@@ -210,6 +210,12 @@
         if (!body || !rows.length) return;
         table.classList.add('qc-review-table');
         const source = sourceForTable(table);
+        const isReworkTable = source === 'REWORK';
+        table.classList.toggle('qc-rework-review-table', isReworkTable);
+        const reviewWrapper = table.parentElement;
+        if (reviewWrapper) {
+            reviewWrapper.classList.toggle('qc-rework-review-responsive', isReworkTable);
+        }
         const headerRow = table.tHead && table.tHead.rows[0];
         if (headerRow && !headerRow.querySelector('.qc-review-heading')) {
             const th = document.createElement('th');
@@ -706,6 +712,29 @@
             }
             @media (max-width: 900px) {
                 .qc-review-detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            }
+            .qc-review-table.qc-rework-review-table {
+                width: max-content !important;
+                min-width: 100% !important;
+                table-layout: auto !important;
+            }
+            .qc-review-table.qc-rework-review-table th.qc-review-heading,
+            .qc-review-table.qc-rework-review-table td.qc-review-rework-cell {
+                width: 150px !important;
+                min-width: 150px !important;
+            }
+            .qc-review-table.qc-rework-review-table .qc-review-rework-cell .qc-review-detail-button,
+            .qc-review-table.qc-rework-review-table .qc-review-rework-cell .qc-review-action {
+                width: auto !important;
+                min-width: 128px !important;
+                white-space: nowrap !important;
+                word-break: keep-all !important;
+                overflow-wrap: normal !important;
+            }
+            .qc-rework-review-responsive {
+                max-height: none !important;
+                overflow-x: auto !important;
+                overflow-y: visible !important;
             }
             @media (max-width: 700px) {
                 .qc-review-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
