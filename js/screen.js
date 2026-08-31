@@ -548,7 +548,10 @@ async function loadScreenDashboardChart(forceRefresh = false) {
     try {
         if (!screenDashboardRecordsCache) {
             if (!screenDashboardLoadPromise) {
-                screenDashboardLoadPromise = fetchScreenReportDataFromAPI()
+                // Dashboard statistics must use the reviewed history, just like
+                // the daily and REWORK dashboard charts. The default API scope
+                // is pending, which is empty after SCREEN rows are reviewed.
+                screenDashboardLoadPromise = fetchScreenReportDataFromAPI("", { scope: "reviewed" })
                     .then(rows => Array.isArray(rows) ? rows : [])
                     .finally(() => { screenDashboardLoadPromise = null; });
             }
