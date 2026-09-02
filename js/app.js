@@ -24,7 +24,7 @@ function hasAppPermission(permission) {
 }
 
 function canLoadInspectionData() {
-    return ['dashboard.read', 'history.read', 'qc7.read'].some(hasAppPermission);
+    return ['dashboard.read', 'qc7.read'].some(hasAppPermission);
 }
 
 function formatDateForDisplay(dateVal, timestampVal) {

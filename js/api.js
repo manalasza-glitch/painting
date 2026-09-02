@@ -1080,7 +1080,6 @@ const USER_PERMISSION_KEYS = [
     "checklist.read",
     "events.read",
     "spare_parts.read",
-    "history.read",
     "users.manage"
 ];
 const DEFAULT_USER_PERMISSION_KEYS = USER_PERMISSION_KEYS.filter(key => key !== "users.manage");

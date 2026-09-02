@@ -24,8 +24,8 @@ const REPORT_READ_MAX_ROWS = 5000;
 // bounded so one malformed tab cannot make every QC request time out.
 const REPORT_READ_MAX_COLUMNS = 64;
 const PARAMETER_CHECKLIST_ID_HEADER = "SubmissionId";
-const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read", "history.read", "users.manage"];
-const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read", "history.read"];
+const ALL_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read", "users.manage"];
+const DEFAULT_USER_PERMISSIONS = ["dashboard.read", "qc7.read", "qc.read", "inspection.create", "daily_report.read", "rework.read", "screen.read", "checklist.read", "events.read", "spare_parts.read"];
 
 function normalizeInspectionWorkType_(value) {
   const raw = String(value == null ? "" : value).trim().toUpperCase();
