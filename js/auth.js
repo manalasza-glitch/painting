@@ -57,6 +57,16 @@ const PaintingAuth = {
             const firstAllowedPage = pages.find(page => this.hasPermission(page.dataset.permission));
             if (firstAllowedPage) switchTab(firstAllowedPage.id);
         }
+
+        // Restore a permitted tab requested by a shared URL after permissions
+        // are refreshed. This also prevents the refresh from falling back to
+        // Dashboard after a direct menu link has been opened.
+        const requestedTab = window.location.hash.replace(/^#/, '');
+        const requestedPage = pages.find(page => page.id === requestedTab);
+        if (requestedPage && this.hasPermission(requestedPage.dataset.permission)
+            && !requestedPage.classList.contains('active') && typeof switchTab === 'function') {
+            switchTab(requestedTab);
+        }
     },
 
     async refreshCurrentUserPermissions() {
