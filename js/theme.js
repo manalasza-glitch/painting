@@ -24,6 +24,43 @@
         });
     }
 
+    function toggleTheme() {
+        setTheme(getTheme() === LIGHT_THEME ? DARK_THEME : LIGHT_THEME);
+    }
+
+    function bindThemeControls() {
+        document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+            if (button.dataset.themeBound === 'true') return;
+            button.dataset.themeBound = 'true';
+
+            let touchHandled = false;
+            const activate = () => {
+                toggleTheme();
+            };
+
+            // Use a real listener instead of inline onclick so mobile WebViews
+            // and touch browsers consistently receive the theme action.
+            button.addEventListener('click', event => {
+                event.preventDefault();
+                if (touchHandled) {
+                    touchHandled = false;
+                    return;
+                }
+                activate();
+            });
+
+            // Some older mobile WebViews do not promote a touch to click when
+            // a fixed header is present. Prevent the follow-up click and do
+            // the same action directly on touchend in that case.
+            button.addEventListener('touchend', event => {
+                event.preventDefault();
+                touchHandled = true;
+                activate();
+                window.setTimeout(() => { touchHandled = false; }, 500);
+            }, { passive: false });
+        });
+    }
+
     function refreshChartTheme() {
         // Chart.js keeps its text colors in canvas options, so refresh those
         // colors when the user switches theme without rebuilding the charts.
@@ -98,14 +135,19 @@
     window.PaintingTheme = {
         getTheme,
         setTheme,
-        toggle: () => setTheme(getTheme() === LIGHT_THEME ? DARK_THEME : LIGHT_THEME)
+        toggle: toggleTheme
     };
 
     setTheme(readSavedTheme(), false);
+    bindThemeControls();
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTheme(getTheme(), false), { once: true });
+        document.addEventListener('DOMContentLoaded', () => {
+            setTheme(getTheme(), false);
+            bindThemeControls();
+        }, { once: true });
     } else {
         setTheme(getTheme(), false);
+        bindThemeControls();
     }
 }());
