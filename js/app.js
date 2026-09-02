@@ -165,6 +165,13 @@ async function initializePaintingApp() {
             inspectionDataScope = "today";
         }
 
+        // Allow a shared URL to open a permitted menu directly. The normal
+        // dashboard remains the default when no tab is present in the hash.
+        const requestedTab = window.location.hash.replace(/^#/, '');
+        if (requestedTab && requestedTab !== 'dashboard-tab' && document.getElementById(requestedTab)) {
+            switchTab(requestedTab);
+        }
+
         // Poll data every 15 seconds only if there are no pending sync requests.
         // Each request is permission-gated so changing permissions takes effect
         // without forcing a full page reload.
