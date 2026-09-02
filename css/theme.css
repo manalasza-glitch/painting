@@ -463,6 +463,142 @@
   border-color: var(--theme-border) !important;
 }
 
+/* Remaining page-specific surfaces used by generated menu content. */
+[data-theme="light"] .user-summary-grid > div {
+  background: linear-gradient(145deg, #ffffff, #f7fbff) !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: var(--theme-shadow) !important;
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] .user-summary-grid span,
+[data-theme="light"] .user-details h4 {
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] .user-summary-grid small,
+[data-theme="light"] .user-details p,
+[data-theme="light"] .users-loading {
+  color: var(--theme-muted) !important;
+}
+
+[data-theme="light"] .total-preview-box {
+  background: linear-gradient(135deg, #ffffff, #f2f8fd) !important;
+  color: var(--theme-text-soft) !important;
+  border-color: #9bd2ed !important;
+  box-shadow: 0 8px 24px rgba(15, 35, 60, 0.08) !important;
+}
+
+[data-theme="light"] .dr-radio-pills {
+  background: #edf4fa !important;
+  border-color: var(--theme-border) !important;
+}
+
+[data-theme="light"] .dr-radio-pills label,
+[data-theme="light"] .rework-form-card .dr-radio-group {
+  color: var(--theme-text-soft) !important;
+}
+
+[data-theme="light"] .rework-form-card .btn-secondary {
+  background: #edf4fa !important;
+  color: #0e3a60 !important;
+  border-color: var(--theme-border-strong) !important;
+}
+
+[data-theme="light"] .rework-form-card .btn-danger {
+  background: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+[data-theme="light"] .qc-daily-group-heading {
+  background: #edf4fa !important;
+  border-bottom-color: var(--theme-border) !important;
+}
+
+[data-theme="light"] .qc-daily-group-heading h4,
+[data-theme="light"] .dr-defect-label {
+  color: var(--theme-text) !important;
+}
+
+/* QC review creates these detail panels dynamically. */
+[data-theme="light"] .mobile-qc-review-submenu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: 0 12px 30px rgba(15, 35, 60, 0.14) !important;
+}
+
+[data-theme="light"] .mobile-qc-review-submenu button {
+  background: #f5f9fc !important;
+  color: var(--theme-text-soft) !important;
+  border-color: var(--theme-border-strong) !important;
+}
+
+[data-theme="light"] .qc-review-detail-row > td,
+[data-theme="light"] .qc-review-detail-panel,
+[data-theme="light"] .qc-rework-detail-wrap .qc-daily-detail-section,
+[data-theme="light"] .qc-rework-detail-wrap .qc-daily-detail-field {
+  background: #ffffff !important;
+  border-color: var(--theme-border) !important;
+}
+
+[data-theme="light"] .qc-review-detail-item span,
+[data-theme="light"] .qc-rework-detail-wrap .qc-daily-detail-defects .qc-daily-detail-value {
+  color: var(--theme-muted) !important;
+}
+
+[data-theme="light"] .qc-review-detail-item strong,
+[data-theme="light"] .qc-rework-detail-wrap .qc-daily-detail-value {
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] .qc-rework-detail-wrap .qc-rework-defect-has-value,
+[data-theme="light"] .qc-rework-total-field {
+  background: #fff1f2 !important;
+}
+
+[data-theme="light"] .qc-review-detail-row > td .qc-review-detail-title,
+[data-theme="light"] .qc-rework-detail-wrap .qc-daily-detail-label {
+  color: #0e7490 !important;
+}
+
+[data-theme="light"] .rtv-kpi {
+  background: linear-gradient(145deg, #ffffff, #f7fbff) !important;
+  border-color: var(--theme-border) !important;
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] #maintenanceAlertBox > div {
+  background: #fffdf5 !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 8px 22px rgba(15, 35, 60, 0.08) !important;
+}
+
+[data-theme="light"] .spare-image-picker {
+  background: linear-gradient(135deg, #eaf7fc, #f7fbff) !important;
+  color: #0e7490 !important;
+  border-color: #9bd2ed !important;
+  box-shadow: 0 6px 16px rgba(15, 35, 60, 0.08) !important;
+}
+
+/* A few older menu templates still carry dark inline presentation values.
+   These selectors only run in light mode and preserve colored action buttons. */
+[data-theme="light"] [style*="#f8fafc"] {
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] [style*="#cbd5e1"] {
+  color: var(--theme-text-soft) !important;
+}
+
+[data-theme="light"] [style*="#0b1329"] {
+  background: #ffffff !important;
+}
+
+[data-theme="light"] [style*="#070d1e"] {
+  background: #eaf4fb !important;
+}
+
 /* Keep calendar icons visible on white controls. */
 [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
 [data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {

@@ -25,7 +25,10 @@
     <script>
         (function () {
             try {
-                var savedTheme = localStorage.getItem('PAINTING_THEME');
+                var urlTheme = new URLSearchParams(window.location.search).get('theme');
+                var savedTheme = (urlTheme === 'light' || urlTheme === 'dark')
+                    ? urlTheme
+                    : localStorage.getItem('PAINTING_THEME');
                 document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
             } catch (error) {
                 document.documentElement.setAttribute('data-theme', 'dark');

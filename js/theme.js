@@ -86,6 +86,8 @@
     }
 
     function readSavedTheme() {
+        const urlTheme = new URLSearchParams(window.location.search).get('theme');
+        if (urlTheme === LIGHT_THEME || urlTheme === DARK_THEME) return urlTheme;
         try {
             return normalizeTheme(localStorage.getItem(STORAGE_KEY));
         } catch (error) {
