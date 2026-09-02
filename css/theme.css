@@ -401,6 +401,13 @@
   color: var(--theme-text-soft) !important;
 }
 
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea,
+[data-theme="light"] button {
+  color-scheme: light !important;
+}
+
 /* QC 7 and mobile navigation */
 [data-theme="light"] .qc7-toolbar input,
 [data-theme="light"] .qc7-toolbar select {
@@ -428,6 +435,24 @@
 [data-theme="light"] .mobile-nav-item.active {
   color: #0e3a60 !important;
   background: rgba(14, 165, 233, 0.14) !important;
+}
+
+[data-theme="light"] .mobile-checklist-menu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: 0 12px 30px rgba(15, 35, 60, 0.14) !important;
+}
+
+[data-theme="light"] .mobile-checklist-option {
+  background: #f5f9fc !important;
+  color: var(--theme-text-soft) !important;
+  border-color: var(--theme-border-strong) !important;
+}
+
+[data-theme="light"] .mobile-checklist-option:hover,
+[data-theme="light"] .mobile-checklist-option:active {
+  background: #e0f2fe !important;
+  color: #0e3a60 !important;
 }
 
 /* Modals and overlays */
@@ -595,6 +620,22 @@
   color: #0e7490 !important;
   border-color: #9bd2ed !important;
   box-shadow: 0 6px 16px rgba(15, 35, 60, 0.08) !important;
+}
+
+[data-theme="light"] #parameter-checklist-tab #parameterChecklistItemsBody tr {
+  background: linear-gradient(145deg, #ffffff, #f7fbff) !important;
+  border-color: var(--theme-border) !important;
+  box-shadow: 0 8px 20px rgba(15, 35, 60, 0.08) !important;
+  color: var(--theme-text) !important;
+}
+
+[data-theme="light"] #parameter-checklist-tab #parameterChecklistItemsBody td:first-child {
+  color: #0284c7 !important;
+  border-bottom-color: var(--theme-border) !important;
+}
+
+[data-theme="light"] #parameter-checklist-tab #parameterChecklistItemsBody td::before {
+  color: var(--theme-muted) !important;
 }
 
 /* A few older menu templates still carry dark inline presentation values.
