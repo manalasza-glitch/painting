@@ -511,6 +511,22 @@
   border-color: #fecdd3 !important;
 }
 
+[data-theme="light"] .btn-secondary-custom,
+[data-theme="light"] .btn-modal-cancel,
+[data-theme="light"] .spare-parts-btn.secondary {
+  background: #edf4fa !important;
+  color: #0e3a60 !important;
+  border-color: var(--theme-border-strong) !important;
+}
+
+[data-theme="light"] .btn-secondary-custom:hover,
+[data-theme="light"] .btn-modal-cancel:hover,
+[data-theme="light"] .spare-parts-btn.secondary:hover {
+  background: #e0f2fe !important;
+  color: #0c4a6e !important;
+  border-color: #7dd3fc !important;
+}
+
 [data-theme="light"] .qc-daily-group-heading {
   background: #edf4fa !important;
   border-bottom-color: var(--theme-border) !important;
