@@ -21,6 +21,18 @@
 
     <title>Painting Inspection Dashboard</title>
 
+    <!-- Apply the saved theme before the page paints to avoid a light/dark flash. -->
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('PAINTING_THEME');
+                document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        }());
+    </script>
+
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
 
     <!-- Embedded CSS Fallback for guaranteed rich layout on iOS & Android -->
@@ -674,6 +686,7 @@
     <!-- Custom CSS Files Loaded after embedded style to guarantee priority on iOS & Android -->
     <link rel="stylesheet" href="css/style.css?v=96.40.0">
     <link rel="stylesheet" href="css/auth.css?v=83.2.0">
+    <link rel="stylesheet" href="css/theme.css?v=1.0.0">
 
     <!-- Chart.js CDN & Zoom Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -685,6 +698,11 @@
 
     <!-- Authentication Glassmorphism Modal Shell -->
     <section class="auth-shell" id="authShell" style="display: flex;">
+        <button type="button" class="theme-toggle auth-theme-toggle" data-theme-toggle onclick="PaintingTheme.toggle()" aria-label="เปลี่ยนเป็นโหมดสว่าง" title="เปลี่ยนเป็นโหมดสว่าง">
+            <span class="theme-toggle-icon theme-icon-sun" aria-hidden="true">☀</span>
+            <span class="theme-toggle-icon theme-icon-moon" aria-hidden="true">☾</span>
+            <span class="theme-toggle-label">โหมดสว่าง</span>
+        </button>
         <div class="auth-card">
             <div class="auth-brand">
                 <img src="assets/logo.png" alt="Painting Inspection Logo">
@@ -850,6 +868,11 @@
                 </div>
 
                 <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button type="button" class="theme-toggle" data-theme-toggle onclick="PaintingTheme.toggle()" aria-label="เปลี่ยนเป็นโหมดสว่าง" title="เปลี่ยนเป็นโหมดสว่าง">
+                        <span class="theme-toggle-icon theme-icon-sun" aria-hidden="true">☀</span>
+                        <span class="theme-toggle-icon theme-icon-moon" aria-hidden="true">☾</span>
+                        <span class="theme-toggle-label">โหมดสว่าง</span>
+                    </button>
                     <!-- User Profile Chip -->
                     <div class="user-chip" id="currentUserChip" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(56, 189, 248, 0.12); padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                         <div id="userHeaderAvatar" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">U</div>
@@ -2290,7 +2313,8 @@
 
     <!-- JS Files -->
     <script src="js/api.js?v=97.9.0"></script>
-<script src="js/rtv.js?v=1.0.2"></script>
+    <script src="js/rtv.js?v=1.0.2"></script>
+    <script src="js/theme.js?v=1.0.0"></script>
     <script src="js/auth.js?v=86.6.0"></script>
     <script src="js/app.js?v=96.49.0"></script>
     <script src="js/spare-parts.js?v=1.0.1"></script><script src="js/maintenance.js?v=1.0.2"></script>
